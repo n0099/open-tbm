@@ -104,6 +104,6 @@ class CursorCodec
             // filter out cursors with all fields value being null, their encoded cursor is ',,'
             ->reject(static fn(Collection $cursors) =>
             $cursors->every(static fn(int|string|null $cursor) => $cursor === null))
-            ->map(static fn(Collection $cursors) => new Cursor($cursors->toArray()));
+            ->map(static fn(Collection $cursors) => new Cursor($cursors->all()));
     }
 }

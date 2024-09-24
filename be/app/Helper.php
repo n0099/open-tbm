@@ -54,35 +54,35 @@ class Helper
         }
     }
 
+    public const array ERROR_STATUS_CODE_INFO = [
+        // httpStatusCode => [ errorCode => errorInfo ]
+        400 => [
+            // 40000 => App\Exceptions\Handler::convertValidationExceptionToResponse()
+            40001 => '帖子查询类型必须为索引或搜索查询',
+            40002 => '搜索查询必须指定查询贴吧',
+            40003 => '部分查询参数与查询帖子类型要求不匹配',
+            40004 => '排序方式与查询帖子类型要求不匹配',
+            40005 => '提供了多个唯一查询参数',
+        ],
+        401 => [
+            40101 => 'Google reCAPTCHA 验证未通过 请刷新页面/更换设备/网络环境后重试',
+        ],
+        404 => [
+            40401 => '帖子查询结果为空',
+            40402 => '用户查询结果为空',
+            40403 => '吧帖量统计查询结果为空',
+            40406 => '指定查询的贴吧不存在',
+        ],
+        500 => [
+            50001 => '数据库中存在多个贴吧表存储了该 ID 的帖子',
+        ],
+    ];
+
     public static function abortAPI(int $errorCode): never
     {
-        $statusCodeAndErrorInfos = [
-            // httpStatusCode => [ errorCode => errorInfo ]
-            400 => [
-                // 40000 => App\Exceptions\Handler::convertValidationExceptionToResponse()
-                40001 => '帖子查询类型必须为索引或搜索查询',
-                40002 => '搜索查询必须指定查询贴吧',
-                40003 => '部分查询参数与查询帖子类型要求不匹配',
-                40004 => '排序方式与查询帖子类型要求不匹配',
-                40005 => '提供了多个唯一查询参数',
-            ],
-            401 => [
-                40101 => 'Google reCAPTCHA 验证未通过 请刷新页面/更换设备/网络环境后重试',
-            ],
-            404 => [
-                40401 => '帖子查询结果为空',
-                40402 => '用户查询结果为空',
-                40403 => '吧帖量统计查询结果为空',
-                40406 => '指定查询的贴吧不存在',
-            ],
-            500 => [
-                50001 => '数据库中存在多个贴吧表存储了该 ID 的帖子',
-            ],
-        ];
-
         $statusCode = 0;
         $errorInfo = null;
-        foreach ($statusCodeAndErrorInfos as $infoStatusCode => $infoErrorInfo) {
+        foreach (self::ERROR_STATUS_CODE_INFO as $infoStatusCode => $infoErrorInfo) {
             if (\array_key_exists($errorCode, $infoErrorInfo)) {
                 $statusCode = $infoStatusCode;
                 $errorInfo = $infoErrorInfo[$errorCode];
