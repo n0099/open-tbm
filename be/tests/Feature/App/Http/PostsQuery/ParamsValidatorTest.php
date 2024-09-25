@@ -38,23 +38,47 @@ class ParamsValidatorTest extends TestCase
     public static function provideValidate40001(): array
     {
         $uniqueParams = [['postTypes' => ['thread']], ['orderBy' => 'postedAt']];
-        return array_map(static fn(array $i) => [40001, $i], [[$uniqueParams[0]], [$uniqueParams[1]], $uniqueParams]);
+        return collect([[$uniqueParams[0]], [$uniqueParams[1]], $uniqueParams])
+            ->mapWithKeys(static function (array $params) {
+                $keys = implode(',', array_map(static fn(array $param) => array_key_first($param), $params));
+                return ["40001, $keys" => [40001, $params]];
+            })->all();
     }
 
     public static function provideValidate40005(): array
     {
-        $uniqueParams = [['fid' => 0], ['postTypes' => ['thread']], ['orderBy' => 'postedAt']];
-        return array_map(static fn(array $p) => [40005, [['tid' => 0], $p, $p]], $uniqueParams);
+        return collect([['fid' => 0], ['postTypes' => ['thread']], ['orderBy' => 'postedAt']])
+            ->mapWithKeys(static fn(array $p) => [
+                '40005, ' . array_key_first($p) => [40005, [['tid' => 0], $p, $p]],
+            ])
+            ->all();
     }
 
     public static function provideValidate40003(): array
     {
-        return [[40003, [['postTypes' => ['thread']], ['spid' => '0']]]];
+        return collect(ParamsValidator::REQUIRED_POST_TYPES_KEY_BY_PARAM_NAME)
+            ->map(static fn(array $coverageAndPostTypes, string $name) => [
+                [$name => match ($name) {
+                    'latestReplyPostedAt' => '2024-01-01,2024-01-01',
+                    'threadProperties' => ['sticky'],
+                    default => '0',
+                }],
+                ['postTypes' => array_diff(Helper::POST_TYPES, $coverageAndPostTypes[1])],
+            ])
+            ->mapWithKeys(static fn(array $i, string $name) => ["40003, $name" => [40003, $i]])
+            ->all();
     }
 
     public static function provideValidate40004(): array
     {
-        return [[40004, [['postTypes' => ['thread']], ['tid' => '0'], ['orderBy' => 'spid']]]];
+        return collect(ParamsValidator::REQUIRED_POST_TYPES_KEY_BY_ORDER_BY_VALUE)
+            ->map(static fn(array $coverageAndPostTypes, string $name) => [
+                ['tid' => 0],
+                ['postTypes' => array_diff(Helper::POST_TYPES, $coverageAndPostTypes[1])],
+                ['orderBy' => $name],
+            ])
+            ->mapWithKeys(static fn(array $i, string $name) => ["40004, $name" => [40004, $i]])
+            ->all();
     }
 
     #[DataProvider('providerDateRangeParamValueOrder')]

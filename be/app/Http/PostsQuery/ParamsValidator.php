@@ -100,49 +100,59 @@ class ParamsValidator
 
     private static function isRequiredPostTypes(array $current, array $required): bool
     {
-        $required[1] = Arr::sort($required[1]);
-        return $required[0] === 'SUB'
-            ? array_diff($current, $required[1]) === []
-            : $current === $required[1];
+        /** @var 'SUB' | 'All' $coverage */
+        /** @var array $postTypes */
+        [$coverage, $postTypes] = $required;
+        $postTypes = Arr::sort($postTypes);
+        return match ($coverage) {
+            'SUB' => array_diff($current, $postTypes) === [],
+            'ALL' => $current === $postTypes,
+            default => throw new \Exception(),
+        };
     }
+
+    public const array REQUIRED_POST_TYPES_KEY_BY_PARAM_NAME = [
+        'pid' => ['SUB', ['reply', 'subReply']],
+        'spid' => ['ALL', ['subReply']],
+        'latestReplyPostedAt' => ['ALL', ['thread']],
+        'threadTitle' => ['ALL', ['thread']],
+        'postContent' => ['SUB', ['reply', 'subReply']],
+        'threadViewCount' => ['ALL', ['thread']],
+        'threadShareCount' => ['ALL', ['thread']],
+        'threadReplyCount' => ['ALL', ['thread']],
+        'replySubReplyCount' => ['ALL', ['reply']],
+        'threadProperties' => ['ALL', ['thread']],
+        'authorExpGrade' => ['SUB', ['reply', 'subReply']],
+        'latestReplierUid' => ['ALL', ['thread']],
+        'latestReplierName' => ['ALL', ['thread']],
+        'latestReplierDisplayName' => ['ALL', ['thread']],
+        'latestReplierGender' => ['ALL', ['thread']],
+    ];
 
     private function validate40003(array $currentPostTypes): void
     {
-        $paramsRequiredPostTypes = [
-            'pid' => ['SUB', ['reply', 'subReply']],
-            'spid' => ['ALL', ['subReply']],
-            'latestReplyPostedAt' => ['ALL', ['thread']],
-            'threadTitle' => ['ALL', ['thread']],
-            'postContent' => ['SUB', ['reply', 'subReply']],
-            'threadViewCount' => ['ALL', ['thread']],
-            'threadShareCount' => ['ALL', ['thread']],
-            'threadReplyCount' => ['ALL', ['thread']],
-            'replySubReplyCount' => ['ALL', ['reply']],
-            'threadProperties' => ['ALL', ['thread']],
-            'authorExpGrade' => ['SUB', ['reply', 'subReply']],
-            'latestReplierUid' => ['ALL', ['thread']],
-            'latestReplierName' => ['ALL', ['thread']],
-            'latestReplierDisplayName' => ['ALL', ['thread']],
-            'latestReplierGender' => ['ALL', ['thread']],
-        ];
-        foreach ($paramsRequiredPostTypes as $paramName => $requiredPostTypes) {
+        foreach (self::REQUIRED_POST_TYPES_KEY_BY_PARAM_NAME as $paramName => $requiredPostTypes) {
             if ($this->params->pick($paramName) !== []) {
                 Helper::abortAPIIfNot(40003, self::isRequiredPostTypes($currentPostTypes, $requiredPostTypes));
             }
         }
     }
 
+    public const array REQUIRED_POST_TYPES_KEY_BY_ORDER_BY_VALUE = [
+        'pid' => ['SUB', ['reply', 'subReply']],
+        'spid' => ['SUB', ['subReply']],
+    ];
+
     private function validate40004(array $currentPostTypes): void
     {
-        $orderByRequiredPostTypes = [
-            'pid' => ['SUB', ['reply', 'subReply']],
-            'spid' => ['SUB', ['subReply']],
-        ];
         $currentOrderBy = (string) $this->params->getUniqueParamValue('orderBy');
-        if (\array_key_exists($currentOrderBy, $orderByRequiredPostTypes)) {
+        if (\array_key_exists($currentOrderBy, self::REQUIRED_POST_TYPES_KEY_BY_ORDER_BY_VALUE)) {
             Helper::abortAPIIfNot(
                 40004,
-                self::isRequiredPostTypes($currentPostTypes, $orderByRequiredPostTypes[$currentOrderBy]),
+                self::isRequiredPostTypes(
+                    $currentPostTypes,
+                    self::REQUIRED_POST_TYPES_KEY_BY_ORDER_BY_VALUE[$currentOrderBy],
+                ),
             );
         }
     }

@@ -66,12 +66,26 @@ class QueryParamsTest extends TestCase
 
     public static function provideAddDefaultValueOnParams(): array
     {
-        return [[
-            [['tid' => 0], ['threadTitle' => 'test']],
-            [
-                ['tid' => 0, 'range' => '='],
-                ['threadTitle' => 'test', 'matchBy' => 'explicit', 'spaceSplit' => false],
-            ],
-        ]];
+        return collect(QueryParams::PARAM_NAME_KEY_BY_TYPE)
+            ->flatMap(static fn(array $names, string $type) =>
+                array_map(static fn(string $name) => [$type, $name], $names))
+            ->mapWithKeys(static fn(array $typeAndName) => [$typeAndName[1] => $typeAndName])
+            ->map(static function (array $typeAndName) {
+                /** @var 'numeric' | 'text' $name */
+                /** @var string $name */
+                [$type, $name] = $typeAndName;
+                $param = [
+                    $name => match ($type) {
+                        'numeric' => 0,
+                        'text' => 'test',
+                        default => throw new \Exception(),
+                    },
+                ];
+                return [
+                    [$param],
+                    [[...$param, ...QueryParams::PARAM_DEFAULT_VALUE_KEY_BY_TYPE[$type]]],
+                ];
+            })
+            ->all();
     }
 }

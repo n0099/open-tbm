@@ -84,37 +84,39 @@ class QueryParams
         }
     }
 
+    public const array PARAM_DEFAULT_VALUE_KEY_BY_TYPE = [
+        'numeric' => ['range' => '='],
+        'text' => ['matchBy' => 'explicit', 'spaceSplit' => false],
+    ];
+
+    public const array PARAM_NAME_KEY_BY_TYPE = [
+        'numeric' => [
+            'tid',
+            'pid',
+            'spid',
+            'threadViewCount',
+            'threadShareCount',
+            'threadReplyCount',
+            'replySubReplyCount',
+            'authorUid',
+            'authorExpGrade',
+            'latestReplierUid',
+        ],
+        'text' => [
+            'threadTitle',
+            'postContent',
+            'authorName',
+            'authorDisplayName',
+            'latestReplierName',
+            'latestReplierDisplayName',
+        ],
+    ];
+
     public function addDefaultValueOnParams(): void
     {
-        $paramDefaultValueByType = [
-            'numeric' => ['range' => '='],
-            'text' => ['matchBy' => 'explicit', 'spaceSplit' => false],
-        ];
-        $paramsNameByType = [
-            'numeric' => [
-                'tid',
-                'pid',
-                'spid',
-                'threadViewCount',
-                'threadShareCount',
-                'threadReplyCount',
-                'replySubReplyCount',
-                'authorUid',
-                'authorExpGrade',
-                'latestReplierUid',
-            ],
-            'text' => [
-                'threadTitle',
-                'postContent',
-                'authorName',
-                'authorDisplayName',
-                'latestReplierName',
-                'latestReplierDisplayName',
-            ],
-        ];
-        $subParamsDefaultValue = collect($paramsNameByType)
+        $subParamsDefaultValue = collect(self::PARAM_NAME_KEY_BY_TYPE)
             ->mapWithKeys(static fn(array $names, string $type) =>
-                array_fill_keys($names, $paramDefaultValueByType[$type]));
+                array_fill_keys($names, self::PARAM_DEFAULT_VALUE_KEY_BY_TYPE[$type]));
         foreach ($this->params as $param) { // set sub params with default value
             foreach ($subParamsDefaultValue->get($param->name, []) as $name => $value) {
                 if ($param->getSub($name) === null) {
