@@ -4,11 +4,12 @@ namespace App\Http\Middleware;
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
 
 class DumpJsonResponse
 {
-    /** @param \Closure(Request): (\Symfony\Component\HttpFoundation\Response) $next */
-    public function handle(Request $request, \Closure $next): mixed
+    /** @param \Closure(Request): (Response) $next */
+    public function handle(Request $request, \Closure $next): Response
     {
         $response = $next($request);
         if ($response instanceof JsonResponse) {

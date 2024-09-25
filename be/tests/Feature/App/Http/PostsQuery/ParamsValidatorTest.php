@@ -6,7 +6,6 @@ use App\Helper;
 use App\Http\PostsQuery\ParamsValidator;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Facades\App;
 use Illuminate\Validation\Factory;
 use Illuminate\Validation\ValidationException;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -18,7 +17,7 @@ class ParamsValidatorTest extends TestCase
 {
     public static function newParamsValidator(array $rawParams): ParamsValidator
     {
-        return new ParamsValidator(App::make(Factory::class), $rawParams);
+        return new ParamsValidator(app(Factory::class), $rawParams);
     }
 
     #[DataProvider('provideValidate40001')]

@@ -28,12 +28,14 @@ jobs:
           --coverage-xml=coverage/coverage-xml
           --log-junit=coverage/junit.xml
         # https://infection.github.io/guide/command-line-options.html#coverage
-      - uses: actions/upload-artifact@v4
+      - if: always()
+        uses: actions/upload-artifact@v4
         with:
           name: coverage-${{ inputs.runs-on }}
           path: be/coverage/clover.xml
           compression-level: 9
-      - run: ./vendor/bin/infection --coverage=coverage --skip-initial-tests
+      - if: always()
+        run: ./vendor/bin/infection --coverage=coverage --skip-initial-tests
 
   phan:
     runs-on: ${{ inputs.runs-on }}
