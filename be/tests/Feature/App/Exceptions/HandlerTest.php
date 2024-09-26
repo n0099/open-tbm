@@ -6,10 +6,12 @@ use App\Exceptions\Handler;
 use Illuminate\Container\Container;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Validation\Factory;
+use PHPUnit\Framework\Attributes\CoversClass;
 use ReflectionMethod;
 use Symfony\Component\HttpFoundation\Response;
 use Tests\TestCase;
 
+#[CoversClass(Handler::class)]
 class HandlerTest extends TestCase
 {
     private Handler $sut;

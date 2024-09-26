@@ -8,7 +8,7 @@ class NullableNumericAttributeCast implements CastsAttributes
 {
     public function get($model, string $key, $value, array $attributes): ?int
     {
-        return $value === null ? 0 : $value;
+        return $value ?? 0;
     }
 
     public function set($model, string $key, $value, array $attributes): ?int

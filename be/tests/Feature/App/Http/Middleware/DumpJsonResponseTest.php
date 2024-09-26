@@ -7,8 +7,10 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\UrlGenerator;
 use Illuminate\Support\Facades\Config;
+use PHPUnit\Framework\Attributes\CoversClass;
 use Tests\TestCase;
 
+#[CoversClass(DumpJsonResponse::class)]
 class DumpJsonResponseTest extends TestCase
 {
     protected function setUp(): void

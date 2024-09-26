@@ -13,8 +13,8 @@ class ModelAttributeMaker
      */
     public static function makeProtoBufAttribute(string $protoBufClass): Attribute
     {
-        return Attribute::make(/** @param resource|null $value */
-            get: static function ($value) use ($protoBufClass): ?\stdClass {
+        return Attribute::get(/** @param resource|null $value */
+            static function ($value) use ($protoBufClass): ?\stdClass {
                 if ($value === null) {
                     return null;
                 }
@@ -29,11 +29,11 @@ class ModelAttributeMaker
     /** @return Attribute<string, void> */
     public static function makeResourceAttribute(): Attribute
     {
-        return Attribute::make(/**
+        return Attribute::get(/**
              * @param resource|null $value
              * @return string
              */
-            get: static fn($value) => $value === null ? null : stream_get_contents($value),
+            static fn($value) => $value === null ? null : stream_get_contents($value),
         )->shouldCache();
     }
 }
