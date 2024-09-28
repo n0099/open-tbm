@@ -40,6 +40,18 @@
             "./tests/bootstrap.php"
         ]
     },
+    "spatie/symfony-ignition-bundle": {
+        "version": "1.1",
+        "recipe": {
+            "repo": "github.com/symfony/recipes-contrib",
+            "branch": "main",
+            "version": "0.0",
+            "ref": "5e504db6aa95f5d8f664f6c9e073c406fb60c85d"
+        },
+        "files": [
+            "./config/packages/ignition.yaml"
+        ]
+    },
     "symfony/console": {
         "version": "7.1",
         "recipe": {
@@ -130,6 +142,19 @@
         "files": [
             "./config/packages/routing.yaml",
             "./config/routes.yaml"
+        ]
+    },
+    "symfony/translation": {
+        "version": "7.1",
+        "recipe": {
+            "repo": "github.com/symfony/recipes",
+            "branch": "main",
+            "version": "6.3",
+            "ref": "e28e27f53663cc34f0be2837aba18e3a1bef8e7b"
+        },
+        "files": [
+            "./config/packages/translation.yaml",
+            "./translations/.gitignore"
         ]
     },
     "symfony/twig-bundle": {
