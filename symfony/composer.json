@@ -9,7 +9,6 @@
         "ext-iconv": "*",
         "doctrine/dbal": "^3",
         "doctrine/doctrine-bundle": "^2.13",
-        "doctrine/doctrine-migrations-bundle": "^3.3",
         "doctrine/orm": "^3.2",
         "illuminate/collections": "^11.25",
         "symfony/asset": "7.1.*",
