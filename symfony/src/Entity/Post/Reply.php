@@ -2,8 +2,10 @@
 
 namespace App\Entity\Post;
 
+use App\Entity\BlobResourceGetter;
 use App\Repository\Post\ReplyRepository;
 use Doctrine\ORM\Mapping as ORM;
+use TbClient\Post\Common\Lbs;
 
 #[ORM\Entity(repositoryClass: ReplyRepository::class)]
 class Reply extends Post
@@ -13,7 +15,8 @@ class Reply extends Post
     #[ORM\Column] private int $floor;
     #[ORM\Column] private ?int $subReplyCount;
     #[ORM\Column] private ?int $isFold;
-    #[ORM\Column] private ?string $geolocation;
+    /** @type resource|null */
+    #[ORM\Column] private $geolocation;
     #[ORM\Column] private ?int $signatureId;
 
     public function getTid(): int
@@ -41,9 +44,9 @@ class Reply extends Post
         return $this->isFold;
     }
 
-    public function getGeolocation(): ?string
+    public function getGeolocation(): ?\stdClass
     {
-        return $this->geolocation;
+        return BlobResourceGetter::protoBuf($this->geolocation, Lbs::class);
     }
 
     public function getSignatureId(): ?int

@@ -2,8 +2,11 @@
 
 namespace App\Entity\Post;
 
+use App\Entity\BlobResourceGetter;
 use App\Repository\Post\ThreadRepository;
 use Doctrine\ORM\Mapping as ORM;
+use TbClient\Post\Common\Lbs;
+use TbClient\Post\Common\Zan;
 
 #[ORM\Entity(repositoryClass: ThreadRepository::class)]
 class Thread extends Post
@@ -18,8 +21,10 @@ class Thread extends Post
     #[ORM\Column] private ?int $replyCount;
     #[ORM\Column] private ?int $viewCount;
     #[ORM\Column] private ?int $shareCount;
-    #[ORM\Column] private ?string $zan;
-    #[ORM\Column] private ?string $geolocation;
+    /** @type resource|null */
+    #[ORM\Column] private $zan;
+    /** @type resource|null */
+    #[ORM\Column] private $geolocation;
     #[ORM\Column] private ?string $authorPhoneType;
 
     public function getTid(): int
@@ -72,14 +77,14 @@ class Thread extends Post
         return $this->shareCount;
     }
 
-    public function getZan(): ?string
+    public function getZan(): ?\stdClass
     {
-        return $this->zan;
+        return BlobResourceGetter::protoBuf($this->zan, Zan::class);
     }
 
-    public function getGeolocation(): ?string
+    public function getGeolocation(): ?\stdClass
     {
-        return $this->geolocation;
+        return BlobResourceGetter::protoBuf($this->geolocation, Lbs::class);
     }
 
     public function getAuthorPhoneType(): ?string
