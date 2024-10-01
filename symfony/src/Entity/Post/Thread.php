@@ -1,4 +1,4 @@
-<?php
+<?php /** @noinspection PhpPropertyOnlyWrittenInspection */
 
 namespace App\Entity\Post;
 
@@ -6,7 +6,7 @@ use App\Repository\Post\ThreadRepository;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: ThreadRepository::class)]
-class Thread
+class Thread extends Post
 {
     #[ORM\Id, ORM\Column] private int $tid;
     #[ORM\Column] private int $threadType;
@@ -14,7 +14,6 @@ class Thread
     #[ORM\Column] private ?string $topicType;
     #[ORM\Column] private ?int $isGood;
     #[ORM\Column] private string $title;
-    #[ORM\Column] private int $authorUid;
     #[ORM\Column] private int $postedAt;
     #[ORM\Column] private int $latestReplyPostedAt;
     #[ORM\Column] private ?int $replyCount;
@@ -25,9 +24,6 @@ class Thread
     #[ORM\Column] private ?string $zan;
     #[ORM\Column] private ?string $geolocation;
     #[ORM\Column] private ?string $authorPhoneType;
-    #[ORM\Column] private int $createdAt;
-    #[ORM\Column] private ?int $updatedAt;
-    #[ORM\Column] private ?int $lastSeenAt;
 
     public function getTid(): int
     {
@@ -57,11 +53,6 @@ class Thread
     public function getTitle(): string
     {
         return $this->title;
-    }
-
-    public function getAuthorUid(): int
-    {
-        return $this->authorUid;
     }
 
     public function getPostedAt(): int
@@ -112,20 +103,5 @@ class Thread
     public function getAuthorPhoneType(): ?string
     {
         return $this->authorPhoneType;
-    }
-
-    public function getCreatedAt(): int
-    {
-        return $this->createdAt;
-    }
-
-    public function getUpdatedAt(): ?int
-    {
-        return $this->updatedAt;
-    }
-
-    public function getLastSeenAt(): ?int
-    {
-        return $this->lastSeenAt;
     }
 }

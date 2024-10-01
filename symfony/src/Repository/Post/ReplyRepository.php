@@ -2,17 +2,17 @@
 
 namespace App\Repository\Post;
 
-use App\Entity\Post\Thread;
+use App\Entity\Post\Reply;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
- * @extends PostRepository<Thread>
+ * @extends PostRepository<Reply>
  */
-class ThreadRepository extends PostRepository
+class ReplyRepository extends PostRepository
 {
     public function __construct(ManagerRegistry $registry, EntityManagerInterface $entityManager, int $fid)
     {
-        parent::__construct($registry, $entityManager, Thread::class, 'thread', $fid);
+        parent::__construct($registry, $entityManager, Reply::class, 'reply', $fid);
     }
 }
