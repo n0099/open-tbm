@@ -8,7 +8,7 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\Entity(repositoryClass: ThreadRepository::class)]
 class Thread extends Post
 {
-    #[ORM\Id, ORM\Column] private int $tid;
+    #[ORM\Column, ORM\Id] private int $tid;
     #[ORM\Column] private int $threadType;
     #[ORM\Column] private ?string $stickyType;
     #[ORM\Column] private ?string $topicType;

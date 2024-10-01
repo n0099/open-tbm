@@ -9,7 +9,7 @@ use Doctrine\ORM\Mapping as ORM;
 class SubReply extends Post
 {
     #[ORM\Column] private int $pid;
-    #[ORM\Id, ORM\Column] private int $spid;
+    #[ORM\Column, ORM\Id] private int $spid;
     #[ORM\Column] private int $postedAt;
     #[ORM\Column] private ?int $agreeCount;
     #[ORM\Column] private ?int $disagreeCount;

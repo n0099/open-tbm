@@ -8,7 +8,7 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\Entity(repositoryClass: ReplyRepository::class)]
 class Reply extends Post
 {
-    #[ORM\Id, ORM\Column] private int $pid;
+    #[ORM\Column, ORM\Id] private int $pid;
     #[ORM\Column] private int $floor;
     #[ORM\Column] private ?int $subReplyCount;
     #[ORM\Column] private int $postedAt;
