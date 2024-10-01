@@ -33,12 +33,12 @@
       },
       "Npgsql.EntityFrameworkCore.PostgreSQL.NetTopologySuite": {
         "type": "Direct",
-        "requested": "[8.0.4, )",
-        "resolved": "8.0.4",
-        "contentHash": "H4k6jTunSNB8VXW5GqFyq+fWUcz/u6CenUlk9vi+C5TXdMJAXbBIclcUlITjVPd/XRQvT0UnVrt8njEYrwdMRA==",
+        "requested": "[8.0.8, )",
+        "resolved": "8.0.8",
+        "contentHash": "hMljtFEu1n+Yr2vmRQgxIOs4qyisqkNwPFjlhIyrc/3xvT7bCQmG2F0Mt3FCW6dykRd5wHk3No3YWlx0AYDqeQ==",
         "dependencies": {
-          "Npgsql.EntityFrameworkCore.PostgreSQL": "8.0.4",
-          "Npgsql.NetTopologySuite": "8.0.3"
+          "Npgsql.EntityFrameworkCore.PostgreSQL": "8.0.8",
+          "Npgsql.NetTopologySuite": "8.0.4"
         }
       },
       "OpenCvSharp4": {
@@ -183,10 +183,10 @@
       },
       "Microsoft.EntityFrameworkCore.Relational": {
         "type": "Transitive",
-        "resolved": "8.0.4",
-        "contentHash": "aWLT6e9a8oMzXgF0YQpYYa3mDeU+yb2UQSQ+RrIgyGgSpzPfSKgpA7v2kOVDuZr2AQ6NNAlWPaBG7wZuKQI96w==",
+        "resolved": "8.0.8",
+        "contentHash": "3WnrwdXxKg4L98cDx0lNEEau8U2lsfuBJCs0Yzht+5XVTmahboM7MukKfQHAzVsHUPszm6ci929S7Qas0WfVHA==",
         "dependencies": {
-          "Microsoft.EntityFrameworkCore": "8.0.4",
+          "Microsoft.EntityFrameworkCore": "8.0.8",
           "Microsoft.Extensions.Configuration.Abstractions": "8.0.0"
         }
       },
@@ -548,31 +548,31 @@
       },
       "Npgsql": {
         "type": "Transitive",
-        "resolved": "8.0.3",
-        "contentHash": "6WEmzsQJCZAlUG1pThKg/RmeF6V+I0DmBBBE/8YzpRtEzhyZzKcK7ulMANDm5CkxrALBEC8H+5plxHWtIL7xnA==",
+        "resolved": "8.0.4",
+        "contentHash": "vaYEUlF/pB9m8bs21wQv3Da0kMHT4A9USe47VfY/L2BO97xz5KfIxhEu22QS9d68ZrLxvtL3wQDfDLPr2OjbjA==",
         "dependencies": {
           "Microsoft.Extensions.Logging.Abstractions": "8.0.0"
         }
       },
       "Npgsql.EntityFrameworkCore.PostgreSQL": {
         "type": "Transitive",
-        "resolved": "8.0.4",
-        "contentHash": "/hHd9MqTRVDgIpsToCcxMDxZqla0HAQACiITkq1+L9J2hmHKV6lBAPlauF+dlNSfHpus7rrljWx4nAanKD6qAw==",
+        "resolved": "8.0.8",
+        "contentHash": "D5WWJZJTgZYUmGv66BARXbTlinp2a5f5RueJqGYoHuWJw02J0i2va/RA+8N4A5hLORK5YKMRqXhFWtKsZdrksw==",
         "dependencies": {
-          "Microsoft.EntityFrameworkCore": "8.0.4",
-          "Microsoft.EntityFrameworkCore.Abstractions": "8.0.4",
-          "Microsoft.EntityFrameworkCore.Relational": "8.0.4",
-          "Npgsql": "8.0.3"
+          "Microsoft.EntityFrameworkCore": "8.0.8",
+          "Microsoft.EntityFrameworkCore.Abstractions": "8.0.8",
+          "Microsoft.EntityFrameworkCore.Relational": "8.0.8",
+          "Npgsql": "8.0.4"
         }
       },
       "Npgsql.NetTopologySuite": {
         "type": "Transitive",
-        "resolved": "8.0.3",
-        "contentHash": "Lvz8BOojjhbn9hA9D7+NLUfj5poKhU4wAgKWC9Gj5fFt73JZpMBdm9tea0yyXPR89GYa7nhYpPYP2L28lBb1Wg==",
+        "resolved": "8.0.4",
+        "contentHash": "3henjF4ffHaHi0Ovdq8pQKEVHidlKCXar5bso28ZVqnZSGgjAABZrqy6cR1DRcOZ78tVsZS/aJAun10eCZBeiQ==",
         "dependencies": {
           "NetTopologySuite": "2.5.0",
           "NetTopologySuite.IO.PostGIS": "2.1.0",
-          "Npgsql": "8.0.3"
+          "Npgsql": "8.0.4"
         }
       },
       "Polly": {
@@ -915,7 +915,7 @@
           "Microsoft.EntityFrameworkCore": "[8.0.8, )",
           "Microsoft.Extensions.Hosting": "[8.0.0, )",
           "NLog.Extensions.Logging": "[5.3.14, )",
-          "Npgsql.EntityFrameworkCore.PostgreSQL": "[8.0.4, )",
+          "Npgsql.EntityFrameworkCore.PostgreSQL": "[8.0.8, )",
           "SuperLinq": "[6.2.0, )"
         }
       }
