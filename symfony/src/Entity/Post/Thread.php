@@ -14,13 +14,10 @@ class Thread extends Post
     #[ORM\Column] private ?string $topicType;
     #[ORM\Column] private ?int $isGood;
     #[ORM\Column] private string $title;
-    #[ORM\Column] private int $postedAt;
     #[ORM\Column] private int $latestReplyPostedAt;
     #[ORM\Column] private ?int $replyCount;
     #[ORM\Column] private ?int $viewCount;
     #[ORM\Column] private ?int $shareCount;
-    #[ORM\Column] private ?int $agreeCount;
-    #[ORM\Column] private ?int $disagreeCount;
     #[ORM\Column] private ?string $zan;
     #[ORM\Column] private ?string $geolocation;
     #[ORM\Column] private ?string $authorPhoneType;
@@ -55,11 +52,6 @@ class Thread extends Post
         return $this->title;
     }
 
-    public function getPostedAt(): int
-    {
-        return $this->postedAt;
-    }
-
     public function getLatestReplyPostedAt(): int
     {
         return $this->latestReplyPostedAt;
@@ -78,16 +70,6 @@ class Thread extends Post
     public function getShareCount(): ?int
     {
         return $this->shareCount;
-    }
-
-    public function getAgreeCount(): ?int
-    {
-        return $this->agreeCount;
-    }
-
-    public function getDisagreeCount(): ?int
-    {
-        return $this->disagreeCount;
     }
 
     public function getZan(): ?string

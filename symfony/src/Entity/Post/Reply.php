@@ -8,15 +8,18 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\Entity(repositoryClass: ReplyRepository::class)]
 class Reply extends Post
 {
+    #[ORM\Column] private int $tid;
     #[ORM\Column, ORM\Id] private int $pid;
     #[ORM\Column] private int $floor;
     #[ORM\Column] private ?int $subReplyCount;
-    #[ORM\Column] private int $postedAt;
     #[ORM\Column] private ?int $isFold;
-    #[ORM\Column] private ?int $agreeCount;
-    #[ORM\Column] private ?int $disagreeCount;
     #[ORM\Column] private ?string $geolocation;
     #[ORM\Column] private ?int $signatureId;
+
+    public function getTid(): int
+    {
+        return $this->tid;
+    }
 
     public function getPid(): int
     {
@@ -33,24 +36,9 @@ class Reply extends Post
         return $this->subReplyCount;
     }
 
-    public function getPostedAt(): int
-    {
-        return $this->postedAt;
-    }
-
     public function getIsFold(): ?int
     {
         return $this->isFold;
-    }
-
-    public function getAgreeCount(): ?int
-    {
-        return $this->agreeCount;
-    }
-
-    public function getDisagreeCount(): ?int
-    {
-        return $this->disagreeCount;
     }
 
     public function getGeolocation(): ?string
