@@ -62,19 +62,19 @@ class Thread extends Post
         return $this->latestReplyPostedAt;
     }
 
-    public function getReplyCount(): ?int
+    public function getReplyCount(): int
     {
-        return $this->replyCount;
+        return $this->replyCount ?? 0;
     }
 
-    public function getViewCount(): ?int
+    public function getViewCount(): int
     {
-        return $this->viewCount;
+        return $this->viewCount ?? 0;
     }
 
-    public function getShareCount(): ?int
+    public function getShareCount(): int
     {
-        return $this->shareCount;
+        return $this->shareCount ?? 0;
     }
 
     public function getZan(): ?\stdClass

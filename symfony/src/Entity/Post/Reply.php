@@ -34,9 +34,9 @@ class Reply extends Post
         return $this->floor;
     }
 
-    public function getSubReplyCount(): ?int
+    public function getSubReplyCount(): int
     {
-        return $this->subReplyCount;
+        return $this->subReplyCount ?? 0;
     }
 
     public function getIsFold(): ?int

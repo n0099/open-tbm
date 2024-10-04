@@ -29,13 +29,13 @@ abstract class Post extends TimestampedEntity
         return $this->lastSeenAt;
     }
 
-    public function getAgreeCount(): ?int
+    public function getAgreeCount(): int
     {
-        return $this->agreeCount;
+        return $this->agreeCount ?? 0;
     }
 
-    public function getDisagreeCount(): ?int
+    public function getDisagreeCount(): int
     {
-        return $this->disagreeCount;
+        return $this->disagreeCount ?? 0;
     }
 }
