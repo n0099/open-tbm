@@ -12,7 +12,7 @@ class LatestReplier extends TimestampedEntity
     #[ORM\Column, ORM\Id] private int $id;
     #[ORM\Column] private ?int $uid;
     #[ORM\Column] private ?string $name;
-    /** @type resource|null */
+    /** @type ?resource */
     #[ORM\Column] private $displayName;
 
     public function getId(): int

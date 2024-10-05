@@ -21,9 +21,9 @@ class Thread extends Post
     #[ORM\Column] private ?int $replyCount;
     #[ORM\Column] private ?int $viewCount;
     #[ORM\Column] private ?int $shareCount;
-    /** @type resource|null */
+    /** @type ?resource */
     #[ORM\Column] private $zan;
-    /** @type resource|null */
+    /** @type ?resource */
     #[ORM\Column] private $geolocation;
     #[ORM\Column] private ?string $authorPhoneType;
 
@@ -77,12 +77,12 @@ class Thread extends Post
         return $this->shareCount ?? 0;
     }
 
-    public function getZan(): ?\stdClass
+    public function getZan(): ?Zan
     {
         return BlobResourceGetter::protoBuf($this->zan, Zan::class);
     }
 
-    public function getGeolocation(): ?\stdClass
+    public function getGeolocation(): ?Lbs
     {
         return BlobResourceGetter::protoBuf($this->geolocation, Lbs::class);
     }

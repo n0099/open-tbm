@@ -12,13 +12,13 @@ class User extends TimestampedEntity
 {
     #[ORM\Column, ORM\Id] private int $uid;
     #[ORM\Column] private ?string $name;
-    /** @type resource|null */
+    /** @type ?resource */
     #[ORM\Column] private $displayName;
     #[ORM\Column] private string $portrait;
     #[ORM\Column] private ?int $portraitUpdatedAt;
     #[ORM\Column] private ?int $gender;
     #[ORM\Column] private ?string $fansNickname;
-    /** @type resource|null */
+    /** @type ?resource */
     #[ORM\Column] private $icon;
     #[ORM\Column] private string $ipGeolocation;
 
@@ -57,7 +57,7 @@ class User extends TimestampedEntity
         return $this->fansNickname;
     }
 
-    public function getIcon(): ?\stdClass
+    public function getIcon(): ?Icon
     {
         return BlobResourceGetter::protoBuf($this->icon, Icon::class);
     }

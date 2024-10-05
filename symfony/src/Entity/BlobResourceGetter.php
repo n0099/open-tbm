@@ -7,21 +7,23 @@ use Google\Protobuf\Internal\Message;
 class BlobResourceGetter
 {
     /**
-     * @param resource|null $value
-     * @param class-string<Message> $protoBufClass
+     * @param ?resource $value
+     * @param class-string<T> $protoBufClass
+     * @template T extends Message
+     * @return ?T
      */
-    public static function protoBuf($value, string $protoBufClass): ?\stdClass
+    public static function protoBuf($value, string $protoBufClass): ?Message
     {
         if ($value === null) {
             return null;
         }
         $protoBuf = new $protoBufClass();
         $protoBuf->mergeFromString(self::resource($value));
-        return \Safe\json_decode($protoBuf->serializeToJsonString());
+        return $protoBuf;
     }
 
     /**
-     * @param resource|null $value
+     * @param ?resource $value
      */
     public static function resource($value): ?string
     {

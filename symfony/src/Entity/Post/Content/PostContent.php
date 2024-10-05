@@ -9,10 +9,10 @@ use TbClient\Wrapper\PostContentWrapper;
 #[ORM\MappedSuperclass]
 abstract class PostContent
 {
-    /** @type resource|null */
+    /** @type ?resource */
     #[ORM\Column] private $protoBufBytes;
 
-    public function getProtoBufBytes(): ?\stdClass
+    public function getProtoBufBytes(): ?PostContentWrapper
     {
         return BlobResourceGetter::protoBuf($this->protoBufBytes, PostContentWrapper::class);
     }

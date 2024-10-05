@@ -15,7 +15,7 @@ class Reply extends Post
     #[ORM\Column] private int $floor;
     #[ORM\Column] private ?int $subReplyCount;
     #[ORM\Column] private ?int $isFold;
-    /** @type resource|null */
+    /** @type ?resource */
     #[ORM\Column] private $geolocation;
     #[ORM\Column] private ?int $signatureId;
 
@@ -44,7 +44,7 @@ class Reply extends Post
         return $this->isFold;
     }
 
-    public function getGeolocation(): ?\stdClass
+    public function getGeolocation(): ?Lbs
     {
         return BlobResourceGetter::protoBuf($this->geolocation, Lbs::class);
     }
