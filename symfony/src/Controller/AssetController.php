@@ -12,7 +12,6 @@ use Symfony\Component\Routing\Attribute\Route;
 class AssetController extends AbstractController
 {
     public function __construct(
-        private readonly ParameterBagInterface $parameterBag,
         private readonly Filesystem $filesystem,
         private readonly Packages $assets,
     ) {}
@@ -29,7 +28,7 @@ class AssetController extends AbstractController
                 '@^//# sourceMappingURL=.+$@m' =>
                     static fn() => '',
             ], $this->filesystem->readFile(
-                $this->parameterBag->get('kernel.project_dir') . "/public/react-json-view/$filename"
+                $this->getParameter('kernel.project_dir') . "/public/react-json-view/$filename"
             )),
             headers: ['Content-Type' => 'text/javascript']
         );
