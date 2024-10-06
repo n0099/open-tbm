@@ -14,7 +14,7 @@ readonly class Validator
     {
         $errors = $this->validator->validate($value, $constraints);
         if ($errors->count() !== 0) {
-            throw new ValidationFailedException(null, $errors);
+            throw new ValidationFailedException($value, $errors);
         }
     }
 }

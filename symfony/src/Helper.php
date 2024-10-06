@@ -93,6 +93,7 @@ class Helper
         if ($errorInfo === null) {
             throw new \InvalidArgumentException('Given error code doesn\'t existed');
         }
-        throw new HttpException($statusCode, \Safe\json_encode(compact('errorCode', 'errorInfo')));
+        $json = \Safe\json_encode(compact('errorCode', 'errorInfo'));
+        throw HttpException::fromStatusCode($statusCode, $json, code: $errorCode);
     }
 }
