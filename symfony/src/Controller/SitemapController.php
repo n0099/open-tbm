@@ -5,7 +5,7 @@ namespace App\Controller;
 use App\Helper;
 use App\Repository\ForumRepository;
 use App\Repository\Post\PostRepositoryFactory;
-use App\Validator;
+use App\Validator\Validator;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -48,7 +48,7 @@ class SitemapController extends AbstractController
     public function threads(Request $request, Validator $validator, int $fid): Response
     {
         $cursor = $request->query->get('cursor') ?? 0;
-        $validator($cursor, new Assert\Type('digit'));
+        $validator->validate($cursor, new Assert\Type('digit'));
         Helper::abortAPIIfNot(40406, $this->forumRepository->isForumExists($fid));
 
         return $this->cache->get(
