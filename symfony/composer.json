@@ -12,7 +12,6 @@
         "doctrine/doctrine-bundle": "^2.13.0",
         "doctrine/orm": "^3.2.2",
         "google/protobuf": "^4.28.2",
-        "google/recaptcha": "^1.3.0",
         "illuminate/collections": "^11.26.0",
         "spatie/laravel-collection-macros": "^7.14.1",
         "spatie/regex": "^3.1.1",
