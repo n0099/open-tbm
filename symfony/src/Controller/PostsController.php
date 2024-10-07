@@ -13,7 +13,7 @@ use App\Validator\Validator;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpFoundation\ParameterBag;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Stopwatch\Stopwatch;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -29,16 +29,16 @@ class PostsController extends AbstractController
     ) {}
 
     #[Route('/posts')]
-    public function query(ParameterBag $parameterBag): array
+    public function query(Request $request): array
     {
-        $this->validator->validate($parameterBag->all(), new Assert\Collection([
-            'cursor' => new Assert\Regex( // https://stackoverflow.com/questions/475074/regex-to-parse-or-validate-base64-data
+        $this->validator->validate($request->query->all(), new Assert\Collection([
+            'cursor' => new Assert\Optional(new Assert\Regex( // https://stackoverflow.com/questions/475074/regex-to-parse-or-validate-base64-data
                 // (,|$)|,){5,6} means allow at most 5~6 parts of base64 segment or empty string to exist
                 '/^(([A-Za-z0-9-_]{4})*([A-Za-z0-9-_]{2,3})(,|$)|,){5,6}$/'
-            ),
-            'query' => new Assert\Json(),
+            )),
+            'query' => new Assert\Required(new Assert\Json()),
         ]));
-        $validator = new ParamsValidator($this->validator, \Safe\json_decode($parameterBag->get('query'), true));
+        $validator = new ParamsValidator($this->validator, \Safe\json_decode($request->query->get('query'), true));
         $params = $validator->params;
 
         $postIDParams = $params->pick(...Helper::POST_ID);

@@ -76,7 +76,7 @@ class ParamsValidator
             // latestReplierName, latestReplierDisplayName
             'matchBy' => new Assert\Choice(['implicit', 'explicit', 'regex']),
             'spaceSplit' => new Assert\Type('boolean'),
-        ]));
+        ], allowMissingFields: true));
     }
 
     private function validate40001(): void

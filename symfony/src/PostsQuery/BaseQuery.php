@@ -91,27 +91,23 @@ abstract class BaseQuery
                 static fn(QueryBuilder $acc, $cursorValue, string $cursorField): QueryBuilder =>
                     $acc->andWhere("t.$cursorField > :cursorValue")->setParameter('cursorValue', $cursorValue),
                 $qb
-            )?->setMaxResults($this->perPageItems + 1);
+            );
         });
         $this->stopwatch->stop('initPaginators');
 
-        $hasMorePages = false;
+        $resultsAndHasMorePages = $paginators->map(static fn(QueryBuilder $paginator) =>
+            self::hasQueryResultMorePages($paginator, $this->perPageItems));
         /** @var Collection<string, Collection> $postsKeyByTypePluralName */
-        $postsKeyByTypePluralName = $paginators
-            ->mapWithKeys(function (QueryBuilder $paginator, string $postType) use (&$hasMorePages) {
-                $posts = collect($paginator->getQuery()->getResult());
-                if ($posts->count() === $this->perPageItems + 1) {
-                    $posts->pop();
-                    $hasMorePages = true;
-                }
-                return [Helper::POST_TYPE_TO_PLURAL[$postType] => $posts];
-            });
+        $postsKeyByTypePluralName = $resultsAndHasMorePages
+            ->mapWithKeys(fn(array $resultAndHasMorePages, string $postType) =>
+                [Helper::POST_TYPE_TO_PLURAL[$postType] => $resultAndHasMorePages['result']]);
         Helper::abortAPIIf(40401, $postsKeyByTypePluralName->every(static fn(Collection $i) => $i->isEmpty()));
         $this->queryResult = ['fid' => $fid, ...$postsKeyByTypePluralName];
 
         $this->queryResultPages = [
             'currentCursor' => $cursorParamValue ?? '',
-            'nextCursor' => $hasMorePages
+            'nextCursor' => $resultsAndHasMorePages->pluck('hasMorePages')
+                    ->filter()->isNotEmpty() // filter() remove falsy
                 ? $this->cursorCodec->encodeNextCursor(
                     $queryByPostIDParamName === null
                         ? $postsKeyByTypePluralName
@@ -122,6 +118,19 @@ abstract class BaseQuery
         ];
 
         $this->stopwatch->stop('setResult');
+    }
+
+    /**
+     * @return array{result: Collection, hasMorePages: bool}
+     */
+    public static function hasQueryResultMorePages(QueryBuilder $query, int $limit): array
+    {
+        $results = collect($query->setMaxResults($limit + 1)->getQuery()->getResult());
+        if ($results->count() === $limit + 1) {
+            $results->pop();
+            $hasMorePages = true;
+        }
+        return ['result' => $results, 'hasMorePages' => $hasMorePages ?? false];
     }
 
     /**

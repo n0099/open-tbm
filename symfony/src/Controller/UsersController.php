@@ -3,10 +3,12 @@
 namespace App\Controller;
 
 use App\Helper;
+use App\PostsQuery\BaseQuery;
 use App\Repository\UserRepository;
 use App\Validator\Validator;
 use Doctrine\ORM\QueryBuilder;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Validator\Constraints as Assert;
 
@@ -20,48 +22,45 @@ class UsersController extends AbstractController
     ) {}
 
     #[Route('/users')]
-    public function query(): array
+    public function query(Request $request): array
     {
-        $queryParams = \Safe\json_decode($this->getParameter('query'));
+        $queryParams = $request->query->all();
         $paramConstraints = [
             'uid' => new Assert\Type('digit'),
             'name' => new Assert\Type('string'),
             'displayName' => new Assert\Type('string'),
             'gender' => new Assert\Choice(['0', '1', '2', 'NULL']),
         ];
-        $this->validator->validate($queryParams, new Assert\Collection($paramConstraints));
+        $this->validator->validate($queryParams, new Assert\Collection($paramConstraints, allowMissingFields: true));
 
-        $queriedUsers = collect(collect($queryParams)
+        $queries = collect($queryParams)
             ->reduce(
-                function (QueryBuilder $acc, $paramValue, string $paramName) use ($paramConstraints): QueryBuilder {
+                function (array $acc, $paramValue, string $paramName) use ($paramConstraints): array {
+                    /** @var array{int, QueryBuilder} $acc */
+                    [$paramIndex, $queryBuilder] = $acc;
                     if (!array_key_exists($paramName, $paramConstraints)) {
                         throw new \InvalidArgumentException();
                     }
-                    return $paramValue === 'NULL'
+                    return [$paramIndex + 1, $paramValue === 'NULL'
                         && in_array($paramName, ['name', 'displayName', 'gender'], true)
-                        ? $acc->andWhere("t.$paramName IS NULL")
-                        : $acc->andWhere("t.$paramName = :paramValue")
-                            ->setParameter('paramValue', $paramValue);
+                        ? $queryBuilder->andWhere("t.$paramName IS NULL")
+                        : $queryBuilder->andWhere("t.$paramName = ?$paramIndex")
+                            ->setParameter($paramIndex, $paramValue)];
                 },
-                $this->userRepository->createQueryBuilder('t')
-            )
-            ?->orderBy('t.id', 'DESC')
-            ->setMaxResults($this->perPageItems + 1)
-            ->getQuery()->getResult());
-        Helper::abortAPIIf(40402, $queriedUsers->isEmpty());
+                [0, $this->userRepository->createQueryBuilder('t')]
+            )[1]->orderBy('t.uid', 'DESC');
 
-        $hasMorePages = false;
-        if ($queriedUsers->count() === $this->perPageItems + 1) {
-            $queriedUsers->pop();
-            $hasMorePages = true;
-        }
+        ['result' => $result, 'hasMorePages' => $hasMorePages] =
+            BaseQuery::hasQueryResultMorePages($queries, $this->perPageItems);
+        $resultCount = count($result);
+        Helper::abortAPIIf(40402, $resultCount === 0);
 
         return [
             'pages' => [
-                'itemCount' => $queriedUsers->count(),
+                'itemCount' => $resultCount,
                 'hasMore' => $hasMorePages,
             ],
-            'users' => $queriedUsers->all(),
+            'users' => $result,
         ];
     }
 }
