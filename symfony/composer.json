@@ -21,6 +21,7 @@
         "symfony/framework-bundle": "^7.1.5",
         "symfony/runtime": "^7.1.1",
         "symfony/serializer": "^7.1.5",
+        "symfony/stopwatch": "7.1.*",
         "symfony/twig-bundle": "^7.1.5",
         "symfony/validator": "7.1.*",
         "symfony/yaml": "^7.1.5",
