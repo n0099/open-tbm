@@ -2,6 +2,8 @@
 
 namespace App\Repository\Post;
 
+use App\Entity\Post as Entity;
+use App\Helper;
 use App\Repository\Post\Content\ReplyContentRepository;
 use App\Repository\Post\Content\SubReplyContentRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -37,5 +39,16 @@ readonly class PostRepositoryFactory
     public function newSubReplyContent(int $fid): SubReplyContentRepository
     {
         return new SubReplyContentRepository($this->registry, $this->entityManager, $fid);
+    }
+
+    /**
+     * @return array{thread: Entity\Thread, reply: Entity\Reply, subReply: Entity\SubReply}
+     */
+    public function newForumPosts(int $fid): array
+    {
+        return array_combine(
+            Helper::POST_TYPES,
+            [$this->newThread($fid), $this->newReply($fid), $this->newSubReply($fid)],
+        );
     }
 }
