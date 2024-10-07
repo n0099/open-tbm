@@ -1,0 +1,95 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Eloquent\Model\LatestReplier;
+use App\Helper;
+use App\Http\PostsQuery\IndexQuery;
+use App\Http\PostsQuery\ParamsValidator;
+use App\Http\PostsQuery\SearchQuery;
+use App\Eloquent\Model\Forum;
+use App\Eloquent\Model\User;
+use Barryvdh\Debugbar\LaravelDebugbar;
+use Illuminate\Container\Container;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Collection;
+
+class PostsQuery extends Controller
+{
+    public function __construct(
+        private readonly LaravelDebugbar $debugbar,
+        protected Container $app,
+    ) {}
+
+    public function query(\Illuminate\Http\Request $request): array
+    {
+        $validator = $this->app->makeWith(ParamsValidator::class, ['params' => \Safe\json_decode(
+            $request->validate([
+                'cursor' => [ // https://stackoverflow.com/questions/475074/regex-to-parse-or-validate-base64-data
+                    // (,|$)|,){5,6} means allow at most 5~6 parts of base64 segment or empty string to exist
+                    'regex:/^(([A-Za-z0-9-_]{4})*([A-Za-z0-9-_]{2,3})(,|$)|,){5,6}$/',
+                ],
+                'query' => 'json|required',
+            ])['query'],
+            assoc: true,
+        )]);
+        $params = $validator->params;
+
+        $postIDParams = $params->pick(...Helper::POST_ID);
+        $isQueryByPostID =
+            // is there no other params except unique params and post ID params
+            \count($params->omit(...ParamsValidator::UNIQUE_PARAMS_NAME, ...Helper::POST_ID)) === 0
+            // is there only one post ID param
+            && \count($postIDParams) === 1
+            // is all post ID params doesn't own any sub param
+            && array_filter($postIDParams, static fn($p) => $p->getAllSub() !== []) === [];
+        $isFidParamNull = $params->getUniqueParamValue('fid') === null;
+        // is the fid param exists and there's no other params except unique params
+        $isQueryByFid = !$isFidParamNull && \count($params->omit(...ParamsValidator::UNIQUE_PARAMS_NAME)) === 0;
+        $isIndexQuery = $isQueryByPostID || $isQueryByFid;
+        $isSearchQuery = !$isIndexQuery;
+        Helper::abortAPIIf(40002, $isSearchQuery && $isFidParamNull);
+
+        $validator->addDefaultParamsThenValidate(shouldSkip40003: $isIndexQuery);
+
+        $queryClass = $isIndexQuery ? IndexQuery::class : SearchQuery::class;
+        $this->debugbar->startMeasure('$queryClass->query()');
+        $query = (new $queryClass())->query($params, $request->get('cursor'));
+        $this->debugbar->stopMeasure('$queryClass->query()');
+        $this->debugbar->startMeasure('fillWithParentPost');
+        $result = $query->fillWithParentPost();
+        $this->debugbar->stopMeasure('fillWithParentPost');
+
+        $this->debugbar->startMeasure('queryUsers');
+        $latestRepliersId = $result['threads']->pluck('latestReplierId');
+        $latestRepliers = LatestReplier::query()->whereIn('id', $latestRepliersId)
+            ->whereNotNull('uid')->selectPublicFields()->get()
+            ->concat(LatestReplier::query()->whereIn('id', $latestRepliersId)
+                ->whereNull('uid')->selectPublicFields()
+                ->addSelect(['name', 'displayName'])->get());
+        $whereCurrentFid = static fn(HasOne $q): HasOne => $q->where('fid', $result['fid']);
+        $users = User::query()->whereIn(
+            'uid',
+            collect($result)
+                ->only(Helper::POST_TYPES_PLURAL)
+                ->flatMap(static fn(Collection $posts) => $posts->pluck('authorUid'))
+                ->concat($latestRepliers->pluck('uid'))
+                ->filter()->unique(), // remove NULLs
+        )->with(['currentForumModerator' => $whereCurrentFid, 'currentAuthorExpGrade' => $whereCurrentFid])
+            ->selectPublicFields()->get();
+        $this->debugbar->stopMeasure('queryUsers');
+
+        return [
+            'type' => $isIndexQuery ? 'index' : 'search',
+            'pages' => [
+                ...$query->getResultPages(),
+                ...Arr::except($result, ['fid', ...Helper::POST_TYPES_PLURAL]),
+            ],
+            'forum' => Forum::fid($result['fid'])->selectPublicFields()->first(),
+            'threads' => $query->reOrderNestedPosts($query->nestPostsWithParent(...$result)),
+            'users' => $users,
+            'latestRepliers' => $latestRepliers,
+        ];
+    }
+}
