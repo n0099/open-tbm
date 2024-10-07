@@ -15,6 +15,11 @@ class ReplyRepository extends PostRepository
 {
     public function __construct(ManagerRegistry $registry, EntityManagerInterface $entityManager, int $fid)
     {
-        parent::__construct($registry, $entityManager, Reply::class, 'reply', $fid);
+        parent::__construct($registry, $entityManager, Reply::class, $fid);
+    }
+
+    protected function getTableNameSuffix(): string
+    {
+        return 'reply';
     }
 }

@@ -16,6 +16,11 @@ class SubReplyContentRepository extends PostRepository
 {
     public function __construct(ManagerRegistry $registry, EntityManagerInterface $entityManager, int $fid)
     {
-        parent::__construct($registry, $entityManager, SubReplyContent::class, 'subReply_content', $fid);
+        parent::__construct($registry, $entityManager, SubReplyContent::class, $fid);
+    }
+
+    protected function getTableNameSuffix(): string
+    {
+        return 'subReply_content';
     }
 }

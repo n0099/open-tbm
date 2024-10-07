@@ -15,7 +15,12 @@ class ThreadRepository extends PostRepository
 {
     public function __construct(ManagerRegistry $registry, EntityManagerInterface $entityManager, int $fid)
     {
-        parent::__construct($registry, $entityManager, Thread::class, 'thread', $fid);
+        parent::__construct($registry, $entityManager, Thread::class, $fid);
+    }
+
+    protected function getTableNameSuffix(): string
+    {
+        return 'thread';
     }
 
     public function getThreadsIdByChunks(int $chunkSize): array

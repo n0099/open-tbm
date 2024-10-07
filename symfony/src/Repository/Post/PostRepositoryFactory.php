@@ -2,7 +2,6 @@
 
 namespace App\Repository\Post;
 
-use App\Entity\Post as Entity;
 use App\Helper;
 use App\Repository\Post\Content\ReplyContentRepository;
 use App\Repository\Post\Content\SubReplyContentRepository;
@@ -42,7 +41,7 @@ readonly class PostRepositoryFactory
     }
 
     /**
-     * @return array{thread: Entity\Thread, reply: Entity\Reply, subReply: Entity\SubReply}
+     * @return array{thread: ThreadRepository, reply: ReplyRepository, subReply: SubReplyRepository}
      */
     public function newForumPosts(int $fid): array
     {
@@ -50,5 +49,14 @@ readonly class PostRepositoryFactory
             Helper::POST_TYPES,
             [$this->newThread($fid), $this->newReply($fid), $this->newSubReply($fid)],
         );
+    }
+
+    public function new(int $fid, string $postType): PostRepository
+    {
+        return match ($postType) {
+            'thread' => $this->newThread($fid),
+            'reply' => $this->newReply($fid),
+            'subReply' => $this->newSubReply($fid),
+        };
     }
 }
