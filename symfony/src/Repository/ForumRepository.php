@@ -14,6 +14,13 @@ class ForumRepository extends ServiceEntityRepository
         parent::__construct($registry, Forum::class);
     }
 
+    public function getOrderedForums(): array
+    {
+        return $this->getEntityManager()
+            ->createQuery(/** @lang DQL */'SELECT t FROM App\Entity\Forum t ORDER BY t.fid')
+            ->getArrayResult();
+    }
+
     public function getOrderedForumsId(): array
     {
         return $this->getEntityManager()

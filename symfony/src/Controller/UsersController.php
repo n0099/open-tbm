@@ -7,9 +7,10 @@ use App\Repository\UserRepository;
 use App\Validator\Validator;
 use Doctrine\ORM\QueryBuilder;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Validator\Constraints as Assert;
 
-class UsersQuery extends AbstractController
+class UsersController extends AbstractController
 {
     private int $perPageItems = 200;
 
@@ -17,7 +18,8 @@ class UsersQuery extends AbstractController
         private readonly Validator $validator,
         private readonly UserRepository $userRepository,
     ) {}
-    
+
+    #[Route('/users')]
     public function query(): array
     {
         $queryParams = \Safe\json_decode($this->getParameter('query'));

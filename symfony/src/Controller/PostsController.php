@@ -14,10 +14,11 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\ParameterBag;
+use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Stopwatch\Stopwatch;
 use Symfony\Component\Validator\Constraints as Assert;
 
-class PostsQuery extends AbstractController
+class PostsController extends AbstractController
 {
     public function __construct(
         private readonly Stopwatch $stopwatch,
@@ -27,6 +28,7 @@ class PostsQuery extends AbstractController
         private readonly LatestReplierRepository $latestReplierRepository,
     ) {}
 
+    #[Route('/posts')]
     public function query(ParameterBag $parameterBag): array
     {
         $this->validator->validate($parameterBag->all(), new Assert\Collection([
