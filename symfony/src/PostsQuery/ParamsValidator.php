@@ -14,7 +14,6 @@ class ParamsValidator
 
     public QueryParams $params;
 
-
     /** @param array[] $params */
     public function __construct(private readonly Validator $validator, array $params)
     {

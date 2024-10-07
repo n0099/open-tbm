@@ -1,48 +1,65 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Controller;
 
 use App\Helper;
-use App\Eloquent\Model\User;
+use App\Repository\UserRepository;
+use App\Validator\Validator;
+use Doctrine\ORM\QueryBuilder;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\Validator\Constraints as Assert;
 
-class UsersQuery extends Controller
+class UsersQuery extends AbstractController
 {
     private int $perPageItems = 200;
 
-    public function query(\Illuminate\Http\Request $request): array
+    public function __construct(
+        private readonly Validator $validator,
+        private readonly UserRepository $userRepository,
+    ) {}
+    
+    public function query(): array
     {
-        $queryParams = $request->validate([
-            'uid' => 'integer',
-            'name' => 'string',
-            'displayName' => 'string',
-            'gender' => 'string|in:0,1,2,NULL',
-        ]);
-        Helper::abortAPIIf(40402, empty($queryParams));
+        $queryParams = \Safe\json_decode($this->getParameter('query'));
+        $paramConstraints = [
+            'uid' => new Assert\Type('digit'),
+            'name' => new Assert\Type('string'),
+            'displayName' => new Assert\Type('string'),
+            'gender' => new Assert\Choice(['0', '1', '2', 'NULL']),
+        ];
+        $this->validator->validate($queryParams, new Assert\Collection($paramConstraints));
 
-        $queryBuilder = User::query();
+        $queriedUsers = collect(collect($queryParams)
+            ->reduce(
+                function (QueryBuilder $acc, $paramValue, string $paramName) use ($paramConstraints): QueryBuilder {
+                    if (!array_key_exists($paramName, $paramConstraints)) {
+                        throw new \InvalidArgumentException();
+                    }
+                    return $paramValue === 'NULL'
+                        && in_array($paramName, ['name', 'displayName', 'gender'], true)
+                        ? $acc->andWhere("t.$paramName IS NULL")
+                        : $acc->andWhere("t.$paramName = :paramValue")
+                            ->setParameter('paramValue', $paramValue);
+                },
+                $this->userRepository->createQueryBuilder('t')
+            )
+            ?->orderBy('t.id', 'DESC')
+            ->setMaxResults($this->perPageItems + 1)
+            ->getQuery()->getResult());
+        Helper::abortAPIIf(40402, $queriedUsers->isEmpty());
 
-        $nullableParams = ['name', 'displayName', 'gender'];
-        foreach ($nullableParams as $nullableParamName) {
-            if (\array_key_exists($nullableParamName, $queryParams) && $queryParams[$nullableParamName] === 'NULL') {
-                $queryBuilder = $queryBuilder->whereNull($nullableParamName);
-                unset($queryParams[$nullableParamName]);
-            }
+        $hasMorePages = false;
+        if ($queriedUsers->count() === $this->perPageItems + 1) {
+            $queriedUsers->pop();
+            $hasMorePages = true;
         }
-
-        $queriedInfo = $queryBuilder
-            ->where($queryParams)
-            ->orderBy('id', 'DESC')
-            ->selectPublicFields()
-            ->simplePaginate($this->perPageItems);
-        Helper::abortAPIIf(40402, $queriedInfo->isEmpty());
 
         return [
             'pages' => [
-                'firstItem' => $queriedInfo->firstItem(),
-                'itemCount' => $queriedInfo->count(),
-                'currentPage' => $queriedInfo->currentPage(),
+                'itemCount' => $queriedUsers->count(),
+                'hasMore' => $hasMorePages,
             ],
-            'users' => $queriedInfo->toArray()['data'],
+            'users' => $queriedUsers->all(),
         ];
     }
 }

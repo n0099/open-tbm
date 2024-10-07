@@ -1,18 +1,17 @@
 <?php
 
-namespace App\Http\PostsQuery;
+namespace App\PostsQuery;
 
-use App\Eloquent\Model\Post\Post;
-use App\Eloquent\Model\Post\PostFactory;
-use App\Eloquent\Model\Post\Reply;
-use App\Eloquent\Model\Post\SubReply;
-use App\Eloquent\Model\Post\Thread;
+use App\Entity\Post\Post;
+use App\Entity\Post\Reply;
+use App\Entity\Post\SubReply;
+use App\Entity\Post\Thread;
 use App\Helper;
-use Closure;
-use Barryvdh\Debugbar\LaravelDebugbar;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Pagination\CursorPaginator;
+use App\Repository\Post\PostRepositoryFactory;
+use Doctrine\ORM\QueryBuilder;
 use Illuminate\Support\Collection;
+use Symfony\Component\Serializer\SerializerInterface;
+use Symfony\Component\Stopwatch\Stopwatch;
 
 abstract class BaseQuery
 {
@@ -34,8 +33,10 @@ abstract class BaseQuery
     abstract public function query(QueryParams $params, ?string $cursor): self;
 
     public function __construct(
-        private readonly LaravelDebugbar $debugbar,
+        private readonly SerializerInterface $serializer,
+        private readonly Stopwatch $stopwatch,
         private readonly CursorCodec $cursorCodec,
+        private readonly PostRepositoryFactory $postRepositoryFactory,
         private readonly int $perPageItems = 50,
     ) {}
 
@@ -46,7 +47,7 @@ abstract class BaseQuery
 
     /**
      * @param int $fid
-     * @param Collection<string, Builder<Post>> $queries key by post type
+     * @param Collection<string, QueryBuilder> $queries key by post type
      * @param string|null $cursorParamValue
      * @param string|null $queryByPostIDParamName
      * @return void
@@ -57,11 +58,11 @@ abstract class BaseQuery
         ?string $cursorParamValue,
         ?string $queryByPostIDParamName = null,
     ): void {
-        $this->debugbar->startMeasure('setResult');
+        $this->stopwatch->start('setResult');
 
-        $addOrderByForBuilder = fn(Builder $qb, string $postType): Builder => $qb
+        $addOrderByForBuilder = fn(QueryBuilder $qb, string $postType): QueryBuilder => $qb
             // we don't have to select the post ID
-            // since it's already selected by invokes of Post::scopeSelectCurrentAndParentPostID()
+            // since it's already selected by invokes of PostRepository->selectCurrentAndParentPostID()
             ->addSelect($this->orderByField)
             ->orderBy($this->orderByField, $this->orderByDesc === true ? 'DESC' : 'ASC')
             // cursor paginator requires values of orderBy column are unique
@@ -79,29 +80,38 @@ abstract class BaseQuery
             // remove queries for post types with encoded cursor ',,'
             $queriesWithOrderBy = $queriesWithOrderBy->intersectByKeys($cursorsKeyByPostType);
         }
-        $this->debugbar->startMeasure('initPaginators');
-        /** @var Collection<string, CursorPaginator> $paginators key by post type */
-        $paginators = $queriesWithOrderBy->map(fn(Builder $qb, string $type) =>
-            $qb->cursorPaginate($this->perPageItems, cursor: $cursorsKeyByPostType[$type] ?? null));
-        $this->debugbar->stopMeasure('initPaginators');
+        $this->stopwatch->start('initPaginators');
+        /** @var Collection<string, QueryBuilder> $paginators key by post type */
+        $paginators = $queriesWithOrderBy->map(function (QueryBuilder $qb, string $type) use ($cursorsKeyByPostType) {
+            $cursors = $cursorsKeyByPostType[$type];
+            if ($cursors === null) {
+                return $qb;
+            }
+            return collect($cursors)->reduce(
+                static fn(QueryBuilder $acc, $cursorValue, string $cursorField): QueryBuilder =>
+                    $acc->andWhere("t.$cursorField > :cursorValue")->setParameter('cursorValue', $cursorValue),
+                $qb
+            )?->setMaxResults($this->perPageItems + 1);
+        });
+        $this->stopwatch->stop('initPaginators');
 
+        $hasMorePages = false;
         /** @var Collection<string, Collection> $postsKeyByTypePluralName */
         $postsKeyByTypePluralName = $paginators
-            // cast paginator with queried posts to Collection<int, Post>
-            ->map(static fn(CursorPaginator $paginator) => $paginator->collect())
-            ->mapWithKeys(static fn(Collection $posts, string $type) =>
-                [Helper::POST_TYPE_TO_PLURAL[$type] => $posts]);
+            ->mapWithKeys(function (QueryBuilder $paginator, string $postType) use (&$hasMorePages) {
+                $posts = collect($paginator->getQuery()->getResult());
+                if ($posts->count() === $this->perPageItems + 1) {
+                    $posts->pop();
+                    $hasMorePages = true;
+                }
+                return [Helper::POST_TYPE_TO_PLURAL[$postType] => $posts];
+            });
         Helper::abortAPIIf(40401, $postsKeyByTypePluralName->every(static fn(Collection $i) => $i->isEmpty()));
         $this->queryResult = ['fid' => $fid, ...$postsKeyByTypePluralName];
 
-        $hasMore = self::unionPageStats(
-            $paginators,
-            'hasMorePages',
-            static fn(Collection $v) => $v->filter()->count() !== 0, // Collection->filter() will remove false values
-        );
         $this->queryResultPages = [
             'currentCursor' => $cursorParamValue ?? '',
-            'nextCursor' => $hasMore
+            'nextCursor' => $hasMorePages
                 ? $this->cursorCodec->encodeNextCursor(
                     $queryByPostIDParamName === null
                         ? $postsKeyByTypePluralName
@@ -111,26 +121,7 @@ abstract class BaseQuery
                 : null,
         ];
 
-        $this->debugbar->stopMeasure('setResult');
-    }
-
-    /**
-     * Union builders pagination $unionMethodName data by $unionStatement
-     *
-     * @param Collection<string, CursorPaginator> $paginators key by post type
-     * @param string $unionMethodName
-     * @param Closure $unionCallback (Collection): TReturn
-     * @template TReturn
-     * @return TReturn returned by $unionCallback()
-     */
-    private static function unionPageStats(
-        Collection $paginators,
-        string $unionMethodName,
-        Closure $unionCallback,
-    ): mixed {
-        // Collection::filter() will remove falsy values
-        $unionValues = $paginators->map(static fn(CursorPaginator $p) => $p->$unionMethodName());
-        return $unionCallback($unionValues->isEmpty() ? collect(0) : $unionValues); // prevent empty array
+        $this->stopwatch->stop('setResult');
     }
 
     /**
@@ -167,42 +158,47 @@ abstract class BaseQuery
 
         /** @var int $fid */
         $fid = $result['fid'];
-        $postModels = PostFactory::getPostModelsByFid($fid);
+        $postModels = $this->postRepositoryFactory->newForumPosts($fid);
 
-        $this->debugbar->startMeasure('fillWithThreadsFields');
+        $this->stopwatch->start('fillWithThreadsFields');
         /** @var Collection<int, int> $parentThreadsID parent tid of all replies and their sub replies */
         $parentThreadsID = $replies->pluck('tid')->concat($subReplies->pluck('tid'))->unique();
         /** @var Collection<int, Thread> $threads */
-        $threads = $postModels['thread']
-            // from the original $this->queryResult, see Post::scopeSelectCurrentAndParentPostID()
-            ->tid($parentThreadsID->concat($tids))
-            ->selectPublicFields()->get()
-            ->map(static fn(Thread $thread) => // mark threads that exists in the original $this->queryResult
-                $thread->setAttribute('isMatchQuery', $tids->contains($thread->tid)));
-        $this->debugbar->stopMeasure('fillWithThreadsFields');
+        $threads = array_map(
+            static fn(Thread $thread) =>
+                $thread->setIsMatchQuery($tids->contains($thread->getTid())),
+            $postModels['thread']->createQueryBuilder('t')
+                ->where('t.tid IN (:tids)')->setParameter('tids', $parentThreadsID->concat($tids)->toArray())
+                ->getQuery()->getResult()
+        );
+        $this->stopwatch->stop('fillWithThreadsFields');
 
-        $this->debugbar->startMeasure('fillWithRepliesFields');
+        $this->stopwatch->start('fillWithRepliesFields');
         /** @var Collection<int, int> $parentRepliesID parent pid of all sub replies */
         $parentRepliesID = $subReplies->pluck('pid')->unique();
-        $replies = $postModels['reply']
-            // from the original $this->queryResult, see Post::scopeSelectCurrentAndParentPostID()
-            ->pid($parentRepliesID->concat($pids))
-            ->selectPublicFields()->with('contentProtoBuf')->get()
-            ->map(static fn(Reply $r) => // mark replies that exists in the original $this->queryResult
-                $r->setAttribute('isMatchQuery', $pids->contains($r->pid)));
-        $this->debugbar->stopMeasure('fillWithRepliesFields');
+        $replies = array_map(
+            static fn(Reply $reply) =>
+                $reply->setIsMatchQuery($pids->contains($reply->getPid())),
+            $postModels['reply']->createQueryBuilder('t')
+                ->where('t.pid IN (:pids)')->setParameter('pids', $parentRepliesID->concat($pids)->toArray())
+                ->getQuery()->getResult()
+        );
+        $this->stopwatch->stop('fillWithRepliesFields');
 
-        $this->debugbar->startMeasure('fillWithSubRepliesFields');
-        $subReplies = $postModels['subReply']->spid($spids)
-            ->selectPublicFields()->with('contentProtoBuf')->get();
-        $this->debugbar->stopMeasure('fillWithSubRepliesFields');
+        $this->stopwatch->start('fillWithSubRepliesFields');
+        $subReplies = $postModels['subReply']->createQueryBuilder('t')
+            ->where('t.spid IN (:spids)')->setParameter('spids', $spids->toArray())
+            ->getQuery()->getResult();
+        $this->stopwatch->stop('fillWithSubRepliesFields');
 
-        $this->debugbar->startMeasure('parsePostContentProtoBufBytes');
+        /*
+        $this->stopwatch->start('parsePostContentProtoBufBytes');
         $replies->concat($subReplies)->each(function ($post) {
             $post->content = $post->contentProtoBuf?->protoBufBytes?->value;
             unset($post->contentProtoBuf);
         });
-        $this->debugbar->stopMeasure('parsePostContentProtoBufBytes');
+        $this->stopwatch->stop('parsePostContentProtoBufBytes');
+        */
 
         return [
             'fid' => $fid,
@@ -231,23 +227,23 @@ abstract class BaseQuery
         Collection $subReplies,
         ...$_,
     ): Collection {
-        $this->debugbar->startMeasure('nestPostsWithParent');
+        $this->stopwatch->start('nestPostsWithParent');
 
         $replies = $replies->groupBy('tid');
         $subReplies = $subReplies->groupBy('pid');
         $ret = $threads
             ->map(fn(Thread $thread) => [
-                ...$thread->toArray(),
+                ...$this->serializer->normalize($thread),
                 'replies' => $replies
-                    ->get($thread->tid, collect())
+                    ->get($thread->getTid(), collect())
                     ->map(fn(Reply $reply) => [
-                        ...$reply->toArray(),
-                        'subReplies' => $subReplies->get($reply->pid, collect()),
+                        ...$this->serializer->normalize($reply),
+                        'subReplies' => $subReplies->get($reply->getPid(), collect()),
                     ]),
             ])
             ->recursive();
 
-        $this->debugbar->stopMeasure('nestPostsWithParent');
+        $this->stopwatch->stop('nestPostsWithParent');
         return $ret;
     }
 
@@ -258,7 +254,7 @@ abstract class BaseQuery
      */
     public function reOrderNestedPosts(Collection $nestedPosts, bool $shouldRemoveSortingKey = true): array
     {
-        $this->debugbar->startMeasure('reOrderNestedPosts');
+        $this->stopwatch->start('reOrderNestedPosts');
 
         /**
          * @param Collection<int, Collection<string, mixed|Collection<int, Collection<string, mixed>>>> $curPost
@@ -338,7 +334,7 @@ abstract class BaseQuery
             ),
         ))->values()->toArray();
 
-        $this->debugbar->stopMeasure('reOrderNestedPosts');
+        $this->stopwatch->stop('reOrderNestedPosts');
         return $ret;
     }
 }

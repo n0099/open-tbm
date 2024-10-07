@@ -1,18 +1,28 @@
 <?php
 
-namespace App\Http\PostsQuery;
+namespace App\PostsQuery;
 
-use App\Eloquent\Model\Forum;
-use App\Eloquent\Model\Post\Post;
-use App\Eloquent\Model\Post\PostFactory;
+use App\Repository\ForumRepository;
+use App\Repository\Post\PostRepository;
+use App\Repository\Post\PostRepositoryFactory;
 use App\Helper;
-use Illuminate\Contracts\Database\Query\Builder as BuilderContract;
-use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
-use Illuminate\Database\Query\Builder as QueryBuilder;
+use Doctrine\ORM\QueryBuilder;
 use Illuminate\Support\Collection;
+use Symfony\Component\Serializer\SerializerInterface;
+use Symfony\Component\Stopwatch\Stopwatch;
 
 class IndexQuery extends BaseQuery
 {
+    public function __construct(
+        private readonly SerializerInterface $serializer,
+        private readonly Stopwatch $stopwatch,
+        private readonly CursorCodec $cursorCodec,
+        private readonly PostRepositoryFactory $postRepositoryFactory,
+        private readonly ForumRepository $forumRepository
+    ) {
+        parent::__construct($serializer, $stopwatch, $cursorCodec, $postRepositoryFactory);
+    }
+
     /** @SuppressWarnings(PHPMD.ElseExpression) */
     public function query(QueryParams $params, ?string $cursor): self
     {
@@ -33,27 +43,21 @@ class IndexQuery extends BaseQuery
 
         /**
          * @param int $fid
-         * @return Collection<string, Post> key by post type
+         * @return Collection<string, PostRepository> key by post type
          */
         $getQueryBuilders = static fn(int $fid): Collection =>
-            collect(PostFactory::getPostModelsByFid($fid))
+            collect($this->postRepositoryFactory->newForumPosts($fid))
                 ->only($postTypes)
-                ->transform(static fn(Post $model, string $type) => $model->selectCurrentAndParentPostID());
-        $getFidByPostIDParam = static function (string $postIDName, int $postID): int {
-            $counts = Forum::get('fid')
-                ->pluck('fid')
-                ->map(static fn(int $fid) =>
-                    PostFactory::getPostModelsByFid($fid)[Helper::POST_ID_TO_TYPE[$postIDName]]
-                        ->selectRaw("{$fid} AS fid, COUNT(*) AS count")
-                        ->where($postIDName, $postID))
-                ->reduce(/** @return BuilderContract|EloquentBuilder<Post>|QueryBuilder */
-                    static fn(
-                        ?BuilderContract $acc,
-                        EloquentBuilder|QueryBuilder $cur,
-                    ): EloquentBuilder|QueryBuilder|BuilderContract =>
-                        $acc === null ? $cur : $acc->union($cur),
-                )
-                ->get()
+                ->transform(static fn(PostRepository $repository) => $repository->selectCurrentAndParentPostID());
+        $getFidByPostIDParam = function (string $postIDName, int $postID): int {
+            $counts = collect($this->forumRepository->getOrderedForumsId())
+                ->map(fn(int $fid) => $this->postRepositoryFactory
+                    ->new($fid, Helper::POST_ID_TO_TYPE[$postIDName])
+                    ->createQueryBuilder('t')
+                    ->select("$fid AS fid", 'COUNT(t) AS count')
+                    ->where("t.$postIDName = :postID")
+                    ->setParameter('postID', $postID)
+                    ->getQuery()->getResult())
                 ->where('count', '!=', 0);
             Helper::abortAPIIf(50001, $counts->count() > 1);
             Helper::abortAPIIf(40401, $counts->count() === 0);
@@ -62,8 +66,8 @@ class IndexQuery extends BaseQuery
 
         if (\array_key_exists('fid', $flatParams)) {
             /** @var int $fid */ $fid = $flatParams['fid'];
-            if (Forum::fid($fid)->exists()) {
-                /** @var Collection<string, EloquentBuilder<Post>> $queries key by post type */
+            if ($this->forumRepository->isForumExists($fid)) {
+                /** @var Collection<string, QueryBuilder> $queries key by post type */
                 $queries = $getQueryBuilders($fid);
             } elseif ($hasPostIDParam) { // query by post ID and fid, but the provided fid is invalid
                 $fid = $getFidByPostIDParam($postIDParamName, $postIDParamValue);
@@ -84,8 +88,9 @@ class IndexQuery extends BaseQuery
                     Helper::POST_TYPES, // only query post types that own the querying post ID param
                     array_search($postIDParamName, Helper::POST_ID, true),
                 ))
-                ->map(static fn(EloquentBuilder $qb, string $type) =>
-                    $qb->where($postIDParamName, $postIDParamValue));
+                ->map(static fn(QueryBuilder $qb, string $type) =>
+                    $qb->where("t.$postIDParamName = :postIDParamValue")
+                        ->setParameter('postIDParamValue', $postIDParamValue));
         }
 
         if (array_diff($postTypes, Helper::POST_TYPES) !== []) {
