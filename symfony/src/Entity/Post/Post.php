@@ -45,9 +45,8 @@ abstract class Post extends TimestampedEntity
         return $this->isMatchQuery;
     }
 
-    public function setIsMatchQuery(bool $isMatchQuery): static
+    public function setIsMatchQuery(bool $isMatchQuery): void
     {
         $this->isMatchQuery = $isMatchQuery;
-        return $this;
     }
 }

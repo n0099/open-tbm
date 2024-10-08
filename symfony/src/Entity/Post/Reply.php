@@ -8,7 +8,7 @@ use Doctrine\ORM\Mapping as ORM;
 use TbClient\Post\Common\Lbs;
 
 #[ORM\Entity(repositoryClass: ReplyRepository::class)]
-class Reply extends Post
+class Reply extends PostWithContent
 {
     #[ORM\Column] private int $tid;
     #[ORM\Column, ORM\Id] private int $pid;

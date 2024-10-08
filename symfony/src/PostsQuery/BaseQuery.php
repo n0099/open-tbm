@@ -2,6 +2,8 @@
 
 namespace App\PostsQuery;
 
+use App\Entity\Post\Content\ReplyContent;
+use App\Entity\Post\Content\SubReplyContent;
 use App\Entity\Post\Post;
 use App\Entity\Post\Reply;
 use App\Entity\Post\SubReply;
@@ -173,9 +175,9 @@ abstract class BaseQuery
         /** @var Collection<int, Thread> $threads */
         $threads = collect($postModels['thread']->createQueryBuilder('t')
             ->where('t.tid IN (:tids)')
-            ->setParameter('tids', $parentThreadsID->concat($tids)->toArray())
+            ->setParameter('tids', $parentThreadsID->concat($tids))
             ->getQuery()->getResult())
-        ->map(static fn(Thread $thread) =>
+        ->each(static fn(Thread $thread) =>
             $thread->setIsMatchQuery($tids->contains($thread->getTid())));
         $this->stopwatch->stop('fillWithThreadsFields');
 
@@ -184,28 +186,34 @@ abstract class BaseQuery
         $parentRepliesID = $subReplies->pluck('pid')->unique();
         $replies = collect($postModels['reply']->createQueryBuilder('t')
             ->where('t.pid IN (:pids)')
-            ->setParameter('pids', $parentRepliesID->concat($pids)->toArray())
-            ->getQuery()->getResult()
-        )->map(static fn(Reply $reply) =>
+            ->setParameter('pids', $parentRepliesID->concat($pids))
+            ->getQuery()->getResult())
+        ->each(static fn(Reply $reply) =>
             $reply->setIsMatchQuery($pids->contains($reply->getPid())));
         $this->stopwatch->stop('fillWithRepliesFields');
 
         $this->stopwatch->start('fillWithSubRepliesFields');
         $subReplies = collect($postModels['subReply']->createQueryBuilder('t')
-            ->where('t.spid IN (:spids)')->setParameter('spids', $spids->toArray())
+            ->where('t.spid IN (:spids)')->setParameter('spids', $spids)
             ->getQuery()->getResult())
-        ->map(static fn(SubReply $subReply) =>
+        ->each(static fn(SubReply $subReply) =>
             $subReply->setIsMatchQuery(true));
         $this->stopwatch->stop('fillWithSubRepliesFields');
 
-        /*
         $this->stopwatch->start('parsePostContentProtoBufBytes');
-        $replies->concat($subReplies)->each(function ($post) {
-            $post->content = $post->contentProtoBuf?->protoBufBytes?->value;
-            unset($post->contentProtoBuf);
-        });
+        // not using one-to-one association due to relying on PostRepository->getTableNameSuffix()
+        $replyContents = collect($this->postRepositoryFactory->newReplyContent($fid)->createQueryBuilder('t')
+                ->where('t.pid IN (:pids)')->setParameter('pids', $pids)
+                ->getQuery()->getResult())
+            ->mapWithKeys(fn(ReplyContent $content) => [$content->getPid() => $content->getProtoBufBytes()]);
+        $replies->each(fn(Reply $reply) => $reply->setContent($replyContents->get($reply->getPid())));
+
+        $subReplyContents = collect($this->postRepositoryFactory->newSubReplyContent($fid)->createQueryBuilder('t')
+                ->where('t.spid IN (:spids)')->setParameter('spids', $spids)
+                ->getQuery()->getResult())
+            ->mapWithKeys(fn(SubReplyContent $content) => [$content->getSpid() => $content->getProtoBufBytes()]);
+        $subReplies->each(fn(SubReply $subReply) => $subReply->setContent($subReplyContents->get($subReply->getSpid())));
         $this->stopwatch->stop('parsePostContentProtoBufBytes');
-        */
 
         return [
             'fid' => $fid,

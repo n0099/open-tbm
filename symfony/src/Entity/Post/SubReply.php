@@ -6,7 +6,7 @@ use App\Repository\Post\SubReplyRepository;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: SubReplyRepository::class)]
-class SubReply extends Post
+class SubReply extends PostWithContent
 {
     #[ORM\Column] private int $tid;
     #[ORM\Column] private int $pid;
