@@ -20,6 +20,6 @@ class SubReplyRepository extends PostRepository
 
     protected function getTableNameSuffix(): string
     {
-        return 'subRreply';
+        return 'subReply';
     }
 }

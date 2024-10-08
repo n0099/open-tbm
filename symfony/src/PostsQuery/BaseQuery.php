@@ -30,7 +30,7 @@ abstract class BaseQuery
 
     protected bool $orderByDesc;
 
-    abstract public function query(QueryParams $params, ?string $cursor): self;
+    abstract public function query(QueryParams $params, ?string $cursor): void;
 
     public function __construct(
         private readonly SerializerInterface $serializer,

@@ -24,7 +24,7 @@ class IndexQuery extends BaseQuery
     }
 
     /** @SuppressWarnings(PHPMD.ElseExpression) */
-    public function query(QueryParams $params, ?string $cursor): self
+    public function query(QueryParams $params, ?string $cursor): void
     {
         /** @var array<string, mixed> $flatParams key by param name */
         $flatParams = array_reduce(
@@ -107,6 +107,5 @@ class IndexQuery extends BaseQuery
         }
 
         $this->setResult($fid, $queries, $cursor, $hasPostIDParam ? $postIDParamName : null);
-        return $this;
     }
 }

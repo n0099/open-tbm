@@ -28,7 +28,7 @@ abstract class PostRepository extends ServiceEntityRepository
     ) {
         parent::__construct($registry, $postClass);
         $entityManager->getClassMetadata($postClass)->setPrimaryTable([
-            'name' => "tbmc_f{$fid}_" . $this->getTableNameSuffix()
+            'name' => "\"tbmc_f{$fid}_" . $this->getTableNameSuffix() . '"'
         ]);
     }
 

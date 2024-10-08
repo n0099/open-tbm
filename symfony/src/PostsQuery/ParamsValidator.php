@@ -12,15 +12,23 @@ class ParamsValidator
 {
     public const array UNIQUE_PARAMS_NAME = ['fid', 'postTypes', 'orderBy'];
 
-    public QueryParams $params;
+    private QueryParams $params;
+
+    public function __construct(private readonly Validator $validator) {}
+
+    public function getParams(): QueryParams
+    {
+        return $this->params;
+    }
 
     /** @param array[] $params */
-    public function __construct(private readonly Validator $validator, array $params)
+    public function setParams(array $params): static
     {
-        $this->validateParamsValue($params);
+        array_map($this->validateParamValue(...), $params);
         $this->params = new QueryParams($params);
         $this->validate40001();
         $this->validate40005();
+        return $this;
     }
 
     public function addDefaultParamsThenValidate(bool $shouldSkip40003): void
@@ -37,33 +45,36 @@ class ParamsValidator
         $this->validate40004($currentPostTypes);
     }
 
-    private function validateParamsValue(array $params): void
+    private function validateParamValue(array $param): void
     {
         $paramsPossibleValue = [
             'userGender' => [0, 1, 2],
             'userManagerType' => ['NULL', 'manager', 'assist', 'voiceadmin'],
         ];
+        $numericParams = collect([
+            'fid',
+            'tid',
+            'pid',
+            'spid',
+            'threadViewCount',
+            'threadShareCount',
+            'threadReplyCount',
+            'replySubReplyCount',
+            'authorUid',
+            'authorExpGrade',
+            'latestReplierUid',
+        ])->mapWithKeys(fn(string $paramName) => [$paramName => new Assert\Type(['digit', 'int'])]);
         // note here we haven't validated that is every sub param have a corresponding main param yet
-        $this->validator->validate($params, new Assert\Collection([
-            'fid' => new Assert\Type('digit'),
+        $this->validator->validate($param, new Assert\Collection([
+            ...$numericParams,
             'postTypes' => new Assert\Collection([new Assert\Choice(Helper::POST_TYPES)]),
             'orderBy' => new Assert\Collection([new Assert\Choice([...Helper::POST_ID, 'postedAt'])]),
             'direction' => new Assert\Choice(['ASC', 'DESC']),
-            'tid' => new Assert\Type('digit'),
-            'pid' => new Assert\Type('digit'),
-            'spid' => new Assert\Type('digit'),
             'postedAt' => new DateTimeRange(),
             'latestReplyPostedAt' => new DateTimeRange(),
-            'threadViewCount' => new Assert\Type('digit'),
-            'threadShareCount' => new Assert\Type('digit'),
-            'threadReplyCount' => new Assert\Type('digit'),
-            'replySubReplyCount' => new Assert\Type('digit'),
             'threadProperties' => new Assert\Collection([new Assert\Choice(['good', 'sticky'])]),
-            'authorUid' => new Assert\Type('digit'),
-            'authorExpGrade' => new Assert\Type('digit'),
             'authorGender' => new Assert\Choice($paramsPossibleValue['userGender']),
             'authorManagerType' => new Assert\Choice($paramsPossibleValue['userManagerType']),
-            'latestReplierUid' => new Assert\Type('digit'),
             'latestReplierGender' => new Assert\Choice($paramsPossibleValue['userGender']),
 
             'not' => new Assert\Type('boolean'),

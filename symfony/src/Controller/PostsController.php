@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Helper;
+use App\PostsQuery\BaseQuery;
 use App\PostsQuery\IndexQuery;
 use App\PostsQuery\ParamsValidator;
 use App\PostsQuery\SearchQuery;
@@ -12,7 +13,9 @@ use App\Repository\UserRepository;
 use App\Validator\Validator;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
+use Psr\Container\ContainerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\DependencyInjection\Attribute\AutowireLocator;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Stopwatch\Stopwatch;
@@ -26,6 +29,12 @@ class PostsController extends AbstractController
         private readonly ForumRepository $forumRepository,
         private readonly UserRepository $userRepository,
         private readonly LatestReplierRepository $latestReplierRepository,
+        #[AutowireLocator([
+            ParamsValidator::class,
+            IndexQuery::class,
+            SearchQuery::class,
+        ])]
+        private readonly ContainerInterface $locator,
     ) {}
 
     #[Route('/posts')]
@@ -38,8 +47,8 @@ class PostsController extends AbstractController
             )),
             'query' => new Assert\Required(new Assert\Json()),
         ]));
-        $validator = new ParamsValidator($this->validator, \Safe\json_decode($request->query->get('query'), true));
-        $params = $validator->params;
+        $validator = $this->locator->get(ParamsValidator::class);
+        $params = $validator->setParams(\Safe\json_decode($request->query->get('query'), true))->getParams();
 
         $postIDParams = $params->pick(...Helper::POST_ID);
         $isQueryByPostID =
@@ -58,9 +67,10 @@ class PostsController extends AbstractController
 
         $validator->addDefaultParamsThenValidate(shouldSkip40003: $isIndexQuery);
 
-        $queryClass = $isIndexQuery ? IndexQuery::class : SearchQuery::class;
         $this->stopwatch->start('$queryClass->query()');
-        $query = (new $queryClass())->query($params, $this->getParameter('cursor'));
+        /** @var BaseQuery $query */
+        $query = $this->locator->get($isIndexQuery ? IndexQuery::class : SearchQuery::class);
+        $query->query($params, $request->query->get('cursor'));
         $this->stopwatch->stop('$queryClass->query()');
         $this->stopwatch->start('fillWithParentPost');
         $result = $query->fillWithParentPost();

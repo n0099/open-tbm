@@ -22,7 +22,7 @@ class SearchQuery extends BaseQuery
         parent::__construct($serializer, $stopwatch, $cursorCodec, $postRepositoryFactory);
     }
 
-    public function query(QueryParams $params, ?string $cursor): self
+    public function query(QueryParams $params, ?string $cursor): void
     {
         /** @var int $fid */
         $fid = $params->getUniqueParamValue('fid');
@@ -55,7 +55,6 @@ class SearchQuery extends BaseQuery
         }
 
         $this->setResult($fid, $queries, $cursor);
-        return $this;
     }
 
     /**
