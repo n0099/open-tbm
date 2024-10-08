@@ -2,18 +2,16 @@
 
 namespace App\Entity\Post;
 
-use TbClient\Wrapper\PostContentWrapper;
-
 abstract class PostWithContent extends Post
 {
-    private PostContentWrapper $content;
+    private ?array $content;
 
-    public function getContent(): PostContentWrapper
+    public function getContent(): ?array
     {
         return $this->content;
     }
 
-    public function setContent(PostContentWrapper $content): void
+    public function setContent(?array $content): void
     {
         $this->content = $content;
     }

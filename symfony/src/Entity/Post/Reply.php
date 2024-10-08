@@ -44,7 +44,7 @@ class Reply extends PostWithContent
         return $this->isFold;
     }
 
-    public function getGeolocation(): ?Lbs
+    public function getGeolocation(): ?array
     {
         return BlobResourceGetter::protoBuf($this->geolocation, Lbs::class);
     }

@@ -12,7 +12,7 @@ abstract class PostContent
     /** @type ?resource */
     #[ORM\Column] private $protoBufBytes;
 
-    public function getProtoBufBytes(): ?PostContentWrapper
+    public function getProtoBufBytes(): ?array
     {
         return BlobResourceGetter::protoBuf($this->protoBufBytes, PostContentWrapper::class);
     }

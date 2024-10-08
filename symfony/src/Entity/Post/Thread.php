@@ -83,12 +83,12 @@ class Thread extends Post
         return $this->shareCount ?? 0;
     }
 
-    public function getZan(): ?Zan
+    public function getZan(): ?array
     {
         return BlobResourceGetter::protoBuf($this->zan, Zan::class);
     }
 
-    public function getGeolocation(): ?Lbs
+    public function getGeolocation(): ?array
     {
         return BlobResourceGetter::protoBuf($this->geolocation, Lbs::class);
     }

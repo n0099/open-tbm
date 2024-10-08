@@ -61,7 +61,7 @@ class User extends TimestampedEntity
         return $this->fansNickname;
     }
 
-    public function getIcon(): ?Icon
+    public function getIcon(): ?array
     {
         return BlobResourceGetter::protoBuf($this->icon, Icon::class);
     }

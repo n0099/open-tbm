@@ -9,17 +9,17 @@ class BlobResourceGetter
     /**
      * @param ?resource $value
      * @param class-string<T> $protoBufClass
-     * @template T extends Message
-     * @return ?T
+     * @template T of Message
      */
-    public static function protoBuf($value, string $protoBufClass): ?Message
+    public static function protoBuf($value, string $protoBufClass): ?array
     {
         if ($value === null) {
             return null;
         }
         $protoBuf = new $protoBufClass();
         $protoBuf->mergeFromString(self::resource($value));
-        return $protoBuf;
+        // Message->serializeToJsonString() will remove fields with default value
+        return \Safe\json_decode($protoBuf->serializeToJsonString(), assoc: true);
     }
 
     /**
