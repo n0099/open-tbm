@@ -22,7 +22,7 @@ abstract class BaseQuery
      *     subReplies: ?Collection<int, SubReply>
      *  }
      */
-    protected array $queryResult;
+    private array $queryResult;
 
     private array $queryResultPages;
 
@@ -60,30 +60,28 @@ abstract class BaseQuery
     ): void {
         $this->stopwatch->start('setResult');
 
-        $addOrderByForBuilder = fn(QueryBuilder $qb, string $postType): QueryBuilder => $qb
+        $orderedQueries = $queries->map(fn(QueryBuilder $qb, string $postType): QueryBuilder => $qb
             // we don't have to select the post ID
             // since it's already selected by invokes of PostRepository->selectCurrentAndParentPostID()
-            ->addSelect($this->orderByField)
-            ->orderBy($this->orderByField, $this->orderByDesc === true ? 'DESC' : 'ASC')
+            ->addSelect("t.$this->orderByField")
+            ->addOrderBy("t.$this->orderByField", $this->orderByDesc === true ? 'DESC' : 'ASC')
             // cursor paginator requires values of orderBy column are unique
             // if not it should fall back to other unique field (here is the post ID primary key)
             // https://use-the-index-luke.com/no-offset
             // https://mysql.rjweb.org/doc.php/pagination
             // https://medium.com/swlh/how-to-implement-cursor-pagination-like-a-pro-513140b65f32
             // https://slack.engineering/evolving-api-pagination-at-slack/
-            ->orderBy(Helper::POST_TYPE_TO_ID[$postType]);
-
-        $queriesWithOrderBy = $queries->map($addOrderByForBuilder);
+            ->addOrderBy('t.' . Helper::POST_TYPE_TO_ID[$postType]));
         $cursorsKeyByPostType = null;
         if ($cursorParamValue !== null) {
             $cursorsKeyByPostType = $this->cursorCodec->decodeCursor($cursorParamValue, $this->orderByField);
             // remove queries for post types with encoded cursor ',,'
-            $queriesWithOrderBy = $queriesWithOrderBy->intersectByKeys($cursorsKeyByPostType);
+            $orderedQueries = $orderedQueries->intersectByKeys($cursorsKeyByPostType);
         }
         $this->stopwatch->start('initPaginators');
         /** @var Collection<string, QueryBuilder> $paginators key by post type */
-        $paginators = $queriesWithOrderBy->map(function (QueryBuilder $qb, string $type) use ($cursorsKeyByPostType) {
-            $cursors = $cursorsKeyByPostType[$type];
+        $paginators = $orderedQueries->map(function (QueryBuilder $qb, string $type) use ($cursorsKeyByPostType) {
+            $cursors = $cursorsKeyByPostType?->get($type);
             if ($cursors === null) {
                 return $qb;
             }
@@ -95,7 +93,7 @@ abstract class BaseQuery
         });
         $this->stopwatch->stop('initPaginators');
 
-        $resultsAndHasMorePages = $paginators->map(static fn(QueryBuilder $paginator) =>
+        $resultsAndHasMorePages = $paginators->map(fn(QueryBuilder $paginator) =>
             self::hasQueryResultMorePages($paginator, $this->perPageItems));
         /** @var Collection<string, Collection> $postsKeyByTypePluralName */
         $postsKeyByTypePluralName = $resultsAndHasMorePages
@@ -173,31 +171,31 @@ abstract class BaseQuery
         /** @var Collection<int, int> $parentThreadsID parent tid of all replies and their sub replies */
         $parentThreadsID = $replies->pluck('tid')->concat($subReplies->pluck('tid'))->unique();
         /** @var Collection<int, Thread> $threads */
-        $threads = array_map(
-            static fn(Thread $thread) =>
-                $thread->setIsMatchQuery($tids->contains($thread->getTid())),
-            $postModels['thread']->createQueryBuilder('t')
-                ->where('t.tid IN (:tids)')->setParameter('tids', $parentThreadsID->concat($tids)->toArray())
-                ->getQuery()->getResult()
-        );
+        $threads = collect($postModels['thread']->createQueryBuilder('t')
+            ->where('t.tid IN (:tids)')
+            ->setParameter('tids', $parentThreadsID->concat($tids)->toArray())
+            ->getQuery()->getResult())
+        ->map(static fn(Thread $thread) =>
+            $thread->setIsMatchQuery($tids->contains($thread->getTid())));
         $this->stopwatch->stop('fillWithThreadsFields');
 
         $this->stopwatch->start('fillWithRepliesFields');
         /** @var Collection<int, int> $parentRepliesID parent pid of all sub replies */
         $parentRepliesID = $subReplies->pluck('pid')->unique();
-        $replies = array_map(
-            static fn(Reply $reply) =>
-                $reply->setIsMatchQuery($pids->contains($reply->getPid())),
-            $postModels['reply']->createQueryBuilder('t')
-                ->where('t.pid IN (:pids)')->setParameter('pids', $parentRepliesID->concat($pids)->toArray())
-                ->getQuery()->getResult()
-        );
+        $replies = collect($postModels['reply']->createQueryBuilder('t')
+            ->where('t.pid IN (:pids)')
+            ->setParameter('pids', $parentRepliesID->concat($pids)->toArray())
+            ->getQuery()->getResult()
+        )->map(static fn(Reply $reply) =>
+            $reply->setIsMatchQuery($pids->contains($reply->getPid())));
         $this->stopwatch->stop('fillWithRepliesFields');
 
         $this->stopwatch->start('fillWithSubRepliesFields');
-        $subReplies = $postModels['subReply']->createQueryBuilder('t')
+        $subReplies = collect($postModels['subReply']->createQueryBuilder('t')
             ->where('t.spid IN (:spids)')->setParameter('spids', $spids->toArray())
-            ->getQuery()->getResult();
+            ->getQuery()->getResult())
+        ->map(static fn(SubReply $subReply) =>
+            $subReply->setIsMatchQuery(true));
         $this->stopwatch->stop('fillWithSubRepliesFields');
 
         /*
@@ -238,8 +236,8 @@ abstract class BaseQuery
     ): Collection {
         $this->stopwatch->start('nestPostsWithParent');
 
-        $replies = $replies->groupBy('tid');
-        $subReplies = $subReplies->groupBy('pid');
+        $replies = $replies->groupBy(fn(Reply $reply) => $reply->getTid());
+        $subReplies = $subReplies->groupBy(fn(SubReply $subReply) => $subReply->getPid());
         $ret = $threads
             ->map(fn(Thread $thread) => [
                 ...$this->serializer->normalize($thread),
@@ -247,7 +245,7 @@ abstract class BaseQuery
                     ->get($thread->getTid(), collect())
                     ->map(fn(Reply $reply) => [
                         ...$this->serializer->normalize($reply),
-                        'subReplies' => $subReplies->get($reply->getPid(), collect()),
+                        'subReplies' => $this->serializer->normalize($subReplies->get($reply->getPid(), collect())),
                     ]),
             ])
             ->recursive();
@@ -282,8 +280,7 @@ abstract class BaseQuery
             $curAndChildSortingKeys = collect([
                 // value of orderBy field in the first sorted child post that isMatchQuery after previous sorting
                 $childPosts
-                    // sub replies won't have isMatchQuery
-                    ->filter(static fn(Collection $p) => ($p['isMatchQuery'] ?? true) === true)
+                    ->filter(static fn(Collection $p) => $p['isMatchQuery'] === true)
                     // if no child posts matching the query, use null as the sorting key
                     ->first()[$this->orderByField] ?? null,
                 // sorting key from the first sorted child posts
@@ -330,7 +327,7 @@ abstract class BaseQuery
                          */
                         function (Collection $reply) use ($setSortingKeyFromCurrentAndChildPosts) {
                             $reply['subReplies'] = $reply['subReplies']->sortBy(
-                                fn(Collection $subReplies) => $subReplies[$this->orderByField],
+                                fn(Collection $subReplies) => $subReplies->get($this->orderByField),
                                 descending: $this->orderByDesc,
                             );
                             return $setSortingKeyFromCurrentAndChildPosts($reply, 'subReplies');

@@ -34,7 +34,7 @@ abstract class PostRepository extends ServiceEntityRepository
 
     public function selectCurrentAndParentPostID(): QueryBuilder
     {
-        return $this->createQueryBuilder('t')->addSelect(collect(Helper::POST_TYPE_TO_ID)
+        return $this->createQueryBuilder('t')->select(collect(Helper::POST_TYPE_TO_ID)
             ->slice(0, array_search($this->getTableNameSuffix(), Helper::POST_TYPES, true) + 1)
             ->values()
             ->map(static fn(string $postIDField) => "t.$postIDField")

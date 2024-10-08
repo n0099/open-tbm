@@ -45,7 +45,7 @@ class IndexQuery extends BaseQuery
          * @param int $fid
          * @return Collection<string, PostRepository> key by post type
          */
-        $getQueryBuilders = static fn(int $fid): Collection =>
+        $getQueryBuilders = fn(int $fid): Collection =>
             collect($this->postRepositoryFactory->newForumPosts($fid))
                 ->only($postTypes)
                 ->transform(static fn(PostRepository $repository) => $repository->selectCurrentAndParentPostID());
@@ -57,7 +57,7 @@ class IndexQuery extends BaseQuery
                     ->select("$fid AS fid", 'COUNT(t) AS count')
                     ->where("t.$postIDName = :postID")
                     ->setParameter('postID', $postID)
-                    ->getQuery()->getResult())
+                    ->getQuery()->getSingleResult())
                 ->where('count', '!=', 0);
             Helper::abortAPIIf(50001, $counts->count() > 1);
             Helper::abortAPIIf(40401, $counts->count() === 0);

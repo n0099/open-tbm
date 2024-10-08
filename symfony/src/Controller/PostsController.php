@@ -80,13 +80,13 @@ class PostsController extends AbstractController
         $latestRepliersId = $result['threads']->pluck('latestReplierId');
         $latestRepliers = collect()
             ->concat($this->latestReplierRepository->createQueryBuilder('t')
-                ->where('t.id IN (?ids)')->setParameter('ids', $latestRepliersId)
-                ->where('t.uid IS NOT NULL')
+                ->where('t.id IN (:ids)')->setParameter('ids', $latestRepliersId)
+                ->andWhere('t.uid IS NOT NULL')
                 ->getQuery()->getResult())
             ->concat($this->latestReplierRepository->createQueryBuilder('t')
-                ->where('t.id IN (?ids)')->setParameter('ids', $latestRepliersId)
-                ->where('t.uid IS NULL')
-                ->addSelect('name', 'displayName')
+                ->where('t.id IN (:ids)')->setParameter('ids', $latestRepliersId)
+                ->andWhere('t.uid IS NULL')
+                ->addSelect('t.name', 't.displayName')
                 ->getQuery()->getResult());
         $users = $this->userRepository->createQueryBuilder('t')
             ->where('t.uid IN (:uids)')

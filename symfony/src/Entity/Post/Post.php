@@ -40,7 +40,7 @@ abstract class Post extends TimestampedEntity
         return $this->disagreeCount ?? 0;
     }
 
-    public function isMatchQuery(): bool
+    public function getIsMatchQuery(): bool
     {
         return $this->isMatchQuery;
     }
