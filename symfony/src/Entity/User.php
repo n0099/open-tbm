@@ -2,6 +2,8 @@
 
 namespace App\Entity;
 
+use App\DTO\User\AuthorExpGrade;
+use App\DTO\User\ForumModerator;
 use App\Repository\UserRepository;
 use Doctrine\ORM\Mapping as ORM;
 use TbClient\UserDeps\Icon;
@@ -21,6 +23,8 @@ class User extends TimestampedEntity
     /** @type ?resource */
     #[ORM\Column] private $icon;
     #[ORM\Column] private string $ipGeolocation;
+    private ?ForumModerator $currentForumModerator;
+    private ?AuthorExpGrade $currentAuthorExpGrade;
 
     public function getUid(): ?int
     {
@@ -65,5 +69,25 @@ class User extends TimestampedEntity
     public function getIpGeolocation(): string
     {
         return $this->ipGeolocation;
+    }
+
+    public function getCurrentForumModerator(): ?ForumModerator
+    {
+        return $this->currentForumModerator;
+    }
+
+    public function setCurrentForumModerator(?ForumModerator $currentForumModerator): void
+    {
+        $this->currentForumModerator = $currentForumModerator;
+    }
+
+    public function getCurrentAuthorExpGrade(): ?AuthorExpGrade
+    {
+        return $this->currentAuthorExpGrade;
+    }
+
+    public function setCurrentAuthorExpGrade(?AuthorExpGrade $currentAuthorExpGrade): void
+    {
+        $this->currentAuthorExpGrade = $currentAuthorExpGrade;
     }
 }
