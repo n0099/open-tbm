@@ -195,9 +195,7 @@ abstract class BaseQuery
         $this->stopwatch->start('fillWithSubRepliesFields');
         $subReplies = collect($postModels['subReply']->createQueryBuilder('t')
             ->where('t.spid IN (:spids)')->setParameter('spids', $spids)
-            ->getQuery()->getResult())
-        ->each(static fn(SubReply $subReply) =>
-            $subReply->setIsMatchQuery(true));
+            ->getQuery()->getResult());
         $this->stopwatch->stop('fillWithSubRepliesFields');
 
         $this->stopwatch->start('parsePostContentProtoBufBytes');
@@ -205,13 +203,13 @@ abstract class BaseQuery
         $replyContents = collect($this->postRepositoryFactory->newReplyContent($fid)->createQueryBuilder('t')
                 ->where('t.pid IN (:pids)')->setParameter('pids', $pids)
                 ->getQuery()->getResult())
-            ->mapWithKeys(fn(ReplyContent $content) => [$content->getPid() => $content->getProtoBufBytes()]);
+            ->mapWithKeys(fn(ReplyContent $content) => [$content->getPid() => $content->getContent()]);
         $replies->each(fn(Reply $reply) => $reply->setContent($replyContents->get($reply->getPid())));
 
         $subReplyContents = collect($this->postRepositoryFactory->newSubReplyContent($fid)->createQueryBuilder('t')
                 ->where('t.spid IN (:spids)')->setParameter('spids', $spids)
                 ->getQuery()->getResult())
-            ->mapWithKeys(fn(SubReplyContent $content) => [$content->getSpid() => $content->getProtoBufBytes()]);
+            ->mapWithKeys(fn(SubReplyContent $content) => [$content->getSpid() => $content->getContent()]);
         $subReplies->each(fn(SubReply $subReply) => $subReply->setContent($subReplyContents->get($subReply->getSpid())));
         $this->stopwatch->stop('parsePostContentProtoBufBytes');
 
@@ -287,8 +285,8 @@ abstract class BaseQuery
             // use the topmost value between sorting key or value of orderBy field within its child posts
             $curAndChildSortingKeys = collect([
                 // value of orderBy field in the first sorted child post that isMatchQuery after previous sorting
-                $childPosts
-                    ->filter(static fn(Collection $p) => $p['isMatchQuery'] === true)
+                $childPosts // sub replies won't have isMatchQuery
+                    ->filter(static fn(Collection $p) => ($p['isMatchQuery'] ?? true) === true)
                     // if no child posts matching the query, use null as the sorting key
                     ->first()[$this->orderByField] ?? null,
                 // sorting key from the first sorted child posts

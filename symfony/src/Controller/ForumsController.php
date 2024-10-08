@@ -10,7 +10,7 @@ class ForumsController extends AbstractController
 {
     public function __construct(private readonly ForumRepository $repository,) {}
 
-    #[Route('/forums')]
+    #[Route('/api/forums')]
     public function query(): array
     {
         return $this->repository->getOrderedForums();

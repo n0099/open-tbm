@@ -46,7 +46,7 @@ class PostsController extends AbstractController
         private readonly ContainerInterface $locator,
     ) {}
 
-    #[Route('/posts')]
+    #[Route('/api/posts')]
     public function query(Request $request): array
     {
         $this->validator->validate($request->query->all(), new Assert\Collection([
@@ -128,7 +128,8 @@ class PostsController extends AbstractController
             ],
             'forum' => $this->forumRepository->createQueryBuilder('t')
                 ->where('t.fid = :fid')->setParameter('fid', $fid)
-                ->setMaxResults(1)->getQuery()->getResult(),
+                ->select('t.fid', 't.name')->setMaxResults(1)
+                ->getQuery()->getSingleResult(),
             'threads' => $query->reOrderNestedPosts($query->nestPostsWithParent(...$result)),
             'users' => $users,
             'latestRepliers' => $latestRepliers,

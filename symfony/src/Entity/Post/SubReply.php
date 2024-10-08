@@ -4,6 +4,7 @@ namespace App\Entity\Post;
 
 use App\Repository\Post\SubReplyRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Attribute\Ignore;
 
 #[ORM\Entity(repositoryClass: SubReplyRepository::class)]
 class SubReply extends PostWithContent
@@ -25,5 +26,15 @@ class SubReply extends PostWithContent
     public function getSpid(): int
     {
         return $this->spid;
+    }
+
+    #[Ignore]
+    public function getIsMatchQuery(): bool
+    {
+        return true;
+    }
+
+    public function setIsMatchQuery(bool $isMatchQuery): void
+    {
     }
 }

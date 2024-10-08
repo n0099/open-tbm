@@ -21,7 +21,7 @@ class UsersController extends AbstractController
         private readonly UserRepository $userRepository,
     ) {}
 
-    #[Route('/users')]
+    #[Route('/api/users')]
     public function query(Request $request): array
     {
         $queryParams = $request->query->all();

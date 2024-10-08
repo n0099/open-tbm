@@ -11,6 +11,17 @@ class BlobResourceGetter
      * @param class-string<T> $protoBufClass
      * @template T of Message
      */
+    public static function protoBufWrapper($value, string $protoBufClass): ?array
+    {
+        $protoBuf = self::protoBuf($value, $protoBufClass);
+        return $protoBuf === null ? null : $protoBuf['value'];
+    }
+
+    /**
+     * @param ?resource $value
+     * @param class-string<T> $protoBufClass
+     * @template T of Message
+     */
     public static function protoBuf($value, string $protoBufClass): ?array
     {
         if ($value === null) {

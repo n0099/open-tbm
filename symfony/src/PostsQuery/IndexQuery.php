@@ -88,7 +88,7 @@ class IndexQuery extends BaseQuery
                     Helper::POST_TYPES, // only query post types that own the querying post ID param
                     array_search($postIDParamName, Helper::POST_ID, true),
                 ))
-                ->map(static fn(QueryBuilder $qb, string $type) =>
+                ->each(static fn(QueryBuilder $qb, string $type) =>
                     $qb->where("t.$postIDParamName = :postIDParamValue")
                         ->setParameter('postIDParamValue', $postIDParamValue));
         }

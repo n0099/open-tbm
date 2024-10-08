@@ -6,7 +6,7 @@ use Symfony\Component\EventDispatcher\Attribute\AsEventListener;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpKernel\Event\ResponseEvent;
 
-#[AsEventListener]
+#[AsEventListener(priority: -1)] /** should be lower than @see ShowReactJsonView */
 class PrettyJsonResponse
 {
     public function __invoke(ResponseEvent $event): void

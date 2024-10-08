@@ -6,7 +6,7 @@ use App\DTO\User\AuthorExpGrade;
 use App\DTO\User\ForumModerator;
 use App\Repository\UserRepository;
 use Doctrine\ORM\Mapping as ORM;
-use TbClient\UserDeps\Icon;
+use TbClient\Wrapper\UserIconWrapper;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\Table(name: '"tbmc_user"')]
@@ -22,7 +22,7 @@ class User extends TimestampedEntity
     #[ORM\Column] private ?string $fansNickname;
     /** @type ?resource */
     #[ORM\Column] private $icon;
-    #[ORM\Column] private string $ipGeolocation;
+    #[ORM\Column] private ?string $ipGeolocation;
     private ?ForumModerator $currentForumModerator;
     private ?AuthorExpGrade $currentAuthorExpGrade;
 
@@ -63,10 +63,10 @@ class User extends TimestampedEntity
 
     public function getIcon(): ?array
     {
-        return BlobResourceGetter::protoBuf($this->icon, Icon::class);
+        return BlobResourceGetter::protoBufWrapper($this->icon, UserIconWrapper::class);
     }
 
-    public function getIpGeolocation(): string
+    public function getIpGeolocation(): ?string
     {
         return $this->ipGeolocation;
     }
