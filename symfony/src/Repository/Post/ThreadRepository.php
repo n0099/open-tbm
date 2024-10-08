@@ -29,7 +29,7 @@ class ThreadRepository extends PostRepository
         // https://github.com/doctrine/dbal/issues/5018#issuecomment-2395177479
         $entityManager = $this->getEntityManager();
         $connection = $entityManager->getConnection();
-        $tableName = $connection->quoteIdentifier($entityManager->getClassMetadata(Thread::class)->getTableName());
+        $tableName = $entityManager->getClassMetadata(Thread::class)->getTableName();
         $statement = $connection->prepare(<<<"SQL"
             SELECT tid FROM (
                 SELECT tid, ROW_NUMBER() OVER (ORDER BY tid) rn FROM $tableName

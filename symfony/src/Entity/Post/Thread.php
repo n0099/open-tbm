@@ -18,6 +18,7 @@ class Thread extends Post
     #[ORM\Column] private ?int $isGood;
     #[ORM\Column] private string $title;
     #[ORM\Column] private int $latestReplyPostedAt;
+    #[ORM\Column] private ?int $latestReplierId;
     #[ORM\Column] private ?int $replyCount;
     #[ORM\Column] private ?int $viewCount;
     #[ORM\Column] private ?int $shareCount;
@@ -60,6 +61,11 @@ class Thread extends Post
     public function getLatestReplyPostedAt(): int
     {
         return $this->latestReplyPostedAt;
+    }
+
+    public function getLatestReplierId(): ?int
+    {
+        return $this->latestReplierId;
     }
 
     public function getReplyCount(): int

@@ -2,6 +2,11 @@
 
 namespace App\Controller;
 
+use App\DTO\User\AuthorExpGrade;
+use App\DTO\User\ForumModerator;
+use App\Entity\Post\Post;
+use App\Entity\Post\Thread;
+use App\Entity\User;
 use App\Helper;
 use App\PostsQuery\BaseQuery;
 use App\PostsQuery\IndexQuery;
@@ -9,6 +14,8 @@ use App\PostsQuery\ParamsValidator;
 use App\PostsQuery\SearchQuery;
 use App\Repository\ForumRepository;
 use App\Repository\LatestReplierRepository;
+use App\Repository\Revision\AuthorExpGradeRepository;
+use App\Repository\Revision\ForumModeratorRepository;
 use App\Repository\UserRepository;
 use App\Validator\Validator;
 use Illuminate\Support\Arr;
@@ -29,6 +36,8 @@ class PostsController extends AbstractController
         private readonly ForumRepository $forumRepository,
         private readonly UserRepository $userRepository,
         private readonly LatestReplierRepository $latestReplierRepository,
+        private readonly ForumModeratorRepository $forumModeratorRepository,
+        private readonly AuthorExpGradeRepository $authorExpGradeRepository,
         #[AutowireLocator([
             ParamsValidator::class,
             IndexQuery::class,
@@ -77,29 +86,39 @@ class PostsController extends AbstractController
         $this->stopwatch->stop('fillWithParentPost');
 
         $this->stopwatch->start('queryUsers');
-        $latestRepliersId = $result['threads']->pluck('latestReplierId');
+        $latestRepliersId = $result['threads']->map(fn(Thread $thread) => $thread->getLatestReplierId());
         $latestRepliers = collect()
             ->concat($this->latestReplierRepository->createQueryBuilder('t')
                 ->where('t.id IN (:ids)')->setParameter('ids', $latestRepliersId)
                 ->andWhere('t.uid IS NOT NULL')
+                ->select('t.id', 't.uid', 't.createdAt', 't.updatedAt') // removeSelect('t.name', 't.displayName')
                 ->getQuery()->getResult())
             ->concat($this->latestReplierRepository->createQueryBuilder('t')
                 ->where('t.id IN (:ids)')->setParameter('ids', $latestRepliersId)
                 ->andWhere('t.uid IS NULL')
-                ->addSelect('t.name', 't.displayName')
                 ->getQuery()->getResult());
-        $users = $this->userRepository->createQueryBuilder('t')
+        $uids = collect($result)
+            ->only(Helper::POST_TYPES_PLURAL)
+            ->flatMap(static fn(Collection $posts) => $posts->map(fn(Post $post) => $post->getAuthorUid()))
+            ->concat($latestRepliers->pluck('uid'))
+            ->filter()->unique(); // remove NULLs
+        $users = collect($this->userRepository->createQueryBuilder('t')
             ->where('t.uid IN (:uids)')
-            ->setParameter(
-                'uids',
-                collect($result)
-                    ->only(Helper::POST_TYPES_PLURAL)
-                    ->flatMap(static fn(Collection $posts) => $posts->pluck('authorUid'))
-                    ->concat($latestRepliers->pluck('uid'))
-                    ->filter()->unique()->toArray() // remove NULLs
-            )
-            ->getQuery()->getResult();
+            ->setParameter('uids', $uids)
+            ->getQuery()->getResult());
         $this->stopwatch->stop('queryUsers');
+
+        $this->stopwatch->start('queryUserRelated');
+        $fid = $result['fid'];
+        $authorExpGrades = collect($this->authorExpGradeRepository->getLatestOfUsers($fid, $uids))
+            ->keyBy(fn(AuthorExpGrade $authorExpGrade) => $authorExpGrade->getUid());
+        $users->each(fn (User $user) => $user->setCurrentAuthorExpGrade($authorExpGrades[$user->getUid()]));
+
+        $forumModerators = collect($this->forumModeratorRepository
+                ->getLatestOfUsers($fid, $users->map(fn(User $user) => $user->getPortrait())))
+            ->keyBy(fn(ForumModerator $forumModerator) => $forumModerator->getPortrait());
+        $users->each(fn (User $user) => $user->setCurrentForumModerator($forumModerators->get($user->getPortrait())));
+        $this->stopwatch->stop('queryUserRelated');
 
         return [
             'type' => $isIndexQuery ? 'index' : 'search',
@@ -108,7 +127,7 @@ class PostsController extends AbstractController
                 ...Arr::except($result, ['fid', ...Helper::POST_TYPES_PLURAL]),
             ],
             'forum' => $this->forumRepository->createQueryBuilder('t')
-                ->where('t.fid = :fid')->setParameter('fid', $result['fid'])
+                ->where('t.fid = :fid')->setParameter('fid', $fid)
                 ->setMaxResults(1)->getQuery()->getResult(),
             'threads' => $query->reOrderNestedPosts($query->nestPostsWithParent(...$result)),
             'users' => $users,
