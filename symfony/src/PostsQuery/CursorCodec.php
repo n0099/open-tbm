@@ -2,14 +2,18 @@
 
 namespace App\PostsQuery;
 
-use App\Entity\Post\Post;
 use App\Helper;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 
+/** @psalm-type PostsKeyByTypePluralName = Collection{
+ *     threads: Collection<array{tid: int, postedAt: int}>,
+ *     replies: Collection<array{tid: int, pid: int, postedAt: int}>,
+ *     subReplies: Collection<array{tid: int, pid: int, spid: int, postedAt: int}>,
+ * } */
 class CursorCodec
 {
-    /** @param Collection<string, Post> $postsKeyByTypePluralName */
+    /** @param PostsKeyByTypePluralName $postsKeyByTypePluralName */
     public function encodeNextCursor(Collection $postsKeyByTypePluralName, string $orderByField): string
     {
         $encodedCursorsKeyByPostType = $postsKeyByTypePluralName
@@ -17,13 +21,8 @@ class CursorCodec
                 Helper::POST_TYPE_PLURAL_TO_SINGULAR[$type] => $posts->last(), // null when no posts
             ]) // [singularPostTypeName => lastPostInResult]
             ->filter() // remove post types that have no posts
-            ->map(function (Post $post, string $typePluralName) use ($orderByField) {
-                $postIDFieldName = Helper::POST_TYPE_TO_ID[$typePluralName];
-                return [
-                    $post->{"get$postIDFieldName"}(),
-                    $post->{"get$orderByField"}(),
-                ];
-            })
+            ->map(fn(array $post, string $typePluralName) =>
+                [$post[Helper::POST_TYPE_TO_ID[$typePluralName]], $post[$orderByField]])
             ->map(static fn(array $cursors) => collect($cursors)
                 ->map(static function (int|string $cursor): string {
                     if ($cursor === 0) { // quick exit to keep 0 as is
@@ -103,9 +102,9 @@ class CursorCodec
                 $cursors->mapWithKeys(fn(int|string|null $cursor, int $index) =>
                 [$index === 0 ? Helper::POST_TYPE_TO_ID[$postType] : $orderByField => $cursor]),
             ])
-            // filter out cursors with all fields value being null, their encoded cursor is ',,'
+            // filter out cursors with all fields value being null, '' or 0 with their encoded cursor ',,'
             ->reject(static fn(Collection $cursors) =>
-            $cursors->every(static fn(int|string|null $cursor) => $cursor === null))
+                $cursors->every(static fn(int|string|null $cursor) => empty($cursor)))
             ->map(static fn(Collection $cursors) => $cursors->all());
     }
 }

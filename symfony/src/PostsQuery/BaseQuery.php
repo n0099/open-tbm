@@ -10,11 +10,13 @@ use App\Entity\Post\SubReply;
 use App\Entity\Post\Thread;
 use App\Helper;
 use App\Repository\Post\PostRepositoryFactory;
+use Doctrine\ORM\Query\Expr;
 use Doctrine\ORM\QueryBuilder;
 use Illuminate\Support\Collection;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Stopwatch\Stopwatch;
 
+/** @psalm-import-type PostsKeyByTypePluralName from CursorCodec */
 abstract class BaseQuery
 {
     /** @type array{
@@ -82,22 +84,25 @@ abstract class BaseQuery
         }
         $this->stopwatch->start('initPaginators');
         /** @var Collection<string, QueryBuilder> $paginators key by post type */
-        $paginators = $orderedQueries->map(function (QueryBuilder $qb, string $type) use ($cursorsKeyByPostType) {
+        $paginators = $orderedQueries->each(function (QueryBuilder $qb, string $type) use ($cursorsKeyByPostType) {
             $cursors = $cursorsKeyByPostType?->get($type);
             if ($cursors === null) {
-                return $qb;
+                return;
             }
-            return collect($cursors)->reduce(
-                static fn(QueryBuilder $acc, $cursorValue, string $cursorField): QueryBuilder =>
-                    $acc->andWhere("t.$cursorField > :cursorValue")->setParameter('cursorValue', $cursorValue),
-                $qb
-            );
+            $cursors = collect($cursors);
+            $comparisons = $cursors->keys()->map(
+                fn(string $fieldName): Expr\Comparison => $this->orderByDesc
+                    ? $qb->expr()->lt("t.$fieldName", ":cursor_$fieldName")
+                    : $qb->expr()->gt("t.$fieldName", ":cursor_$fieldName"));
+            $qb->andWhere($qb->expr()->orX(...$comparisons));
+            $cursors->mapWithKeys(fn($fieldValue, string $fieldName) =>
+                $qb->setParameter("cursor_$fieldName", $fieldValue)); // prevent overwriting existing param
         });
         $this->stopwatch->stop('initPaginators');
 
         $resultsAndHasMorePages = $paginators->map(fn(QueryBuilder $paginator) =>
             self::hasQueryResultMorePages($paginator, $this->perPageItems));
-        /** @var Collection<string, Collection> $postsKeyByTypePluralName */
+        /** @var PostsKeyByTypePluralName $postsKeyByTypePluralName */
         $postsKeyByTypePluralName = $resultsAndHasMorePages
             ->mapWithKeys(fn(array $resultAndHasMorePages, string $postType) =>
                 [Helper::POST_TYPE_TO_PLURAL[$postType] => $resultAndHasMorePages['result']]);
@@ -184,9 +189,9 @@ abstract class BaseQuery
         $this->stopwatch->start('fillWithRepliesFields');
         /** @var Collection<int, int> $parentRepliesID parent pid of all sub replies */
         $parentRepliesID = $subReplies->pluck('pid')->unique();
+        $allRepliesId = $parentRepliesID->concat($pids);
         $replies = collect($postModels['reply']->createQueryBuilder('t')
-            ->where('t.pid IN (:pids)')
-            ->setParameter('pids', $parentRepliesID->concat($pids))
+            ->where('t.pid IN (:pids)')->setParameter('pids', $allRepliesId)
             ->getQuery()->getResult())
         ->each(static fn(Reply $reply) =>
             $reply->setIsMatchQuery($pids->contains($reply->getPid())));
@@ -201,7 +206,7 @@ abstract class BaseQuery
         $this->stopwatch->start('parsePostContentProtoBufBytes');
         // not using one-to-one association due to relying on PostRepository->getTableNameSuffix()
         $replyContents = collect($this->postRepositoryFactory->newReplyContent($fid)->createQueryBuilder('t')
-                ->where('t.pid IN (:pids)')->setParameter('pids', $pids)
+                ->where('t.pid IN (:pids)')->setParameter('pids', $allRepliesId)
                 ->getQuery()->getResult())
             ->mapWithKeys(fn(ReplyContent $content) => [$content->getPid() => $content->getContent()]);
         $replies->each(fn(Reply $reply) => $reply->setContent($replyContents->get($reply->getPid())));
