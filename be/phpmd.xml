@@ -6,7 +6,7 @@
     xsi:noNamespaceSchemaLocation="http://phpmd.org/xml/ruleset_xml_schema_1.0.0.xsd">
     <!-- https://github.com/phpmd/phpmd/issues/506 -->
     <exclude-pattern>vendor</exclude-pattern>
-    <exclude-pattern>_ide_helper*.php</exclude-pattern>
+    <exclude-pattern>var</exclude-pattern>
     <!-- https://github.com/phpmd/phpmd/tree/2.15.0/src/main/resources/rulesets -->
     <!-- https://gist.github.com/slayerfat/2b3cc4faf94d2863b505 -->
     <rule ref="rulesets/cleancode.xml">

@@ -1,0 +1,139 @@
+<?php
+
+namespace App\Controller;
+
+use App\DTO\User\AuthorExpGrade;
+use App\DTO\User\ForumModerator;
+use App\Entity\Post\Post;
+use App\Entity\Post\Thread;
+use App\Entity\User;
+use App\Helper;
+use App\PostsQuery\BaseQuery;
+use App\PostsQuery\IndexQuery;
+use App\PostsQuery\ParamsValidator;
+use App\PostsQuery\SearchQuery;
+use App\Repository\ForumRepository;
+use App\Repository\LatestReplierRepository;
+use App\Repository\Revision\AuthorExpGradeRepository;
+use App\Repository\Revision\ForumModeratorRepository;
+use App\Repository\UserRepository;
+use App\Validator\Validator;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Collection;
+use Psr\Container\ContainerInterface;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\DependencyInjection\Attribute\AutowireLocator;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Stopwatch\Stopwatch;
+use Symfony\Component\Validator\Constraints as Assert;
+
+class PostsController extends AbstractController
+{
+    public function __construct(
+        private readonly Stopwatch $stopwatch,
+        private readonly Validator $validator,
+        private readonly ForumRepository $forumRepository,
+        private readonly UserRepository $userRepository,
+        private readonly LatestReplierRepository $latestReplierRepository,
+        private readonly ForumModeratorRepository $forumModeratorRepository,
+        private readonly AuthorExpGradeRepository $authorExpGradeRepository,
+        #[AutowireLocator([
+            ParamsValidator::class,
+            IndexQuery::class,
+            SearchQuery::class,
+        ])]
+        private readonly ContainerInterface $locator,
+    ) {}
+
+    #[Route('/api/posts')]
+    public function query(Request $request): array
+    {
+        $this->validator->validate($request->query->all(), new Assert\Collection([
+            'cursor' => new Assert\Optional(new Assert\Regex(
+                // https://stackoverflow.com/questions/475074/regex-to-parse-or-validate-base64-data
+                // (,|$)|,){5,6} means allow at most 5~6 parts of base64 segment or empty string to exist
+                '/^(([A-Za-z0-9-_]{4})*([A-Za-z0-9-_]{2,3})(,|$)|,){5,6}$/',
+            )),
+            'query' => new Assert\Required(new Assert\Json()),
+        ]));
+        $validator = $this->locator->get(ParamsValidator::class);
+        $params = $validator->setParams(\Safe\json_decode($request->query->get('query'), true))->getParams();
+
+        $postIDParams = $params->pick(...Helper::POST_ID);
+        $isQueryByPostID =
+            // is there no other params except unique params and post ID params
+            \count($params->omit(...ParamsValidator::UNIQUE_PARAMS_NAME, ...Helper::POST_ID)) === 0
+            // is there only one post ID param
+            && \count($postIDParams) === 1
+            // is all post ID params doesn't own any sub param
+            && array_filter($postIDParams, static fn($p) => $p->getAllSub() !== []) === [];
+        $isFidParamNull = $params->getUniqueParamValue('fid') === null;
+        // is the fid param exists and there's no other params except unique params
+        $isQueryByFid = !$isFidParamNull && \count($params->omit(...ParamsValidator::UNIQUE_PARAMS_NAME)) === 0;
+        $isIndexQuery = $isQueryByPostID || $isQueryByFid;
+        $isSearchQuery = !$isIndexQuery;
+        Helper::abortAPIIf(40002, $isSearchQuery && $isFidParamNull);
+
+        $validator->addDefaultParamsThenValidate(shouldSkip40003: $isIndexQuery);
+
+        $this->stopwatch->start('$queryClass->query()');
+        /** @var BaseQuery $query */
+        $query = $this->locator->get($isIndexQuery ? IndexQuery::class : SearchQuery::class);
+        $query->query($params, $request->query->get('cursor'));
+        $this->stopwatch->stop('$queryClass->query()');
+        $this->stopwatch->start('fillWithParentPost');
+        $result = $query->fillWithParentPost();
+        $this->stopwatch->stop('fillWithParentPost');
+
+        $this->stopwatch->start('queryUsers');
+        $latestRepliersId = $result['threads']->map(fn(Thread $thread) => $thread->getLatestReplierId());
+        $latestRepliers = collect()
+            ->concat($this->latestReplierRepository->createQueryBuilder('t')
+                ->where('t.id IN (:ids)')->setParameter('ids', $latestRepliersId)
+                ->andWhere('t.uid IS NOT NULL')
+                ->select('t.id', 't.uid', 't.createdAt', 't.updatedAt') // removeSelect('t.name', 't.displayName')
+                ->getQuery()->getResult())
+            ->concat($this->latestReplierRepository->createQueryBuilder('t')
+                ->where('t.id IN (:ids)')->setParameter('ids', $latestRepliersId)
+                ->andWhere('t.uid IS NULL')
+                ->getQuery()->getResult());
+        $uids = collect($result)
+            ->only(Helper::POST_TYPES_PLURAL)
+            ->flatMap(static fn(Collection $posts) => $posts->map(fn(Post $post) => $post->getAuthorUid()))
+            ->concat($latestRepliers->pluck('uid'))
+            ->filter()->unique(); // remove NULLs
+        $users = collect($this->userRepository->createQueryBuilder('t')
+            ->where('t.uid IN (:uids)')
+            ->setParameter('uids', $uids)
+            ->getQuery()->getResult());
+        $this->stopwatch->stop('queryUsers');
+
+        $this->stopwatch->start('queryUserRelated');
+        $fid = $result['fid'];
+        $authorExpGrades = collect($this->authorExpGradeRepository->getLatestOfUsers($fid, $uids))
+            ->keyBy(fn(AuthorExpGrade $authorExpGrade) => $authorExpGrade->getUid());
+        $users->each(fn(User $user) => $user->setCurrentAuthorExpGrade($authorExpGrades[$user->getUid()]));
+
+        $forumModerators = collect($this->forumModeratorRepository
+                ->getLatestOfUsers($fid, $users->map(fn(User $user) => $user->getPortrait())))
+            ->keyBy(fn(ForumModerator $forumModerator) => $forumModerator->getPortrait());
+        $users->each(fn(User $user) => $user->setCurrentForumModerator($forumModerators->get($user->getPortrait())));
+        $this->stopwatch->stop('queryUserRelated');
+
+        return [
+            'type' => $isIndexQuery ? 'index' : 'search',
+            'pages' => [
+                ...$query->getResultPages(),
+                ...Arr::except($result, ['fid', ...Helper::POST_TYPES_PLURAL]),
+            ],
+            'forum' => $this->forumRepository->createQueryBuilder('t')
+                ->where('t.fid = :fid')->setParameter('fid', $fid)
+                ->select('t.fid', 't.name')->setMaxResults(1)
+                ->getQuery()->getSingleResult(),
+            'threads' => $query->reOrderNestedPosts($query->nestPostsWithParent(...$result)),
+            'users' => $users,
+            'latestRepliers' => $latestRepliers,
+        ];
+    }
+}

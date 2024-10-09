@@ -272,14 +272,14 @@ return [
     // directories/files, unanalyzable files, or files that
     // can't be removed for whatever reason.
     // (e.g. `'@Test\.php$@'`, or `'@vendor/.*/(tests|Tests)/@'`)
-    'exclude_file_regex' => '@^vendor/.*/(tests?|Tests?)/|_ide_helper.*\.php@',
+    'exclude_file_regex' => '@^vendor/.*/(tests?|Tests?)/@',
 
     // A list of files that will be excluded from parsing and analysis
     // and will not be read at all.
     //
     // This is useful for excluding hopelessly unanalyzable
     // files that can't be removed for whatever reason.
-    'exclude_file_list' => ['.phpstorm.meta.php'],
+    'exclude_file_list' => [],
 
     // A directory list that defines files that will be excluded
     // from static analysis, but whose class and method
@@ -292,7 +292,7 @@ return [
     //       party code, directories containing that code
     //       should be added to the `directory_list` as well as
     //       to `exclude_analysis_directory_list`.
-    'exclude_analysis_directory_list' => ['vendor/'],
+    'exclude_analysis_directory_list' => ['vendor/', 'var/'],
 
     // Enable this to enable checks of require/include statements referring to valid paths.
     // The settings `include_paths` and `warn_about_relative_include_statement` affect the checks.

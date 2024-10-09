@@ -58,7 +58,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/be
       - run: >
-          ./vendor/bin/phpstan analyse --error-format=checkstyle
+          ./vendor/bin/phpstan analyze --error-format=checkstyle
           | tee >(cs2pr --notices-as-warnings --graceful-warnings --prepend-filename --prepend-source)
         shell: bash
 

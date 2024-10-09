@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sitemapindex
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/siteindex.xsd"
+    xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+    {%- for fid, tids in threads_id_key_by_fid %}
+        {% set threads_sitemap_path =
+            app.request.schemeAndHttpHost ~ app.request.baseUrl ~ "/sitemaps/forums/#{fid}/threads" ~%}
+        <sitemap>
+            <loc>{{ threads_sitemap_path }}</loc>
+        </sitemap>
+        {%- for tid in tids ~%}
+            <sitemap>
+                <loc>{{ threads_sitemap_path }}?cursor={{ tid }}</loc>
+            </sitemap>
+        {%- endfor %}
+    {% endfor ~%}
+</sitemapindex>
