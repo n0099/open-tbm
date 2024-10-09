@@ -1,7 +1,5 @@
 <?php
 
-/** @noinspection PhpPropertyOnlyWrittenInspection */
-
 namespace App\Entity\Post;
 
 use App\Entity\BlobResourceGetter;
@@ -26,9 +24,19 @@ class Reply extends PostWithContent
         return $this->tid;
     }
 
+    public function setTid(int $tid): void
+    {
+        $this->tid = $tid;
+    }
+
     public function getPid(): int
     {
         return $this->pid;
+    }
+
+    public function setPid(int $pid): void
+    {
+        $this->pid = $pid;
     }
 
     public function getFloor(): int
@@ -36,9 +44,19 @@ class Reply extends PostWithContent
         return $this->floor;
     }
 
+    public function setFloor(int $floor): void
+    {
+        $this->floor = $floor;
+    }
+
     public function getSubReplyCount(): int
     {
         return $this->subReplyCount ?? 0;
+    }
+
+    public function setSubReplyCount(?int $subReplyCount): void
+    {
+        $this->subReplyCount = $subReplyCount;
     }
 
     public function getIsFold(): ?int
@@ -46,13 +64,31 @@ class Reply extends PostWithContent
         return $this->isFold;
     }
 
+    public function setIsFold(?int $isFold): void
+    {
+        $this->isFold = $isFold;
+    }
+
     public function getGeolocation(): ?array
     {
         return BlobResourceGetter::protoBuf($this->geolocation, Lbs::class);
     }
 
+    /**
+     * @param resource|null $geolocation
+     */
+    public function setGeolocation(null $geolocation): void
+    {
+        $this->geolocation = $geolocation;
+    }
+
     public function getSignatureId(): ?int
     {
         return $this->signatureId;
+    }
+
+    public function setSignatureId(?int $signatureId): void
+    {
+        $this->signatureId = $signatureId;
     }
 }

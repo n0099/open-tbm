@@ -1,7 +1,5 @@
 <?php
 
-/** @noinspection PhpPropertyOnlyWrittenInspection */
-
 namespace App\Entity\Post;
 
 use App\Entity\BlobResourceGetter;
@@ -35,9 +33,19 @@ class Thread extends Post
         return $this->tid;
     }
 
+    public function setTid(int $tid): void
+    {
+        $this->tid = $tid;
+    }
+
     public function getThreadType(): int
     {
         return $this->threadType;
+    }
+
+    public function setThreadType(int $threadType): void
+    {
+        $this->threadType = $threadType;
     }
 
     public function getStickyType(): ?string
@@ -45,9 +53,19 @@ class Thread extends Post
         return $this->stickyType;
     }
 
+    public function setStickyType(?string $stickyType): void
+    {
+        $this->stickyType = $stickyType;
+    }
+
     public function getTopicType(): ?string
     {
         return $this->topicType;
+    }
+
+    public function setTopicType(?string $topicType): void
+    {
+        $this->topicType = $topicType;
     }
 
     public function getIsGood(): ?int
@@ -55,9 +73,19 @@ class Thread extends Post
         return $this->isGood;
     }
 
+    public function setIsGood(?int $isGood): void
+    {
+        $this->isGood = $isGood;
+    }
+
     public function getTitle(): string
     {
         return $this->title;
+    }
+
+    public function setTitle(string $title): void
+    {
+        $this->title = $title;
     }
 
     public function getLatestReplyPostedAt(): int
@@ -65,9 +93,19 @@ class Thread extends Post
         return $this->latestReplyPostedAt;
     }
 
+    public function setLatestReplyPostedAt(int $latestReplyPostedAt): void
+    {
+        $this->latestReplyPostedAt = $latestReplyPostedAt;
+    }
+
     public function getLatestReplierId(): ?int
     {
         return $this->latestReplierId;
+    }
+
+    public function setLatestReplierId(?int $latestReplierId): void
+    {
+        $this->latestReplierId = $latestReplierId;
     }
 
     public function getReplyCount(): int
@@ -75,9 +113,19 @@ class Thread extends Post
         return $this->replyCount ?? 0;
     }
 
+    public function setReplyCount(?int $replyCount): void
+    {
+        $this->replyCount = $replyCount;
+    }
+
     public function getViewCount(): int
     {
         return $this->viewCount ?? 0;
+    }
+
+    public function setViewCount(?int $viewCount): void
+    {
+        $this->viewCount = $viewCount;
     }
 
     public function getShareCount(): int
@@ -85,9 +133,22 @@ class Thread extends Post
         return $this->shareCount ?? 0;
     }
 
+    public function setShareCount(?int $shareCount): void
+    {
+        $this->shareCount = $shareCount;
+    }
+
     public function getZan(): ?array
     {
         return BlobResourceGetter::protoBuf($this->zan, Zan::class);
+    }
+
+    /**
+     * @param resource|null $zan
+     */
+    public function setZan(null $zan): void
+    {
+        $this->zan = $zan;
     }
 
     public function getGeolocation(): ?array
@@ -95,8 +156,21 @@ class Thread extends Post
         return BlobResourceGetter::protoBuf($this->geolocation, Lbs::class);
     }
 
+    /**
+     * @param resource|null $geolocation
+     */
+    public function setGeolocation(null $geolocation): void
+    {
+        $this->geolocation = $geolocation;
+    }
+
     public function getAuthorPhoneType(): ?string
     {
         return $this->authorPhoneType;
+    }
+
+    public function setAuthorPhoneType(?string $authorPhoneType): void
+    {
+        $this->authorPhoneType = $authorPhoneType;
     }
 }

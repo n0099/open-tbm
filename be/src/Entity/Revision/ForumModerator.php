@@ -1,7 +1,5 @@
 <?php
 
-/** @noinspection PhpPropertyOnlyWrittenInspection */
-
 namespace App\Entity\Revision;
 
 use App\Repository\Revision\ForumModeratorRepository;
@@ -21,9 +19,19 @@ class ForumModerator
         return $this->discoveredAt;
     }
 
+    public function setDiscoveredAt(int $discoveredAt): void
+    {
+        $this->discoveredAt = $discoveredAt;
+    }
+
     public function getFid(): int
     {
         return $this->fid;
+    }
+
+    public function setFid(int $fid): void
+    {
+        $this->fid = $fid;
     }
 
     public function getPortrait(): string
@@ -31,8 +39,18 @@ class ForumModerator
         return $this->portrait;
     }
 
+    public function setPortrait(string $portrait): void
+    {
+        $this->portrait = $portrait;
+    }
+
     public function getModeratorTypes(): string
     {
         return $this->moderatorTypes;
+    }
+
+    public function setModeratorTypes(string $moderatorTypes): void
+    {
+        $this->moderatorTypes = $moderatorTypes;
     }
 }

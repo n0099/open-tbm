@@ -1,7 +1,5 @@
 <?php
 
-/** @noinspection PhpPropertyOnlyWrittenInspection */
-
 namespace App\Entity\Post\Content;
 
 use App\Repository\Post\Content\SubReplyContentRepository;
@@ -15,5 +13,10 @@ class SubReplyContent extends PostContent
     public function getSpid(): int
     {
         return $this->spid;
+    }
+
+    public function setSpid(int $spid): void
+    {
+        $this->spid = $spid;
     }
 }

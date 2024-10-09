@@ -1,7 +1,5 @@
 <?php
 
-/** @noinspection PhpPropertyOnlyWrittenInspection */
-
 namespace App\Entity;
 
 use App\Repository\ForumRepository;
@@ -20,13 +18,28 @@ class Forum
         return $this->fid;
     }
 
+    public function setFid(int $fid): void
+    {
+        $this->fid = $fid;
+    }
+
     public function getName(): string
     {
         return $this->name;
     }
 
+    public function setName(string $name): void
+    {
+        $this->name = $name;
+    }
+
     public function isCrawling(): bool
     {
         return $this->isCrawling;
+    }
+
+    public function setIsCrawling(bool $isCrawling): void
+    {
+        $this->isCrawling = $isCrawling;
     }
 }

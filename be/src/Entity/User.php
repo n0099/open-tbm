@@ -1,7 +1,5 @@
 <?php
 
-/** @noinspection PhpPropertyOnlyWrittenInspection */
-
 namespace App\Entity;
 
 use App\DTO\User\AuthorExpGrade;
@@ -33,9 +31,19 @@ class User extends TimestampedEntity
         return $this->uid;
     }
 
+    public function setUid(int $uid): void
+    {
+        $this->uid = $uid;
+    }
+
     public function getName(): ?string
     {
         return $this->name;
+    }
+
+    public function setName(?string $name): void
+    {
+        $this->name = $name;
     }
 
     public function getDisplayName(): ?string
@@ -43,9 +51,22 @@ class User extends TimestampedEntity
         return BlobResourceGetter::resource($this->displayName);
     }
 
+    /**
+     * @param resource|null $displayName
+     */
+    public function setDisplayName(null $displayName): void
+    {
+        $this->displayName = $displayName;
+    }
+
     public function getPortrait(): string
     {
         return $this->portrait;
+    }
+
+    public function setPortrait(string $portrait): void
+    {
+        $this->portrait = $portrait;
     }
 
     public function getPortraitUpdatedAt(): ?int
@@ -53,9 +74,19 @@ class User extends TimestampedEntity
         return $this->portraitUpdatedAt;
     }
 
+    public function setPortraitUpdatedAt(?int $portraitUpdatedAt): void
+    {
+        $this->portraitUpdatedAt = $portraitUpdatedAt;
+    }
+
     public function getGender(): ?int
     {
         return $this->gender;
+    }
+
+    public function setGender(?int $gender): void
+    {
+        $this->gender = $gender;
     }
 
     public function getFansNickname(): ?string
@@ -63,14 +94,32 @@ class User extends TimestampedEntity
         return $this->fansNickname;
     }
 
+    public function setFansNickname(?string $fansNickname): void
+    {
+        $this->fansNickname = $fansNickname;
+    }
+
     public function getIcon(): ?array
     {
         return BlobResourceGetter::protoBufWrapper($this->icon, UserIconWrapper::class);
     }
 
+    /**
+     * @param resource|null $icon
+     */
+    public function setIcon(null $icon): void
+    {
+        $this->icon = $icon;
+    }
+
     public function getIpGeolocation(): ?string
     {
         return $this->ipGeolocation;
+    }
+
+    public function setIpGeolocation(?string $ipGeolocation): void
+    {
+        $this->ipGeolocation = $ipGeolocation;
     }
 
     public function getCurrentForumModerator(): ?ForumModerator

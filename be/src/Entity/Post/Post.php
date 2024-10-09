@@ -1,7 +1,5 @@
 <?php
 
-/** @noinspection PhpPropertyOnlyWrittenInspection */
-
 namespace App\Entity\Post;
 
 use App\Entity\TimestampedEntity;
@@ -22,9 +20,19 @@ abstract class Post extends TimestampedEntity
         return $this->authorUid;
     }
 
+    public function setAuthorUid(int $authorUid): void
+    {
+        $this->authorUid = $authorUid;
+    }
+
     public function getPostedAt(): int
     {
         return $this->postedAt;
+    }
+
+    public function setPostedAt(int $postedAt): void
+    {
+        $this->postedAt = $postedAt;
     }
 
     public function getLastSeenAt(): ?int
@@ -32,14 +40,29 @@ abstract class Post extends TimestampedEntity
         return $this->lastSeenAt;
     }
 
+    public function setLastSeenAt(?int $lastSeenAt): void
+    {
+        $this->lastSeenAt = $lastSeenAt;
+    }
+
     public function getAgreeCount(): int
     {
         return $this->agreeCount ?? 0;
     }
 
+    public function setAgreeCount(?int $agreeCount): void
+    {
+        $this->agreeCount = $agreeCount;
+    }
+
     public function getDisagreeCount(): int
     {
         return $this->disagreeCount ?? 0;
+    }
+
+    public function setDisagreeCount(?int $disagreeCount): void
+    {
+        $this->disagreeCount = $disagreeCount;
     }
 
     public function getIsMatchQuery(): bool

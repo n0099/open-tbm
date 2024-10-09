@@ -1,7 +1,5 @@
 <?php
 
-/** @noinspection PhpPropertyOnlyWrittenInspection */
-
 namespace App\Entity\Post\Content;
 
 use App\Repository\Post\Content\ReplyContentRepository;
@@ -15,5 +13,10 @@ class ReplyContent extends PostContent
     public function getPid(): int
     {
         return $this->pid;
+    }
+
+    public function setPid(int $pid): void
+    {
+        $this->pid = $pid;
     }
 }

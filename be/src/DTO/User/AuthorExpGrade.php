@@ -1,7 +1,5 @@
 <?php
 
-/** @noinspection PhpPropertyOnlyWrittenInspection */
-
 namespace App\DTO\User;
 
 use Doctrine\ORM\Mapping as ORM;

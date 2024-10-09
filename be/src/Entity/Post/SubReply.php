@@ -1,7 +1,5 @@
 <?php
 
-/** @noinspection PhpPropertyOnlyWrittenInspection */
-
 namespace App\Entity\Post;
 
 use App\Repository\Post\SubReplyRepository;
@@ -20,14 +18,29 @@ class SubReply extends PostWithContent
         return $this->tid;
     }
 
+    public function setTid(int $tid): void
+    {
+        $this->tid = $tid;
+    }
+
     public function getPid(): int
     {
         return $this->pid;
     }
 
+    public function setPid(int $pid): void
+    {
+        $this->pid = $pid;
+    }
+
     public function getSpid(): int
     {
         return $this->spid;
+    }
+
+    public function setSpid(int $spid): void
+    {
+        $this->spid = $spid;
     }
 
     #[Ignore]

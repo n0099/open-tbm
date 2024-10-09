@@ -1,7 +1,5 @@
 <?php
 
-/** @noinspection PhpPropertyOnlyWrittenInspection */
-
 namespace App\Entity;
 
 use App\Repository\LatestReplierRepository;
@@ -22,9 +20,19 @@ class LatestReplier extends TimestampedEntity
         return $this->id;
     }
 
+    public function setId(int $id): void
+    {
+        $this->id = $id;
+    }
+
     public function getUid(): ?int
     {
         return $this->uid;
+    }
+
+    public function setUid(?int $uid): void
+    {
+        $this->uid = $uid;
     }
 
     public function getName(): ?string
@@ -32,8 +40,21 @@ class LatestReplier extends TimestampedEntity
         return $this->name;
     }
 
+    public function setName(?string $name): void
+    {
+        $this->name = $name;
+    }
+
     public function getDisplayName(): ?string
     {
         return BlobResourceGetter::resource($this->displayName);
+    }
+
+    /**
+     * @param resource|null $displayName
+     */
+    public function setDisplayName(null $displayName): void
+    {
+        $this->displayName = $displayName;
     }
 }
