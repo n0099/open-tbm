@@ -4,6 +4,7 @@
         <!-- https://github.com/squizlabs/PHP_CodeSniffer/issues/3291 -->
         <exclude name="Squiz.Functions.MultiLineFunctionDeclaration.BraceOnSameLine"/>
         <exclude name="Squiz.WhiteSpace.ScopeClosingBrace.ContentBefore"/>
+        <exclude name="PSR12.ControlStructures.ControlStructureSpacing" />
     </rule>
     <arg name="extensions" value="php" />
     <!-- https://github.com/squizlabs/PHP_CodeSniffer/issues/2242 -->

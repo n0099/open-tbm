@@ -111,6 +111,7 @@ class SearchQuery extends BaseQuery
             'tid', 'pid', 'spid',
             'authorUid', 'authorExpGrade', 'latestReplierUid',
             'threadViewCount', 'threadShareCount', 'threadReplyCount', 'replySubReplyCount' =>
+                // phpcs:disable Generic.WhiteSpace.ScopeIndent
                 match ($sub['range']) {
                     'IN' => $query->andWhere("t.$fieldNameOfNumericParams $not IN (:$sqlParamName)")
                         ->setParameter($sqlParamName, explode(',', $value)),
@@ -123,7 +124,13 @@ class SearchQuery extends BaseQuery
                 },
             // textMatch
             'threadTitle', 'postContent' =>
-                self::applyTextMatchParamOnQuery($query, $name === 'threadTitle' ? 'title' : 'content', $value, $sub, $sqlParamName),
+                self::applyTextMatchParamOnQuery(
+                    $query,
+                    $name === 'threadTitle' ? 'title' : 'content',
+                    $value,
+                    $sub,
+                    $sqlParamName,
+                ),
             // dateTimeRange
             'postedAt', 'latestReplyPostedAt' => $whereBetween($name),
             // array

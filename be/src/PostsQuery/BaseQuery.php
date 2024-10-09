@@ -210,13 +210,15 @@ abstract class BaseQuery
                 ->where('t.pid IN (:pids)')->setParameter('pids', $allRepliesId)
                 ->getQuery()->getResult())
             ->mapWithKeys(fn(ReplyContent $content) => [$content->getPid() => $content->getContent()]);
-        $replies->each(fn(Reply $reply) => $reply->setContent($replyContents->get($reply->getPid())));
+        $replies->each(fn(Reply $reply) =>
+            $reply->setContent($replyContents->get($reply->getPid())));
 
         $subReplyContents = collect($this->postRepositoryFactory->newSubReplyContent($fid)->createQueryBuilder('t')
                 ->where('t.spid IN (:spids)')->setParameter('spids', $spids)
                 ->getQuery()->getResult())
             ->mapWithKeys(fn(SubReplyContent $content) => [$content->getSpid() => $content->getContent()]);
-        $subReplies->each(fn(SubReply $subReply) => $subReply->setContent($subReplyContents->get($subReply->getSpid())));
+        $subReplies->each(fn(SubReply $subReply) =>
+            $subReply->setContent($subReplyContents->get($subReply->getSpid())));
         $this->stopwatch->stop('parsePostContentProtoBufBytes');
 
         return [

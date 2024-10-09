@@ -2,7 +2,6 @@
 
 namespace App\Tests\PostsQuery;
 
-use App\Entity\Post\Post;
 use App\Entity\Post\Reply;
 use App\Entity\Post\SubReply;
 use App\Entity\Post\Thread;
@@ -229,8 +228,7 @@ class BaseQueryTest extends KernelTestCase
 
     public static function provideNestPostsWithParent(): array
     {
-        (new \ReflectionClass(Post::class))->setStaticPropertyValue('unguarded', true);
-        $ret = [[
+        return [[
             [
                 'threads' => [new Thread(['tid' => 1])],
                 'replies' => [new Reply(['tid' => 1, 'pid' => 2])],
@@ -245,8 +243,5 @@ class BaseQueryTest extends KernelTestCase
                 ]],
             ]],
         ]];
-        // https://github.com/sebastianbergmann/phpunit/issues/5103
-        (new \ReflectionClass(Post::class))->setStaticPropertyValue('unguarded', false);
-        return $ret;
     }
 }
