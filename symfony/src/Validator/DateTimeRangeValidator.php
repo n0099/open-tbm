@@ -18,15 +18,15 @@ class DateTimeRangeValidator extends ConstraintValidator
             return;
         }
 
-        $values = explode(',', $value);
+        $values = array_map(fn(string $value) => new \DateTimeImmutable($value), explode(',', $value));
         $errors = $this->context->getValidator()->validate($values, new Assert\Count(2));
         $errors->addAll($this->context->getValidator()->validate(
             $values[0],
-            [new Assert\DateTime(), new Assert\LessThanOrEqual($values[1])],
+            new Assert\LessThanOrEqual($values[1]),
         ));
         $errors->addAll($this->context->getValidator()->validate(
             $values[1],
-            [new Assert\DateTime(), new Assert\GreaterThanOrEqual($values[0])],
+            new Assert\GreaterThanOrEqual($values[0]),
         ));
 
         if ($errors->count() !== 0) {

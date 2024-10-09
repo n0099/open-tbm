@@ -26,7 +26,10 @@ readonly class ExceptionToJsonResponse
         } elseif ($exception instanceof ValidationFailedException) {
             $event->setResponse(JsonResponse::fromJsonString(
                 // https://github.com/symfony/serializer/blob/7.1/Normalizer/ConstraintViolationListNormalizer.php
-                $this->serializer->serialize($exception->getViolations(), 'json')
+                $this->serializer->serialize([
+                    'errorCode' => 40000,
+                    'errorInfo' => $exception->getViolations()
+                ], 'json')
             ));
         }
     }

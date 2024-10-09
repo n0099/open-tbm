@@ -18,18 +18,23 @@ abstract class PostRepository extends ServiceEntityRepository
     abstract protected function getTableNameSuffix(): string;
 
     /**
-     * @param class-string<T> $postClass
+     * @param class-string<T> $postRepositoryClass
      */
     public function __construct(
         ManagerRegistry $registry,
         EntityManagerInterface $entityManager,
-        string $postClass,
-        int $fid,
+        string $postRepositoryClass,
+        private readonly int $fid,
     ) {
-        parent::__construct($registry, $postClass);
-        $entityManager->getClassMetadata($postClass)->setPrimaryTable([
+        parent::__construct($registry, $postRepositoryClass);
+        $entityManager->getClassMetadata($postRepositoryClass)->setPrimaryTable([
             'name' => "\"tbmc_f{$fid}_" . $this->getTableNameSuffix() . '"'
         ]);
+    }
+
+    public function getFid(): int
+    {
+        return $this->fid;
     }
 
     public function selectCurrentAndParentPostID(): QueryBuilder

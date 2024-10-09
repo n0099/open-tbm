@@ -13,7 +13,7 @@ use App\Repository\Post\PostRepositoryFactory;
 use Doctrine\ORM\Query\Expr;
 use Doctrine\ORM\QueryBuilder;
 use Illuminate\Support\Collection;
-use Symfony\Component\Serializer\SerializerInterface;
+use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 use Symfony\Component\Stopwatch\Stopwatch;
 
 /** @psalm-import-type PostsKeyByTypePluralName from CursorCodec */
@@ -37,7 +37,7 @@ abstract class BaseQuery
     abstract public function query(QueryParams $params, ?string $cursor): void;
 
     public function __construct(
-        private readonly SerializerInterface $serializer,
+        private readonly NormalizerInterface $normalizer,
         private readonly Stopwatch $stopwatch,
         private readonly CursorCodec $cursorCodec,
         private readonly PostRepositoryFactory $postRepositoryFactory,
@@ -251,12 +251,12 @@ abstract class BaseQuery
         $subReplies = $subReplies->groupBy(fn(SubReply $subReply) => $subReply->getPid());
         $ret = $threads
             ->map(fn(Thread $thread) => [
-                ...$this->serializer->normalize($thread),
+                ...$this->normalizer->normalize($thread),
                 'replies' => $replies
                     ->get($thread->getTid(), collect())
                     ->map(fn(Reply $reply) => [
-                        ...$this->serializer->normalize($reply),
-                        'subReplies' => $this->serializer->normalize($subReplies->get($reply->getPid(), collect())),
+                        ...$this->normalizer->normalize($reply),
+                        'subReplies' => $this->normalizer->normalize($subReplies->get($reply->getPid(), collect())),
                     ]),
             ])
             ->recursive();

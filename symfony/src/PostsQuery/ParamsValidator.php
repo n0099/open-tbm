@@ -48,31 +48,23 @@ class ParamsValidator
     private function validateParamValue(array $param): void
     {
         $paramsPossibleValue = [
-            'userGender' => [0, 1, 2],
+            'userGender' => ['0', '1', '2'],
             'userManagerType' => ['NULL', 'manager', 'assist', 'voiceadmin'],
         ];
-        $numericParams = collect([
-            'fid',
-            'tid',
-            'pid',
-            'spid',
-            'threadViewCount',
-            'threadShareCount',
-            'threadReplyCount',
-            'replySubReplyCount',
-            'authorUid',
-            'authorExpGrade',
-            'latestReplierUid',
-        ])->mapWithKeys(fn(string $paramName) => [$paramName => new Assert\Type(['digit', 'int'])]);
+        $numericParams = collect(QueryParams::PARAM_NAME_KEY_BY_TYPE['numeric'])->push('fid')
+            ->mapWithKeys(fn(string $paramName) => [$paramName => new Assert\Type(['digit', 'int'])]);
+        $textParams = collect(QueryParams::PARAM_NAME_KEY_BY_TYPE['text'])
+            ->mapWithKeys(fn(string $paramName) => [$paramName => new Assert\Type('string')]);
         // note here we haven't validated that is every sub param have a corresponding main param yet
         $this->validator->validate($param, new Assert\Collection([
             ...$numericParams,
-            'postTypes' => new Assert\Collection([new Assert\Choice(Helper::POST_TYPES)]),
-            'orderBy' => new Assert\Collection([new Assert\Choice([...Helper::POST_ID, 'postedAt'])]),
+            ...$textParams,
+            'postTypes' => new Assert\All([new Assert\Choice(Helper::POST_TYPES)]),
+            'orderBy' => new Assert\Choice([...Helper::POST_ID, 'postedAt']),
             'direction' => new Assert\Choice(['ASC', 'DESC']),
             'postedAt' => new DateTimeRange(),
             'latestReplyPostedAt' => new DateTimeRange(),
-            'threadProperties' => new Assert\Collection([new Assert\Choice(['good', 'sticky'])]),
+            'threadProperties' => new Assert\All([new Assert\Choice(['good', 'sticky'])]),
             'authorGender' => new Assert\Choice($paramsPossibleValue['userGender']),
             'authorManagerType' => new Assert\Choice($paramsPossibleValue['userManagerType']),
             'latestReplierGender' => new Assert\Choice($paramsPossibleValue['userGender']),
