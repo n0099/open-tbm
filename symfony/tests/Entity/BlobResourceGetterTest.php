@@ -1,16 +1,15 @@
 <?php
 
-namespace App\Tests\Eloquent;
+namespace App\Tests\Entity;
 
-use App\Eloquent\ModelAttributeMaker;
-use Illuminate\Database\Eloquent\Casts\Attribute;
+use App\Entity\BlobResourceGetter;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
+use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use TbClient\Wrapper\PostContentWrapper;
-use Tests\TestCase;
 
-#[CoversClass(ModelAttributeMaker::class)]
-class ModelAttributeMakerTest extends TestCase
+#[CoversClass(BlobResourceGetter::class)]
+class BlobResourceGetterTest extends KernelTestCase
 {
     public static function resourceAttributeGetter(Attribute $attribute, string $fileContent, $expected): void
     {

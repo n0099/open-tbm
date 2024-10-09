@@ -1,20 +1,19 @@
 <?php
 
-namespace App\Tests\Http\PostsQuery;
+namespace App\Tests\PostsQuery;
 
-use App\Eloquent\Model\Post\Post;
-use App\Eloquent\Model\Post\Reply;
-use App\Eloquent\Model\Post\SubReply;
-use App\Eloquent\Model\Post\Thread;
-use App\Http\PostsQuery\BaseQuery;
-use App\Http\PostsQuery\CursorCodec;
-use Barryvdh\Debugbar\LaravelDebugbar;
+use App\Entity\Post\Post;
+use App\Entity\Post\Reply;
+use App\Entity\Post\SubReply;
+use App\Entity\Post\Thread;
+use App\PostsQuery\BaseQuery;
+use App\PostsQuery\CursorCodec;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
-use Tests\TestCase;
+use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 
 #[CoversClass(BaseQuery::class)]
-class BaseQueryTest extends TestCase
+class BaseQueryTest extends KernelTestCase
 {
     private BaseQuery $sut;
 

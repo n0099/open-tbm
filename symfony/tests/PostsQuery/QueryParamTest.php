@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Tests\Http\PostsQuery;
+namespace App\Tests\PostsQuery;
 
-use App\Http\PostsQuery\QueryParam;
+use App\PostsQuery\QueryParam;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;

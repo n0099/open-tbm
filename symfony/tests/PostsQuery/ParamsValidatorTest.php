@@ -1,19 +1,16 @@
 <?php
 
-namespace App\Tests\Http\PostsQuery;
+namespace App\Tests\PostsQuery;
 
 use App\Helper;
-use App\Http\PostsQuery\ParamsValidator;
-use Illuminate\Http\Exceptions\HttpResponseException;
+use App\PostsQuery\ParamsValidator;
 use Illuminate\Support\Arr;
-use Illuminate\Validation\Factory;
-use Illuminate\Validation\ValidationException;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
-use Tests\TestCase;
+use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 
 #[CoversClass(ParamsValidator::class)]
-class ParamsValidatorTest extends TestCase
+class ParamsValidatorTest extends KernelTestCase
 {
     public static function newParamsValidator(array $rawParams): ParamsValidator
     {

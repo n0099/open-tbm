@@ -1,18 +1,15 @@
 <?php
 
-namespace App\Tests\Exceptions;
+namespace App\Tests\EventListener;
 
 use App\Exceptions\Handler;
-use Illuminate\Container\Container;
-use Illuminate\Validation\Factory;
-use Illuminate\Validation\ValidationException;
 use PHPUnit\Framework\Attributes\CoversClass;
 use ReflectionMethod;
+use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Symfony\Component\HttpFoundation\Response;
-use Tests\TestCase;
 
 #[CoversClass(Handler::class)]
-class HandlerTest extends TestCase
+class ExceptionToJsonResponseTest extends KernelTestCase
 {
     private Handler $sut;
     private Factory $validatorFactory;

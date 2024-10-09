@@ -1,19 +1,17 @@
 <?php
 
-namespace App\Tests\Eloquent\Model\Post;
+namespace App\Tests\Repository\Post;
 
-use App\Eloquent\Model\Post\Post;
-use App\Eloquent\Model\Post\PostFactory;
-use App\Eloquent\ModelWithTableNameSplitByFid;
+use App\Entity\Post\Post;
+use App\Repository\Post\PostRepositoryFactory;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use ReflectionProperty;
-use Tests\TestCase;
+use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 
-#[CoversClass(PostFactory::class)]
-#[CoversClass(ModelWithTableNameSplitByFid::class)]
+#[CoversClass(PostRepositoryFactory::class)]
 #[CoversClass(Post::class)]
-class PostFactoryTest extends TestCase
+class PostRepositoryFactoryTest extends KernelTestCase
 {
     #[DataProvider('providePostModelFid')]
     public function testPostModelFid(int $fid): void

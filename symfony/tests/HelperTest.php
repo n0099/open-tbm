@@ -3,11 +3,10 @@
 namespace App\Tests;
 
 use App\Helper;
-use Illuminate\Http\Exceptions\HttpResponseException;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\TestCase;
 use Symfony\Component\String\UnicodeString;
-use Tests\TestCase;
 
 #[CoversClass(Helper::class)]
 class HelperTest extends TestCase

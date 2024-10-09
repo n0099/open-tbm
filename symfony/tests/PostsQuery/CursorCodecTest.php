@@ -1,19 +1,18 @@
 <?php
 
-namespace App\Tests\Http\PostsQuery;
+namespace App\Tests\PostsQuery;
 
-use App\Eloquent\Model\Post\Post;
-use App\Eloquent\Model\Post\Reply;
-use App\Eloquent\Model\Post\SubReply;
-use App\Eloquent\Model\Post\Thread;
-use App\Http\PostsQuery\CursorCodec;
-use Illuminate\Pagination\Cursor;
+use App\Entity\Post\Post;
+use App\Entity\Post\Reply;
+use App\Entity\Post\SubReply;
+use App\Entity\Post\Thread;
+use App\PostsQuery\CursorCodec;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
-use Tests\TestCase;
+use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 
 #[CoversClass(CursorCodec::class)]
-class CursorCodecTest extends TestCase
+class CursorCodecTest extends KernelTestCase
 {
     private CursorCodec $sut;
 

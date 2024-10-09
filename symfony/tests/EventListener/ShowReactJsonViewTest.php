@@ -1,17 +1,13 @@
 <?php
 
-namespace App\Tests\Http\Middleware;
+namespace App\Tests\EventListener;
 
-use App\Http\Middleware\DumpJsonResponse;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
-use Illuminate\Routing\UrlGenerator;
-use Illuminate\Support\Facades\Config;
+use App\EventListener\ShowReactJsonView;
 use PHPUnit\Framework\Attributes\CoversClass;
-use Tests\TestCase;
+use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 
-#[CoversClass(DumpJsonResponse::class)]
-class DumpJsonResponseTest extends TestCase
+#[CoversClass(ShowReactJsonView::class)]
+class ShowReactJsonViewTest extends KernelTestCase
 {
     protected function setUp(): void
     {
