@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Unit\App\Http\PostsQuery;
+namespace App\Tests\Http\PostsQuery;
 
 use App\Http\PostsQuery\QueryParam;
 use PHPUnit\Framework\Attributes\CoversClass;

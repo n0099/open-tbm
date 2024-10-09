@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Feature\App\Http\Middleware;
+namespace App\Tests\Http\Middleware;
 
 use App\Http\Middleware\DumpJsonResponse;
 use Illuminate\Http\JsonResponse;

@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Feature\App\Http\PostsQuery;
+namespace App\Tests\Http\PostsQuery;
 
 use App\Eloquent\Model\Post\Post;
 use App\Eloquent\Model\Post\Reply;

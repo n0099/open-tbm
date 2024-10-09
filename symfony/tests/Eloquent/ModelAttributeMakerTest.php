@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Feature\App\Eloquent;
+namespace App\Tests\Eloquent;
 
 use App\Eloquent\ModelAttributeMaker;
 use Illuminate\Database\Eloquent\Casts\Attribute;

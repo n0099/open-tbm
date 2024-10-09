@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Feature\App\Eloquent\Model\Post;
+namespace App\Tests\Eloquent\Model\Post;
 
 use App\Eloquent\Model\Post\Post;
 use App\Eloquent\Model\Post\PostFactory;

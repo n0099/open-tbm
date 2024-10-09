@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Feature\App\Http\PostsQuery;
+namespace App\Tests\Http\PostsQuery;
 
 use App\Helper;
 use App\Http\PostsQuery\ParamsValidator;

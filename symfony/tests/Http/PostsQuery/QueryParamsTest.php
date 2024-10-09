@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Unit\App\Http\PostsQuery;
+namespace App\Tests\Http\PostsQuery;
 
 use App\Helper;
 use App\Http\PostsQuery\QueryParam;

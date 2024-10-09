@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Feature\App;
+namespace App\Tests;
 
 use App\Helper;
 use Illuminate\Http\Exceptions\HttpResponseException;

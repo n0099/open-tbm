@@ -1,11 +1,11 @@
 <?php
 
-namespace Tests\Feature\App\Exceptions;
+namespace App\Tests\Exceptions;
 
 use App\Exceptions\Handler;
 use Illuminate\Container\Container;
-use Illuminate\Validation\ValidationException;
 use Illuminate\Validation\Factory;
+use Illuminate\Validation\ValidationException;
 use PHPUnit\Framework\Attributes\CoversClass;
 use ReflectionMethod;
 use Symfony\Component\HttpFoundation\Response;
