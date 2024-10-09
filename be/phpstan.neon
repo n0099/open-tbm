@@ -1,5 +1,0 @@
-parameters:
-    paths:
-        - app/
-    level: 9
-    ignoreErrors:
