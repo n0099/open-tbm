@@ -7,7 +7,7 @@
     </ItemGroup>
     <ItemGroup>
         <PackageReference Include="LanguageExt.Core" Version="4.4.9" />
-        <PackageReference Include="Microsoft.Extensions.Http.Polly" Version="8.0.8" />
+        <PackageReference Include="Microsoft.Extensions.Http.Polly" Version="8.0.10" />
         <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL.NetTopologySuite" Version="8.0.8" />
         <PackageReference Include="OpenCvSharp4" Version="4.10.0.20240616" />
         <PackageReference Include="OpenCvSharp4.runtime.win" Version="4.10.0.20240616" />
