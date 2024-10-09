@@ -6,7 +6,7 @@ use App\Helper;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
-use Symfony\Component\String\UnicodeString;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 
 #[CoversClass(Helper::class)]
 class HelperTest extends TestCase
@@ -15,12 +15,11 @@ class HelperTest extends TestCase
     {
         try {
             $callback();
-        } catch (HttpResponseException $e) {
-            $response = $e->getResponse();
-            self::assertEquals($statusCode, $response->getStatusCode());
-            $responseContent = \Safe\json_decode($response->getContent());
-            self::assertEquals($errorCode, $responseContent->errorCode);
-            self::assertEquals($errorInfo, $responseContent->errorInfo);
+        } catch (HttpException $e) {
+            self::assertEquals($statusCode, $e->getStatusCode());
+            $json = \Safe\json_decode($e->getMessage());
+            self::assertEquals($errorCode, $json->errorCode);
+            self::assertEquals($errorInfo, $json->errorInfo);
         }
     }
 
@@ -63,18 +62,5 @@ class HelperTest extends TestCase
     public static function provideAbortAPIWithNonExistsCode(): array
     {
         return [[collect(Helper::ERROR_STATUS_CODE_INFO)->max(static fn(array $i) => max(array_keys($i))) + 1]];
-    }
-
-    #[DataProvider('provideXmlResponse')]
-    public function testXmlResponse(string|\Stringable $xml): void
-    {
-        $response = Helper::xmlResponse($xml);
-        self::assertEquals('<?xml version="1.0" encoding="UTF-8"?>' . "\n$xml", $response->getContent());
-        self::assertEquals('text/xml', $response->headers->get('Content-Type'));
-    }
-
-    public static function provideXmlResponse(): array
-    {
-        return [['<test />'], [new UnicodeString('<test />')]];
     }
 }

@@ -5,51 +5,48 @@ namespace App\Tests\Entity;
 use App\Entity\BlobResourceGetter;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
-use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
+use PHPUnit\Framework\TestCase;
 use TbClient\Wrapper\PostContentWrapper;
 
 #[CoversClass(BlobResourceGetter::class)]
-class BlobResourceGetterTest extends KernelTestCase
+class BlobResourceGetterTest extends TestCase
 {
-    public static function resourceAttributeGetter(Attribute $attribute, string $fileContent, $expected): void
+    /** @return resource */
+    public static function makeStreamResource(string $data)
     {
-        $getter = $attribute->get;
-        self::assertNull($getter(null));
-
-        $fileStream = \Safe\tmpfile();
-        \Safe\fwrite($fileStream, $fileContent);
-        \Safe\rewind($fileStream);
-        self::assertEquals($expected, $getter($fileStream));
+        $stream = \Safe\tmpfile();
+        \Safe\fwrite($stream, $data);
+        \Safe\rewind($stream);
+        return $stream;
     }
 
-    #[DataProvider('provideMakeProtoBufAttribute')]
-    public function testMakeProtoBufAttribute(string $jsonString): void
+    #[DataProvider('provideProtoBuf')]
+    public function testProtoBuf(string $jsonString): void
     {
-        $attribute = ModelAttributeMaker::makeProtoBufAttribute(PostContentWrapper::class);
-        self::assertTrue($attribute->withCaching);
+        $protoBufClass = PostContentWrapper::class;
+        self::assertNull(BlobResourceGetter::protoBuf(null, $protoBufClass));
         $contentProtoBuf = new PostContentWrapper();
         $contentProtoBuf->mergeFromJsonString($jsonString);
-        self::resourceAttributeGetter(
-            $attribute,
-            $contentProtoBuf->serializeToString(),
-            \Safe\json_decode($jsonString),
+        $resource = self::makeStreamResource($contentProtoBuf->serializeToString());
+        self::assertEquals(
+            \Safe\json_decode($jsonString, assoc: true),
+            BlobResourceGetter::protoBuf($resource, $protoBufClass),
         );
     }
 
-    public static function provideMakeProtoBufAttribute(): array
+    public static function provideProtoBuf(): array
     {
         return [['{ "value": [{ "text": "test" }] }']];
     }
 
-    #[DataProvider('provideMakeResourceAttribute')]
-    public function testMakeResourceAttribute(string $data): void
+    #[DataProvider('provideResource')]
+    public function testResource(string $data): void
     {
-        $attribute = ModelAttributeMaker::makeResourceAttribute();
-        self::assertTrue($attribute->withCaching);
-        self::resourceAttributeGetter($attribute, $data, $data);
+        self::assertNull(BlobResourceGetter::resource(null));
+        self::assertEquals($data, BlobResourceGetter::resource(self::makeStreamResource($data)));
     }
 
-    public static function provideMakeResourceAttribute(): array
+    public static function provideResource(): array
     {
         return [['test']];
     }

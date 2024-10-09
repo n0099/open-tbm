@@ -7,7 +7,7 @@ use App\Entity\Post\Reply;
 use App\Entity\Post\SubReply;
 use App\Entity\Post\Thread;
 use App\PostsQuery\BaseQuery;
-use App\PostsQuery\CursorCodec;
+use App\PostsQuery\IndexQuery;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
@@ -20,11 +20,10 @@ class BaseQueryTest extends KernelTestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->sut = $this->getMockBuilder(BaseQuery::class)
-            ->setConstructorArgs([$this->createMock(LaravelDebugbar::class), new CursorCodec()])
-            ->getMockForAbstractClass();
-        (new \ReflectionProperty(BaseQuery::class, 'orderByField'))
-            ->setValue($this->sut, 'postedAt');
+        self::bootKernel();
+        $container = self::getContainer();
+        $this->sut = $container->get(IndexQuery::class);
+        (new \ReflectionProperty(BaseQuery::class, 'orderByField'))->setValue($this->sut, 'postedAt');
     }
 
     public function testPerPageItemsDefaultValue(): void
@@ -34,7 +33,6 @@ class BaseQueryTest extends KernelTestCase
     }
 
     #[DataProvider('provideReOrderNestedPostsData')]
-    /** @backupStaticAttributes enabled */
     public function testReOrderNestedPosts(
         array $input,
         bool $orderByDesc,
@@ -221,7 +219,6 @@ class BaseQueryTest extends KernelTestCase
     }
 
     #[DataProvider('provideNestPostsWithParent')]
-    /** @backupStaticAttributes enabled */
     public function testNestPostsWithParent(array $input, array $expected): void
     {
         self::assertEquals(

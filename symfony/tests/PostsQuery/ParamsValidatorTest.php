@@ -8,13 +8,15 @@ use Illuminate\Support\Arr;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
+use Symfony\Component\HttpKernel\Exception\HttpException;
+use Symfony\Component\Validator\Exception\ValidationFailedException;
 
 #[CoversClass(ParamsValidator::class)]
 class ParamsValidatorTest extends KernelTestCase
 {
     public static function newParamsValidator(array $rawParams): ParamsValidator
     {
-        return new ParamsValidator(app(Factory::class), $rawParams);
+        return static::getContainer()->get(ParamsValidator::class)->setParams($rawParams);
     }
 
     #[DataProvider('provideValidate40001')]
@@ -26,8 +28,8 @@ class ParamsValidatorTest extends KernelTestCase
         try {
             $sut = self::newParamsValidator($params);
             $sut->addDefaultParamsThenValidate(shouldSkip40003: false);
-        } catch (HttpResponseException $e) {
-            self::assertEquals($errorCode, \Safe\json_decode($e->getResponse()->getContent())->errorCode);
+        } catch (HttpException $e) {
+            self::assertEquals($errorCode, \Safe\json_decode($e->getMessage())->errorCode);
         }
     }
 
@@ -80,11 +82,14 @@ class ParamsValidatorTest extends KernelTestCase
     #[DataProvider('providerDateRangeParamValueOrder')]
     public function testDateRangeParamValueOrder(array $params): void
     {
-        $this->assertThrows(
-            fn() => self::newParamsValidator($params),
-            ValidationException::class,
-            'The 0 field must be a date before or equal to 1.',
-        );
+        $this->expectException(ValidationFailedException::class);
+        $paramName = array_key_first($params[0]);
+        $paramValue = $params[0][$paramName];
+        $this->expectExceptionMessage(<<<"MSG"
+            Array[$paramName]:
+                The value "$paramValue" is not valid.
+            MSG);
+        self::newParamsValidator($params);
     }
 
     public static function providerDateRangeParamValueOrder(): array
@@ -98,7 +103,7 @@ class ParamsValidatorTest extends KernelTestCase
     {
         $sut = self::newParamsValidator([['postTypes' => $shuffledPostTypes], ['tid' => 0]]);
         $sut->addDefaultParamsThenValidate(shouldSkip40003: true);
-        self::assertEquals($orderedPostTypes, $sut->params->getUniqueParamValue('postTypes'));
+        self::assertEquals($orderedPostTypes, $sut->getParams()->getUniqueParamValue('postTypes'));
     }
 
     public static function providePostTypesParamValueOrder(): array
