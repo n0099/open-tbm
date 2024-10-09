@@ -33,13 +33,14 @@ class SearchQuery extends BaseQuery
             ->only($params->getUniqueParamValue('postTypes'))
             ->map(function (PostRepository $repository) use ($params, &$cachedUserQueryResult): QueryBuilder {
                 $postQuery = $repository->selectCurrentAndParentPostID();
-                foreach ($params->omit() as $param) { // omit nothing to get all params
+                foreach ($params->omit() as $paramIndex => $param) { // omit nothing to get all params
                     // even when $cachedUserQueryResult[$param->name] is null
                     // it will still pass as a reference to the array item
                     // that is null at this point, but will be later updated by ref
                     $postQuery = self::applyQueryParamsOnQuery(
                         $postQuery,
                         $param,
+                        $paramIndex,
                         $cachedUserQueryResult[$param->name],
                     );
                 }
@@ -63,8 +64,10 @@ class SearchQuery extends BaseQuery
     private function applyQueryParamsOnQuery(
         QueryBuilder $query,
         QueryParam $param,
+        int $paramIndex,
         ?array &$outCachedUserQueryResult,
     ): QueryBuilder {
+        $sqlParamName = "param$paramIndex";
         $name = $param->name;
         $value = $param->value;
         $sub = $param->getAllSub();
@@ -83,7 +86,7 @@ class SearchQuery extends BaseQuery
             '=' => '!=',
             '>' => '<=',
         ];
-        if (!array_key_exists($sub['range'], $inverseRanges)) {
+        if (array_key_exists('range', $sub) && !array_key_exists($sub['range'], $inverseRanges)) {
             throw new \InvalidArgumentException();
         }
         $inverseRangeOfNumericParams = $inverseRanges[$sub['range'] ?? null] ?? null;
@@ -97,11 +100,11 @@ class SearchQuery extends BaseQuery
                 return $outCachedUserQueryResult;
             };
 
-        $whereBetween = static function (string $field) use ($query, $not, $value) {
+        $whereBetween = static function (string $field) use ($query, $not, $value, $sqlParamName) {
             $values = explode(',', $value);
-            return $query->where("t.$field $not BETWEEN ?0 AND ?1")
-                ->setParameter(0, $values[0])
-                ->setParameter(1, $values[1]);
+            return $query->andWhere("t.$field $not BETWEEN :{$sqlParamName}_0 AND :{$sqlParamName}_1")
+                ->setParameter("{$sqlParamName}_0", $values[0])
+                ->setParameter("{$sqlParamName}_1", $values[1]);
         };
         return match ($name) {
             // numeric
@@ -109,55 +112,56 @@ class SearchQuery extends BaseQuery
             'authorUid', 'authorExpGrade', 'latestReplierUid',
             'threadViewCount', 'threadShareCount', 'threadReplyCount', 'replySubReplyCount' =>
                 match ($sub['range']) {
-                    'IN' => $query->where("t.$fieldNameOfNumericParams $not IN (:values)")
-                        ->setParameter('values', explode(',', $value)),
+                    'IN' => $query->andWhere("t.$fieldNameOfNumericParams $not IN (:$sqlParamName)")
+                        ->setParameter($sqlParamName, explode(',', $value)),
                     'BETWEEN' => $whereBetween($fieldNameOfNumericParams),
-                    default => $query->where(
+                    default => $query->andWhere(
                         "t.$fieldNameOfNumericParams "
                             . ($sub['not'] ? $inverseRangeOfNumericParams : $sub['range'])
-                            . " :value"
-                    )->setParameter('value', $value),
+                            . " :$sqlParamName"
+                    )->setParameter($sqlParamName, $value),
                 },
             // textMatch
             'threadTitle', 'postContent' =>
-                self::applyTextMatchParamOnQuery($query, $name === 'threadTitle' ? 'title' : 'content', $value, $sub),
+                self::applyTextMatchParamOnQuery($query, $name === 'threadTitle' ? 'title' : 'content', $value, $sub, $sqlParamName),
             // dateTimeRange
-            'postedAt', 'latestReplyPostedAt' =>
-                $whereBetween($name),
+            'postedAt', 'latestReplyPostedAt' => $whereBetween($name),
             // array
             'threadProperties' => static function () use ($not, $notBoolStr, $value, $query) {
                 foreach ($value as $threadProperty) {
                     match ($threadProperty) {
-                        'good' => $query->where("t.isGood = $notBoolStr"),
-                        'sticky' => $query->where("t.stickyType IS $not NULL"),
+                        'good' => $query->andWhere("t.isGood = $notBoolStr"),
+                        'sticky' => $query->andWhere("t.stickyType IS $not NULL"),
                     };
                 }
                 return $query;
             },
             'authorName', 'latestReplierName', 'authorDisplayName', 'latestReplierDisplayName' =>
-                $query->where("t.{$userTypeOfUserParams}Uid $not IN (:uids)")
+                $query->andWhere("t.{$userTypeOfUserParams}Uid $not IN (:$sqlParamName)")
                     ->setParameter(
-                        'uids',
+                        $sqlParamName,
                         $getAndCacheUserQuery(self::applyTextMatchParamOnQuery(
                             $this->userRepository->createQueryBuilder('t')->select('t.uid'),
                             $fieldNameOfUserNameParams,
                             $value,
                             $sub,
+                            $sqlParamName,
                         ))
                     ),
             'authorGender', 'latestReplierGender' =>
-                $query->where("t.{$userTypeOfUserParams}Uid $not IN (:uids)")
+                $query->andWhere("t.{$userTypeOfUserParams}Uid $not IN (:$sqlParamName)")
                     ->setParameter(
-                        'uids',
+                        $sqlParamName,
                         $getAndCacheUserQuery($this->userRepository->createQueryBuilder('t')
                             ->select('t.uid')
-                            ->where('t.gender = :value')->setParameter('value', $value))
+                            ->andWhere("t.gender = :{$sqlParamName}_gender")
+                            ->setParameter("{$sqlParamName}_gender", $value))
                     ),
             'authorManagerType' =>
                 $value === 'NULL'
-                    ? $query->where("t.authorManagerType IS $not NULL")
-                    : $query->where('t.authorManagerType ' . ($sub['not'] ? '!=' : '=') . ' :value')
-                        ->setParameter('value', $value),
+                    ? $query->andWhere("t.authorManagerType IS $not NULL")
+                    : $query->andWhere('t.authorManagerType ' . ($sub['not'] ? '!=' : '=') . " :$sqlParamName")
+                        ->setParameter($sqlParamName, $value),
             default => $query,
         };
     }
@@ -168,21 +172,24 @@ class SearchQuery extends BaseQuery
         string $field,
         string $value,
         array $subParams,
+        string $sqlParamName,
     ): QueryBuilder {
         $not = $subParams['not'] === true ? 'NOT' : '';
         if ($subParams['matchBy'] === 'regex') {
-            return $query->where("t.$field $not REGEXP :value")->setParameter('value', $value);
+            return $query->andWhere("t.$field $not REGEXP :$sqlParamName")->setParameter($sqlParamName, $value);
         }
 
         // split multiple search keyword by space char when $subParams['spaceSplit'] == true
-        foreach ($subParams['spaceSplit'] ? explode(' ', $value) : [$value] as $keyword) {
+        foreach ($subParams['spaceSplit'] ? explode(' ', $value) : [$value] as $keywordIndex => $keyword) {
             if ($not === 'NOT') {
-                $query = $query->andWhere("t.$field NOT LIKE :keyword");
+                $query = $query->andWhere("t.$field NOT LIKE :{$sqlParamName}_$keywordIndex");
             } else { // not (A or B) <=> not A and not B, following https://en.wikipedia.org/wiki/De_Morgan%27s_laws
-                $query = $query->orWhere("t.$field LIKE :keyword");
+                $query = $query->orWhere("t.$field LIKE :{$sqlParamName}_$keywordIndex");
             }
-            $keyword = $subParams['matchBy'] === 'implicit' ? "%$keyword%" : $keyword;
-            $query = $query->setParameter('keyword', $keyword);
+            $query = $query->setParameter(
+                "{$sqlParamName}_$keywordIndex",
+                $subParams['matchBy'] === 'implicit' ? "%$keyword%" : $keyword
+            );
         }
         return $query;
     }
