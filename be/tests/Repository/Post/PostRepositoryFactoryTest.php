@@ -21,7 +21,7 @@ class PostRepositoryFactoryTest extends KernelTestCase
         $container = static::getContainer();
         $this->sut = $container->get(PostRepositoryFactory::class);
     }
-    
+
     #[DataProvider('providePostModelFid')]
     public function testPostModelFid(int $fid): void
     {

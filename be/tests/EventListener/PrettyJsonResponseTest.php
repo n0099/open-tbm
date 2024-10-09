@@ -29,7 +29,7 @@ class PrettyJsonResponseTest extends KernelTestCase
             self::$kernel,
             new Request(server: ['HTTP_ACCEPT' => 'application/json']),
             HttpKernelInterface::MAIN_REQUEST,
-            JsonResponse::fromJsonString(\Safe\json_encode(['test' => 'test']))
+            JsonResponse::fromJsonString(\Safe\json_encode(['test' => 'test'])),
         );
         ($this->sut)($event);
         self::assertEquals(<<<'JSON'

@@ -21,7 +21,7 @@ class SitemapController extends AbstractController
     public function __construct(
         private readonly CacheInterface $cache,
         private readonly ForumRepository $forumRepository,
-        private readonly PostRepositoryFactory $postRepositoryFactory
+        private readonly PostRepositoryFactory $postRepositoryFactory,
     ) {}
 
     #[Route('/sitemaps/forums')]
@@ -41,7 +41,8 @@ class SitemapController extends AbstractController
                     'sitemaps/forums.xml.twig',
                     ['threads_id_key_by_fid' => $threadsIdKeyByFid],
                 );
-            });
+            },
+        );
     }
 
     #[Route('/sitemaps/forums/{fid}/threads', requirements: ['fid' => /** @lang JSRegexp */'\d+'])]
@@ -60,10 +61,11 @@ class SitemapController extends AbstractController
                     [
                         'threads_id' =>
                             $this->postRepositoryFactory->newThread($fid)->getThreadsIdAfter($cursor, self::$maxUrls),
-                        'base_url_fe' => $this->getParameter('app.base_url.fe')
-                    ]
+                        'base_url_fe' => $this->getParameter('app.base_url.fe'),
+                    ],
                 );
-            });
+            },
+        );
     }
 
     private function renderXml(string $view, array $parameters): Response

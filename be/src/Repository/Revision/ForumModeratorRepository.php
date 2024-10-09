@@ -14,7 +14,7 @@ class ForumModeratorRepository extends ServiceEntityRepository
     {
         parent::__construct($registry, ForumModerator::class);
     }
-    
+
     public function getLatestOfUsers(int $fid, \ArrayAccess $portraits)
     {
         $entityManager = $this->getEntityManager();

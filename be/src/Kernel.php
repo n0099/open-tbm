@@ -17,7 +17,7 @@ class Kernel extends BaseKernel
         /** @see CollectionMacroServiceProvider::register() */
         collect([
             'recursive' => Recursive::class,
-        ])->reject(fn ($class, $macro) => Collection::hasMacro($macro))
-            ->each(fn ($class, $macro) => Collection::macro($macro, (new $class())()));
+        ])->reject(fn($class, $macro) => Collection::hasMacro($macro))
+            ->each(fn($class, $macro) => Collection::macro($macro, (new $class())()));
     }
 }

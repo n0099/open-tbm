@@ -17,7 +17,7 @@ class SearchQuery extends BaseQuery
         Stopwatch $stopwatch,
         CursorCodec $cursorCodec,
         private readonly PostRepositoryFactory $postRepositoryFactory,
-        private readonly UserRepository $userRepository
+        private readonly UserRepository $userRepository,
     ) {
         parent::__construct($normalizer, $stopwatch, $cursorCodec, $postRepositoryFactory);
     }
@@ -118,7 +118,7 @@ class SearchQuery extends BaseQuery
                     default => $query->andWhere(
                         "t.$fieldNameOfNumericParams "
                             . ($sub['not'] ? $inverseRangeOfNumericParams : $sub['range'])
-                            . " :$sqlParamName"
+                            . " :$sqlParamName",
                     )->setParameter($sqlParamName, $value),
                 },
             // textMatch
@@ -146,7 +146,7 @@ class SearchQuery extends BaseQuery
                             $value,
                             $sub,
                             $sqlParamName,
-                        ))
+                        )),
                     ),
             'authorGender', 'latestReplierGender' =>
                 $query->andWhere("t.{$userTypeOfUserParams}Uid $not IN (:$sqlParamName)")
@@ -155,7 +155,7 @@ class SearchQuery extends BaseQuery
                         $getAndCacheUserQuery($this->userRepository->createQueryBuilder('t')
                             ->select('t.uid')
                             ->andWhere("t.gender = :{$sqlParamName}_gender")
-                            ->setParameter("{$sqlParamName}_gender", $value))
+                            ->setParameter("{$sqlParamName}_gender", $value)),
                     ),
             'authorManagerType' =>
                 $value === 'NULL'
@@ -188,7 +188,7 @@ class SearchQuery extends BaseQuery
             }
             $query = $query->setParameter(
                 "{$sqlParamName}_$keywordIndex",
-                $subParams['matchBy'] === 'implicit' ? "%$keyword%" : $keyword
+                $subParams['matchBy'] === 'implicit' ? "%$keyword%" : $keyword,
             );
         }
         return $query;

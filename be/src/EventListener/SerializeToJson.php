@@ -15,7 +15,7 @@ readonly class SerializeToJson
     public function __invoke(ViewEvent $event): void
     {
         $event->setResponse(JsonResponse::fromJsonString(
-            $this->serializer->serialize($event->getControllerResult(), 'json')
+            $this->serializer->serialize($event->getControllerResult(), 'json'),
         ));
     }
 }

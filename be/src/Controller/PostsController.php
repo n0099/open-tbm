@@ -52,7 +52,7 @@ class PostsController extends AbstractController
         $this->validator->validate($request->query->all(), new Assert\Collection([
             'cursor' => new Assert\Optional(new Assert\Regex( // https://stackoverflow.com/questions/475074/regex-to-parse-or-validate-base64-data
                 // (,|$)|,){5,6} means allow at most 5~6 parts of base64 segment or empty string to exist
-                '/^(([A-Za-z0-9-_]{4})*([A-Za-z0-9-_]{2,3})(,|$)|,){5,6}$/'
+                '/^(([A-Za-z0-9-_]{4})*([A-Za-z0-9-_]{2,3})(,|$)|,){5,6}$/',
             )),
             'query' => new Assert\Required(new Assert\Json()),
         ]));
@@ -112,12 +112,12 @@ class PostsController extends AbstractController
         $fid = $result['fid'];
         $authorExpGrades = collect($this->authorExpGradeRepository->getLatestOfUsers($fid, $uids))
             ->keyBy(fn(AuthorExpGrade $authorExpGrade) => $authorExpGrade->getUid());
-        $users->each(fn (User $user) => $user->setCurrentAuthorExpGrade($authorExpGrades[$user->getUid()]));
+        $users->each(fn(User $user) => $user->setCurrentAuthorExpGrade($authorExpGrades[$user->getUid()]));
 
         $forumModerators = collect($this->forumModeratorRepository
                 ->getLatestOfUsers($fid, $users->map(fn(User $user) => $user->getPortrait())))
             ->keyBy(fn(ForumModerator $forumModerator) => $forumModerator->getPortrait());
-        $users->each(fn (User $user) => $user->setCurrentForumModerator($forumModerators->get($user->getPortrait())));
+        $users->each(fn(User $user) => $user->setCurrentForumModerator($forumModerators->get($user->getPortrait())));
         $this->stopwatch->stop('queryUserRelated');
 
         return [

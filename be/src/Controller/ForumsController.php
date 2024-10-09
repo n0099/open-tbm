@@ -8,7 +8,7 @@ use Symfony\Component\Routing\Attribute\Route;
 
 class ForumsController extends AbstractController
 {
-    public function __construct(private readonly ForumRepository $repository,) {}
+    public function __construct(private readonly ForumRepository $repository) {}
 
     #[Route('/api/forums')]
     public function query(): array

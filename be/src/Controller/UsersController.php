@@ -47,7 +47,7 @@ class UsersController extends AbstractController
                         : $queryBuilder->andWhere("t.$paramName = ?$paramIndex")
                             ->setParameter($paramIndex, $paramValue)];
                 },
-                [0, $this->userRepository->createQueryBuilder('t')]
+                [0, $this->userRepository->createQueryBuilder('t')],
             )[1]->orderBy('t.uid', 'DESC');
 
         ['result' => $result, 'hasMorePages' => $hasMorePages] =

@@ -28,8 +28,8 @@ readonly class ExceptionToJsonResponse
                 // https://github.com/symfony/serializer/blob/7.1/Normalizer/ConstraintViolationListNormalizer.php
                 $this->serializer->serialize([
                     'errorCode' => 40000,
-                    'errorInfo' => $exception->getViolations()
-                ], 'json')
+                    'errorInfo' => $exception->getViolations(),
+                ], 'json'),
             ));
         }
     }

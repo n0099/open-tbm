@@ -93,7 +93,8 @@ abstract class BaseQuery
             $comparisons = $cursors->keys()->map(
                 fn(string $fieldName): Expr\Comparison => $this->orderByDesc
                     ? $qb->expr()->lt("t.$fieldName", ":cursor_$fieldName")
-                    : $qb->expr()->gt("t.$fieldName", ":cursor_$fieldName"));
+                    : $qb->expr()->gt("t.$fieldName", ":cursor_$fieldName"),
+            );
             $qb->andWhere($qb->expr()->orX(...$comparisons));
             $cursors->mapWithKeys(fn($fieldValue, string $fieldName) =>
                 $qb->setParameter("cursor_$fieldName", $fieldValue)); // prevent overwriting existing param

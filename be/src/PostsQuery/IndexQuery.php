@@ -18,7 +18,7 @@ class IndexQuery extends BaseQuery
         Stopwatch $stopwatch,
         CursorCodec $cursorCodec,
         private readonly PostRepositoryFactory $postRepositoryFactory,
-        private readonly ForumRepository $forumRepository
+        private readonly ForumRepository $forumRepository,
     ) {
         parent::__construct($normalizer, $stopwatch, $cursorCodec, $postRepositoryFactory);
     }

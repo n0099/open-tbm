@@ -16,9 +16,9 @@ class AssetController extends AbstractController
     ) {}
 
     #[Route('/assets/{filename}', requirements: [
-        'filename' => /** @lang JSRegexp */'(react(|-dom|-json-view)|scheduler)\.js'
+        'filename' => /** @lang JSRegexp */'(react(|-dom|-json-view)|scheduler)\.js',
     ])]
-    public function getAsset(string $filename) : Response
+    public function getAsset(string $filename): Response
     {
         return new Response(
             content: preg_replace_callback_array([
@@ -27,9 +27,9 @@ class AssetController extends AbstractController
                 '@^//# sourceMappingURL=.+$@m' =>
                     static fn() => '',
             ], $this->filesystem->readFile(
-                $this->getParameter('kernel.project_dir') . "/public/react-json-view/$filename"
+                $this->getParameter('kernel.project_dir') . "/public/react-json-view/$filename",
             )),
-            headers: ['Content-Type' => 'text/javascript']
+            headers: ['Content-Type' => 'text/javascript'],
         );
     }
 }

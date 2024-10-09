@@ -1,4 +1,6 @@
-<?php /** @noinspection PhpMultipleClassDeclarationsInspection */
+<?php
+
+/** @noinspection PhpMultipleClassDeclarationsInspection */
 
 namespace App\Repository\Post;
 
@@ -28,7 +30,7 @@ abstract class PostRepository extends ServiceEntityRepository
     ) {
         parent::__construct($registry, $postRepositoryClass);
         $entityManager->getClassMetadata($postRepositoryClass)->setPrimaryTable([
-            'name' => "\"tbmc_f{$fid}_" . $this->getTableNameSuffix() . '"'
+            'name' => "\"tbmc_f{$fid}_" . $this->getTableNameSuffix() . '"',
         ]);
     }
 

@@ -34,7 +34,7 @@ class ExceptionToJsonResponseTest extends KernelTestCase
             self::$kernel,
             new Request(),
             HttpKernelInterface::MAIN_REQUEST,
-            new HttpException(400, message: 'test', code: 40001)
+            new HttpException(400, message: 'test', code: 40001),
         );
         ($this->sut)($event);
         self::assertEquals('test', $event->getResponse()->getContent());

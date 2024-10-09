@@ -1,4 +1,6 @@
-<?php /** @noinspection PhpPropertyOnlyWrittenInspection */
+<?php
+
+/** @noinspection PhpPropertyOnlyWrittenInspection */
 
 namespace App\DTO\User;
 
@@ -9,10 +11,13 @@ use Symfony\Component\Serializer\Attribute\Ignore;
 readonly class AuthorExpGrade
 {
     public function __construct(
-        #[ORM\Column, ORM\Id] private int $uid,
-        #[ORM\Column] private int $discoveredAt,
-        #[ORM\Column] private int $authorExpGrade)
-    {}
+        #[ORM\Column, ORM\Id]
+        private int $uid,
+        #[ORM\Column]
+        private int $discoveredAt,
+        #[ORM\Column]
+        private int $authorExpGrade,
+    ) {}
 
     #[Ignore]
     public function getUid(): int

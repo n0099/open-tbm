@@ -1,4 +1,6 @@
-<?php /** @noinspection PhpPropertyOnlyWrittenInspection */
+<?php
+
+/** @noinspection PhpPropertyOnlyWrittenInspection */
 
 namespace App\Entity\Post;
 
@@ -34,7 +36,5 @@ class SubReply extends PostWithContent
         return true;
     }
 
-    public function setIsMatchQuery(bool $isMatchQuery): void
-    {
-    }
+    public function setIsMatchQuery(bool $isMatchQuery): void {}
 }
