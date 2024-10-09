@@ -2,19 +2,20 @@
 
 namespace App\Tests\PostsQuery;
 
-use App\Entity\Post\Reply;
-use App\Entity\Post\SubReply;
-use App\Entity\Post\Thread;
+use App\Helper;
 use App\PostsQuery\BaseQuery;
 use App\PostsQuery\IndexQuery;
+use Illuminate\Support\Collection;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
+use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
 
 #[CoversClass(BaseQuery::class)]
 class BaseQueryTest extends KernelTestCase
 {
     private BaseQuery $sut;
+    private DenormalizerInterface $denormalizer;
 
     protected function setUp(): void
     {
@@ -23,6 +24,7 @@ class BaseQueryTest extends KernelTestCase
         $container = self::getContainer();
         $this->sut = $container->get(IndexQuery::class);
         (new \ReflectionProperty(BaseQuery::class, 'orderByField'))->setValue($this->sut, 'postedAt');
+        $this->denormalizer = $container->get(DenormalizerInterface::class);
     }
 
     public function testPerPageItemsDefaultValue(): void
@@ -220,9 +222,29 @@ class BaseQueryTest extends KernelTestCase
     #[DataProvider('provideNestPostsWithParent')]
     public function testNestPostsWithParent(array $input, array $expected): void
     {
+        $input = collect($input)->mapWithKeys(function (array $posts, string $postTypePluralName) {
+            $postClass = 'App\Entity\Post\\' . ucfirst(Helper::POST_TYPE_PLURAL_TO_SINGULAR[$postTypePluralName]);
+            return [
+                $postTypePluralName => array_map(
+                    fn(array $post) => $this->denormalizer->denormalize($post, $postClass),
+                    $posts,
+                ),
+            ];
+        })->all();
         self::assertEquals(
             collect($expected)->recursive(),
-            $this->sut->nestPostsWithParent(...array_map('collect', $input)),
+            $this->sut->nestPostsWithParent(...array_map('collect', $input))
+                ->map(function (Collection $thread) {
+                    /** @var Collection $replies */
+                    $replies = $thread['replies'];
+                    $replies->transform(function (Collection $reply) {
+                        /** @var Collection $subReplies */
+                        $subReplies = $reply['subReplies'];
+                        $subReplies->transform(fn(Collection $subReply) => $subReply->filter());
+                        return $reply->filter();
+                    });
+                    return $thread->filter(); // remove normalized entity props with default value
+                }),
         );
     }
 
@@ -230,9 +252,9 @@ class BaseQueryTest extends KernelTestCase
     {
         return [[
             [
-                'threads' => [new Thread(['tid' => 1])],
-                'replies' => [new Reply(['tid' => 1, 'pid' => 2])],
-                'subReplies' => [new SubReply(['tid' => 1, 'pid' => 2, 'spid' => 3])],
+                'threads' => [['tid' => 1]],
+                'replies' => [['tid' => 1, 'pid' => 2]],
+                'subReplies' => [['tid' => 1, 'pid' => 2, 'spid' => 3]],
             ],
             [[
                 'tid' => 1,
