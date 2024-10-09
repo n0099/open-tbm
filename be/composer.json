@@ -19,6 +19,7 @@
         "symfony/dotenv": "^7.1.5",
         "symfony/flex": "^2.4.6",
         "symfony/framework-bundle": "^7.1.5",
+        "symfony/property-access": "7.1.*",
         "symfony/runtime": "^7.1.1",
         "symfony/serializer": "^7.1.5",
         "symfony/stopwatch": "7.1.*",
