@@ -179,10 +179,7 @@ abstract class BaseQuery
         /** @var Collection<int, int> $parentThreadsID parent tid of all replies and their sub replies */
         $parentThreadsID = $replies->pluck('tid')->concat($subReplies->pluck('tid'))->unique();
         /** @var Collection<int, Thread> $threads */
-        $threads = collect($postModels['thread']->createQueryBuilder('t')
-            ->where('t.tid IN (:tids)')
-            ->setParameter('tids', $parentThreadsID->concat($tids))
-            ->getQuery()->getResult())
+        $threads = collect($postModels['thread']->getPosts($parentThreadsID->concat($tids)))
         ->each(static fn(Thread $thread) =>
             $thread->setIsMatchQuery($tids->contains($thread->getTid())));
         $this->stopwatch->stop('fillWithThreadsFields');
@@ -191,31 +188,23 @@ abstract class BaseQuery
         /** @var Collection<int, int> $parentRepliesID parent pid of all sub replies */
         $parentRepliesID = $subReplies->pluck('pid')->unique();
         $allRepliesId = $parentRepliesID->concat($pids);
-        $replies = collect($postModels['reply']->createQueryBuilder('t')
-            ->where('t.pid IN (:pids)')->setParameter('pids', $allRepliesId)
-            ->getQuery()->getResult())
+        $replies = collect($postModels['reply']->getPosts($allRepliesId))
         ->each(static fn(Reply $reply) =>
             $reply->setIsMatchQuery($pids->contains($reply->getPid())));
         $this->stopwatch->stop('fillWithRepliesFields');
 
         $this->stopwatch->start('fillWithSubRepliesFields');
-        $subReplies = collect($postModels['subReply']->createQueryBuilder('t')
-            ->where('t.spid IN (:spids)')->setParameter('spids', $spids)
-            ->getQuery()->getResult());
+        $subReplies = collect($postModels['subReply']->getPosts($spids));
         $this->stopwatch->stop('fillWithSubRepliesFields');
 
         $this->stopwatch->start('parsePostContentProtoBufBytes');
         // not using one-to-one association due to relying on PostRepository->getTableNameSuffix()
-        $replyContents = collect($this->postRepositoryFactory->newReplyContent($fid)->createQueryBuilder('t')
-                ->where('t.pid IN (:pids)')->setParameter('pids', $allRepliesId)
-                ->getQuery()->getResult())
+        $replyContents = collect($this->postRepositoryFactory->newReplyContent($fid)->getPosts($allRepliesId))
             ->mapWithKeys(fn(ReplyContent $content) => [$content->getPid() => $content->getContent()]);
         $replies->each(fn(Reply $reply) =>
             $reply->setContent($replyContents->get($reply->getPid())));
 
-        $subReplyContents = collect($this->postRepositoryFactory->newSubReplyContent($fid)->createQueryBuilder('t')
-                ->where('t.spid IN (:spids)')->setParameter('spids', $spids)
-                ->getQuery()->getResult())
+        $subReplyContents = collect($this->postRepositoryFactory->newSubReplyContent($fid)->getPosts($spids))
             ->mapWithKeys(fn(SubReplyContent $content) => [$content->getSpid() => $content->getContent()]);
         $subReplies->each(fn(SubReply $subReply) =>
             $subReply->setContent($subReplyContents->get($subReply->getSpid())));

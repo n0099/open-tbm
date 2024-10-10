@@ -50,18 +50,14 @@ class IndexQuery extends BaseQuery
                 ->only($postTypes)
                 ->transform(static fn(PostRepository $repository) => $repository->selectCurrentAndParentPostID());
         $getFidByPostIDParam = function (string $postIDName, int $postID): int {
-            $counts = collect($this->forumRepository->getOrderedForumsId())
-                ->map(fn(int $fid) => $this->postRepositoryFactory
+            $postExistencesKeyByFid = collect($this->forumRepository->getOrderedForumsId())
+                ->mapWithKeys(fn(int $fid) => [$fid => $this->postRepositoryFactory
                     ->new($fid, Helper::POST_ID_TO_TYPE[$postIDName])
-                    ->createQueryBuilder('t')
-                    ->select("$fid AS fid", 'COUNT(t) AS count')
-                    ->where("t.$postIDName = :postID")
-                    ->setParameter('postID', $postID)
-                    ->getQuery()->getSingleResult())
-                ->where('count', '!=', 0);
-            Helper::abortAPIIf(50001, $counts->count() > 1);
-            Helper::abortAPIIf(40401, $counts->count() === 0);
-            return $counts->pluck('fid')->first();
+                    ->isPostExists($postID)])
+                ->filter(fn(bool $isExists) => $isExists);
+            Helper::abortAPIIf(50001, $postExistencesKeyByFid->count() > 1);
+            Helper::abortAPIIf(40401, $postExistencesKeyByFid->count() === 0);
+            return $postExistencesKeyByFid->keys()[0];
         };
 
         if (\array_key_exists('fid', $flatParams)) {

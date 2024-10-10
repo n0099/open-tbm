@@ -7,6 +7,7 @@ namespace App\Repository\Post;
 use App\Entity\Post\Post;
 use App\Helper;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\ORM\AbstractQuery;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
@@ -46,5 +47,20 @@ abstract class PostRepository extends ServiceEntityRepository
             ->values()
             ->map(static fn(string $postIDField) => "t.$postIDField")
             ->all());
+    }
+
+    abstract public function getPosts(\ArrayAccess $postsId): array;
+
+    protected function createQueryWithParam(string $dql, string $paramName, int|\ArrayAccess $paramValue): AbstractQuery
+    {
+        return $this->getEntityManager()->createQuery($dql)->setParameter($paramName, $paramValue);
+    }
+
+    abstract public function isPostExists(int $postId): bool;
+
+    protected function isPostExistsWrapper(int $postId, string $dql, string $postIdParamName): bool
+    {
+        return $this->createQueryWithParam($dql, $postIdParamName, $postId)
+                ->getOneOrNullResult(AbstractQuery::HYDRATE_SINGLE_SCALAR) === 1;
     }
 }

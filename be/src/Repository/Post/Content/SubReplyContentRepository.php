@@ -23,4 +23,13 @@ class SubReplyContentRepository extends PostRepository
     {
         return 'subReply_content';
     }
+    
+    public function getPosts(\ArrayAccess $postsId): array
+    {
+        return $this->createQueryWithParam(
+            /** @lang DQL */'SELECT t FROM App\Entity\Post\Content\SubReplyContent t WHERE t.spid IN (:spid)',
+            'spid',
+            $postsId
+        )->getResult();
+    }
 }

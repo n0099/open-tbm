@@ -23,6 +23,24 @@ class ThreadRepository extends PostRepository
         return 'thread';
     }
 
+    public function getPosts(\ArrayAccess $postsId): array
+    {
+        return $this->createQueryWithParam(
+            /** @lang DQL */'SELECT t FROM App\Entity\Post\Thread t WHERE t.tid IN (:tid)',
+            'tid',
+            $postsId
+        )->getResult();
+    }
+
+    public function isPostExists(int $postId): bool
+    {
+        return $this->isPostExistsWrapper(
+            $postId,
+            /** @lang DQL */'SELECT 1 FROM App\Entity\Post\Thread t WHERE t.tid = :tid',
+            'tid'
+        );
+    }
+
     public function getThreadsIdByChunks(int $chunkSize): array
     {
         // https://github.com/doctrine/orm/issues/3542

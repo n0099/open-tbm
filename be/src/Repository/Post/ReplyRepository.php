@@ -22,4 +22,22 @@ class ReplyRepository extends PostRepository
     {
         return 'reply';
     }
+    
+    public function getPosts(\ArrayAccess $postsId): array
+    {
+        return $this->createQueryWithParam(
+            /** @lang DQL */'SELECT t FROM App\Entity\Post\Reply t WHERE t.pid IN (:pid)',
+            'pid',
+            $postsId
+        )->getResult();
+    }
+    
+    public function isPostExists(int $postId): bool
+    {
+        return $this->isPostExistsWrapper(
+            $postId,
+            /** @lang DQL */'SELECT 1 FROM App\Entity\Post\Reply t WHERE t.pid = :pid',
+            'pid'
+        );
+    }
 }

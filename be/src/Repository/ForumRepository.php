@@ -35,4 +35,11 @@ class ForumRepository extends ServiceEntityRepository
             ->setParameter('fid', $fid)
             ->getOneOrNullResult(AbstractQuery::HYDRATE_SINGLE_SCALAR) === 1;
     }
+
+    public function getForum(int $fid): Forum
+    {
+        return $this->getEntityManager()
+            ->createQuery(/** @lang DQL */'SELECT t.fid, t.name FROM App\Entity\Forum t WHERE t.fid = :fid')
+            ->setMaxResults(1)->setParameter('fid', $fid)->getSingleResult();
+    }
 }

@@ -12,4 +12,11 @@ class UserRepository extends ServiceEntityRepository
     {
         parent::__construct($registry, User::class);
     }
+    
+    public function getUsers(array $usersId): array
+    {
+        return $this->getEntityManager()
+            ->createQuery(/** @lang DQL */'SELECT t FROM App\Entity\User t WHERE t.uid IN (:usersId)')
+            ->setParameter('usersId', $usersId)->getResult();         
+    }
 }

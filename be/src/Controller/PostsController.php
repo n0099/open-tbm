@@ -87,26 +87,15 @@ class PostsController extends AbstractController
         $this->stopwatch->stop('fillWithParentPost');
 
         $this->stopwatch->start('queryUsers');
-        $latestRepliersId = $result['threads']->map(fn(Thread $thread) => $thread->getLatestReplierId());
-        $latestRepliers = collect()
-            ->concat($this->latestReplierRepository->createQueryBuilder('t')
-                ->where('t.id IN (:ids)')->setParameter('ids', $latestRepliersId)
-                ->andWhere('t.uid IS NOT NULL')
-                ->select('t.id', 't.uid', 't.createdAt', 't.updatedAt') // removeSelect('t.name', 't.displayName')
-                ->getQuery()->getResult())
-            ->concat($this->latestReplierRepository->createQueryBuilder('t')
-                ->where('t.id IN (:ids)')->setParameter('ids', $latestRepliersId)
-                ->andWhere('t.uid IS NULL')
-                ->getQuery()->getResult());
+        $latestRepliers = $this->latestReplierRepository->getLatestRepliersWithoutNameWhenHasUid(
+            $result['threads']->map(fn(Thread $thread) => $thread->getLatestReplierId()),
+        );
         $uids = collect($result)
             ->only(Helper::POST_TYPES_PLURAL)
             ->flatMap(static fn(Collection $posts) => $posts->map(fn(Post $post) => $post->getAuthorUid()))
-            ->concat($latestRepliers->pluck('uid'))
-            ->filter()->unique(); // remove NULLs
-        $users = collect($this->userRepository->createQueryBuilder('t')
-            ->where('t.uid IN (:uids)')
-            ->setParameter('uids', $uids)
-            ->getQuery()->getResult());
+            ->concat($latestRepliers->pluck('uid')->filter()) // filter() will remove NULLs
+            ->unique();
+        $users = collect($this->userRepository->getUsers($uids));
         $this->stopwatch->stop('queryUsers');
 
         $this->stopwatch->start('queryUserRelated');
@@ -127,10 +116,7 @@ class PostsController extends AbstractController
                 ...$query->getResultPages(),
                 ...Arr::except($result, ['fid', ...Helper::POST_TYPES_PLURAL]),
             ],
-            'forum' => $this->forumRepository->createQueryBuilder('t')
-                ->where('t.fid = :fid')->setParameter('fid', $fid)
-                ->select('t.fid', 't.name')->setMaxResults(1)
-                ->getQuery()->getSingleResult(),
+            'forum' => $this->forumRepository->getForum($fid),
             'threads' => $query->reOrderNestedPosts($query->nestPostsWithParent(...$result)),
             'users' => $users,
             'latestRepliers' => $latestRepliers,
