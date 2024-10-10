@@ -11,7 +11,7 @@ framework:
 
     assets:
         base_urls:
-            - '%env(APP_BASE_URL_ASSETS)%'
+            - '%env(APP_BASE_URL_BE)%'
 
 when@test:
     framework:
