@@ -5,6 +5,7 @@ namespace App\Repository;
 use App\Entity\Forum;
 use Doctrine\Persistence\ManagerRegistry;
 
+/** @extends BaseRepository<Forum> */
 class ForumRepository extends BaseRepository
 {
     public function __construct(ManagerRegistry $registry)

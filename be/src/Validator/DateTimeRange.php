@@ -1,5 +1,7 @@
 <?php
 
+/** @noinspection PhpMultipleClassDeclarationsInspection */
+
 namespace App\Validator;
 
 use Symfony\Component\Validator\Constraint;

@@ -8,6 +8,7 @@ use App\Repository\BaseRepository;
 use Doctrine\ORM\Query\ResultSetMapping;
 use Doctrine\Persistence\ManagerRegistry;
 
+/** @extends BaseRepository<ForumModerator> */
 class ForumModeratorRepository extends BaseRepository
 {
     public function __construct(ManagerRegistry $registry)

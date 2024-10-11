@@ -161,7 +161,7 @@ class SearchQuery extends BaseQuery
                         $sqlParamName,
                         $getAndCacheUserQuery($this->userRepository->createQueryBuilder('t')
                             ->select('t.uid')
-                            ->andWhere("t.gender = :{$sqlParamName}_gender")
+                            ->where("t.gender = :{$sqlParamName}_gender")
                             ->setParameter("{$sqlParamName}_gender", $value)),
                     ),
             'authorManagerType' =>

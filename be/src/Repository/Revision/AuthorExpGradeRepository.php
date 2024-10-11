@@ -8,6 +8,7 @@ use App\Repository\BaseRepository;
 use Doctrine\ORM\Query\ResultSetMapping;
 use Doctrine\Persistence\ManagerRegistry;
 
+/** @extends BaseRepository<AuthorExpGrade> */
 class AuthorExpGradeRepository extends BaseRepository
 {
     public function __construct(ManagerRegistry $registry)
