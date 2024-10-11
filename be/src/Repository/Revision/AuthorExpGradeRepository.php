@@ -4,11 +4,11 @@ namespace App\Repository\Revision;
 
 use App\DTO\User\AuthorExpGrade as AuthorExpGradeDTO;
 use App\Entity\Revision\AuthorExpGrade;
-use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use App\Repository\BaseRepository;
 use Doctrine\ORM\Query\ResultSetMapping;
 use Doctrine\Persistence\ManagerRegistry;
 
-class AuthorExpGradeRepository extends ServiceEntityRepository
+class AuthorExpGradeRepository extends BaseRepository
 {
     public function __construct(ManagerRegistry $registry)
     {

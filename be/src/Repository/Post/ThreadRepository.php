@@ -25,20 +25,14 @@ class ThreadRepository extends PostRepository
 
     public function getPosts(\ArrayAccess $postsId): array
     {
-        return $this->createQueryWithParam(
-            /** @lang DQL */'SELECT t FROM App\Entity\Post\Thread t WHERE t.tid IN (:tid)',
-            'tid',
-            $postsId
-        )->getResult();
+        $dql = 'SELECT t FROM App\Entity\Post\Thread t WHERE t.tid IN (:tid)';
+        return $this->getQueryResultWithSingleParam($dql, 'tid', $postsId);
     }
 
     public function isPostExists(int $postId): bool
     {
-        return $this->isPostExistsWrapper(
-            $postId,
-            /** @lang DQL */'SELECT 1 FROM App\Entity\Post\Thread t WHERE t.tid = :tid',
-            'tid'
-        );
+        $dql = 'SELECT 1 FROM App\Entity\Post\Thread t WHERE t.tid = :tid';
+        return $this->isEntityExists($dql, 'tid', $postId);
     }
 
     public function getThreadsIdByChunks(int $chunkSize): array
@@ -59,8 +53,8 @@ class ThreadRepository extends PostRepository
 
     public function getThreadsIdAfter(int $after, int $limit): array
     {
-        return $this->getEntityManager()->createQuery(<<<'DQL'
-            SELECT t.tid FROM App\Entity\Post\Thread t WHERE t.tid > :after ORDER BY t.tid
-            DQL)->setMaxResults($limit)->setParameters(compact('after'))->getSingleColumnResult();
+        $dql = 'SELECT t.tid FROM App\Entity\Post\Thread t WHERE t.tid > :after ORDER BY t.tid';
+        return $this->createQuery($dql)->setMaxResults($limit)
+            ->setParameters(compact('after'))->getSingleColumnResult();
     }
 }

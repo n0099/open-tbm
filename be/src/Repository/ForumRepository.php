@@ -3,11 +3,9 @@
 namespace App\Repository;
 
 use App\Entity\Forum;
-use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
-use Doctrine\ORM\AbstractQuery;
 use Doctrine\Persistence\ManagerRegistry;
 
-class ForumRepository extends ServiceEntityRepository
+class ForumRepository extends BaseRepository
 {
     public function __construct(ManagerRegistry $registry)
     {
@@ -16,30 +14,26 @@ class ForumRepository extends ServiceEntityRepository
 
     public function getOrderedForums(): array
     {
-        return $this->getEntityManager()
-            ->createQuery(/** @lang DQL */'SELECT t FROM App\Entity\Forum t ORDER BY t.fid')
-            ->getArrayResult();
+        $dql = 'SELECT t FROM App\Entity\Forum t ORDER BY t.fid';
+        return $this->createQuery($dql)->getResult();
     }
 
     public function getOrderedForumsId(): array
     {
-        return $this->getEntityManager()
-            ->createQuery(/** @lang DQL */'SELECT t.fid FROM App\Entity\Forum t ORDER BY t.fid')
-            ->getSingleColumnResult();
+        $dql = 'SELECT t.fid FROM App\Entity\Forum t ORDER BY t.fid';
+        return $this->createQuery($dql)->getSingleColumnResult();
     }
 
     public function isForumExists(int $fid): bool
     {
-        return $this->getEntityManager()
-            ->createQuery(/** @lang DQL */'SELECT 1 FROM App\Entity\Forum t WHERE t.fid = :fid')
-            ->setParameter('fid', $fid)
-            ->getOneOrNullResult(AbstractQuery::HYDRATE_SINGLE_SCALAR) === 1;
+        $dql = 'SELECT 1 FROM App\Entity\Forum t WHERE t.fid = :fid';
+        return $this->isEntityExists($dql, 'fid', $fid);
     }
 
     public function getForum(int $fid): Forum
     {
-        return $this->getEntityManager()
-            ->createQuery(/** @lang DQL */'SELECT t.fid, t.name FROM App\Entity\Forum t WHERE t.fid = :fid')
-            ->setMaxResults(1)->setParameter('fid', $fid)->getSingleResult();
+        $dql = 'SELECT t.fid, t.name FROM App\Entity\Forum t WHERE t.fid = :fid';
+        return $this->createQueryWithSingleParam($dql, 'fid', $fid)
+            ->setMaxResults(1)->getSingleResult();
     }
 }

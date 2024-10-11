@@ -26,10 +26,7 @@ class ReplyContentRepository extends PostRepository
 
     public function getPosts(\ArrayAccess $postsId): array
     {
-        return $this->createQueryWithParam(
-            /** @lang DQL */'SELECT t FROM App\Entity\Post\Content\ReplyContent t WHERE t.pid IN (:pid)',
-            'pid',
-            $postsId
-        )->getResult();
+        $dql = 'SELECT t FROM App\Entity\Post\Content\ReplyContent t WHERE t.pid IN (:pid)';
+        return $this->getQueryResultWithSingleParam($dql, 'pid', $postsId);
     }
 }

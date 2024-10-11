@@ -25,19 +25,13 @@ class SubReplyRepository extends PostRepository
     
     public function getPosts(\ArrayAccess $postsId): array
     {
-        return $this->createQueryWithParam(
-            /** @lang DQL */'SELECT t FROM App\Entity\Post\SubReply t WHERE t.spid IN (:spid)',
-            'spid',
-            $postsId
-        )->getResult();
+        $dql = 'SELECT t FROM App\Entity\Post\SubReply t WHERE t.spid IN (:spid)';
+        return $this->getQueryResultWithSingleParam($dql, 'spid', $postsId);
     }
 
     public function isPostExists(int $postId): bool
     {
-        return $this->isPostExistsWrapper(
-            $postId,
-            /** @lang DQL */'SELECT 1 FROM App\Entity\Post\SubReply t WHERE t.spid = :spid',
-            'spid'
-        );
+        $dql = 'SELECT 1 FROM App\Entity\Post\SubReply t WHERE t.spid = :spid';
+        return $this->isEntityExists($dql, 'spid', $postId);
     }
 }

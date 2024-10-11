@@ -4,11 +4,11 @@ namespace App\Repository\Revision;
 
 use App\DTO\User\ForumModerator as ForumModeratorDTO;
 use App\Entity\Revision\ForumModerator;
-use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use App\Repository\BaseRepository;
 use Doctrine\ORM\Query\ResultSetMapping;
 use Doctrine\Persistence\ManagerRegistry;
 
-class ForumModeratorRepository extends ServiceEntityRepository
+class ForumModeratorRepository extends BaseRepository
 {
     public function __construct(ManagerRegistry $registry)
     {
