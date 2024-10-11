@@ -12,7 +12,7 @@ class UserRepository extends BaseRepository
     {
         parent::__construct($registry, User::class);
     }
-    
+
     public function getUsers(\ArrayAccess $usersId): array
     {
         $dql = 'SELECT t FROM App\Entity\User t WHERE t.uid IN (:usersId)';

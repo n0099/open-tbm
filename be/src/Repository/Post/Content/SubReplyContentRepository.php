@@ -23,7 +23,7 @@ class SubReplyContentRepository extends PostContentRepository
     {
         return 'subReply_content';
     }
-    
+
     public function getPostsContent(\ArrayAccess $postsId): array
     {
         $dql = 'SELECT t FROM App\Entity\Post\Content\SubReplyContent t WHERE t.spid IN (:spid)';

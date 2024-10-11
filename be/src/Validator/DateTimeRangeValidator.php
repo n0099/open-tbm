@@ -18,7 +18,7 @@ class DateTimeRangeValidator extends ConstraintValidator
             return;
         }
 
-        $values = array_map(fn(string $value) => new \DateTimeImmutable($value), explode(',', $value));
+        $values = array_map(static fn(string $value) => new \DateTimeImmutable($value), explode(',', $value));
         $errors = $this->context->getValidator()->validate($values, new Assert\Count(2));
         $errors->addAll($this->context->getValidator()->validate(
             $values[0],

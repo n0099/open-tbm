@@ -22,7 +22,7 @@ class SubReplyRepository extends PostRepository
     {
         return 'subReply';
     }
-    
+
     public function getPosts(\ArrayAccess $postsId): array
     {
         $dql = 'SELECT t FROM App\Entity\Post\SubReply t WHERE t.spid IN (:spid)';

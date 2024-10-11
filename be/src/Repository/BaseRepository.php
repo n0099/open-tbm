@@ -7,11 +7,13 @@ namespace App\Repository;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\AbstractQuery;
 use Doctrine\ORM\Query;
+use Symfony\Component\DependencyInjection\Attribute\Exclude;
 
 /**
  * @template T
  * @extends ServiceEntityRepository<T>
  */
+#[Exclude]
 class BaseRepository extends ServiceEntityRepository
 {
     protected function createQuery(string $dql): Query
