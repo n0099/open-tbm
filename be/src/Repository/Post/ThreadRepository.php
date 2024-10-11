@@ -7,9 +7,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Component\DependencyInjection\Attribute\Exclude;
 
-/**
- * @extends PostRepository<Thread>
- */
+/** @extends PostRepository<Thread> */
 #[Exclude]
 class ThreadRepository extends PostRepository
 {

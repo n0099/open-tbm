@@ -74,9 +74,7 @@ class Reply extends PostWithContent
         return BlobResourceGetter::protoBuf($this->geolocation, Lbs::class);
     }
 
-    /**
-     * @param resource|null $geolocation
-     */
+    /** @param resource|null $geolocation */
     public function setGeolocation(null $geolocation): void
     {
         $this->geolocation = $geolocation;

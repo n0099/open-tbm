@@ -17,9 +17,7 @@ abstract class PostContent
         return BlobResourceGetter::protoBufWrapper($this->protoBufBytes, PostContentWrapper::class);
     }
 
-    /**
-     * @param resource|null $protoBufBytes
-     */
+    /** @param resource|null $protoBufBytes */
     public function setProtoBufBytes(null $protoBufBytes): void
     {
         $this->protoBufBytes = $protoBufBytes;

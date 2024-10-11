@@ -40,9 +40,7 @@ readonly class PostRepositoryFactory
         return new SubReplyContentRepository($this->registry, $this->entityManager, $fid);
     }
 
-    /**
-     * @return array{thread: ThreadRepository, reply: ReplyRepository, subReply: SubReplyRepository}
-     */
+    /** @return array{thread: ThreadRepository, reply: ReplyRepository, subReply: SubReplyRepository} */
     public function newForumPosts(int $fid): array
     {
         return array_combine(

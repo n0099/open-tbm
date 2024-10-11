@@ -13,9 +13,7 @@ abstract class RepositoryWithSplitFid extends BaseRepository
 {
     abstract protected function getTableNameSuffix(): string;
 
-    /**
-     * @param class-string<T> $postRepositoryClass
-     */
+    /** @param class-string<T> $postRepositoryClass */
     public function __construct(
         ManagerRegistry $registry,
         EntityManagerInterface $entityManager,

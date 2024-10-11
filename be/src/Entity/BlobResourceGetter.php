@@ -33,9 +33,7 @@ class BlobResourceGetter
         return \Safe\json_decode($protoBuf->serializeToJsonString(), assoc: true);
     }
 
-    /**
-     * @param ?resource $value
-     */
+    /** @param ?resource $value */
     public static function resource($value): ?string
     {
         if ($value === null) {

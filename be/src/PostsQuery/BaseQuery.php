@@ -126,9 +126,7 @@ abstract class BaseQuery
         $this->stopwatch->stop('setResult');
     }
 
-    /**
-     * @return array{result: Collection, hasMorePages: bool}
-     */
+    /** @return array{result: Collection, hasMorePages: bool} */
     public static function hasQueryResultMorePages(QueryBuilder $query, int $limit): array
     {
         $results = collect($query->setMaxResults($limit + 1)->getQuery()->getResult());

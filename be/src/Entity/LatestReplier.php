@@ -50,9 +50,7 @@ class LatestReplier extends TimestampedEntity
         return BlobResourceGetter::resource($this->displayName);
     }
 
-    /**
-     * @param resource|null $displayName
-     */
+    /** @param resource|null $displayName */
     public function setDisplayName(null $displayName): void
     {
         $this->displayName = $displayName;

@@ -143,9 +143,7 @@ class Thread extends Post
         return BlobResourceGetter::protoBuf($this->zan, Zan::class);
     }
 
-    /**
-     * @param resource|null $zan
-     */
+    /** @param resource|null $zan */
     public function setZan(null $zan): void
     {
         $this->zan = $zan;
@@ -156,9 +154,7 @@ class Thread extends Post
         return BlobResourceGetter::protoBuf($this->geolocation, Lbs::class);
     }
 
-    /**
-     * @param resource|null $geolocation
-     */
+    /** @param resource|null $geolocation */
     public function setGeolocation(null $geolocation): void
     {
         $this->geolocation = $geolocation;

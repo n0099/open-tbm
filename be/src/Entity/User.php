@@ -51,9 +51,7 @@ class User extends TimestampedEntity
         return BlobResourceGetter::resource($this->displayName);
     }
 
-    /**
-     * @param resource|null $displayName
-     */
+    /** @param resource|null $displayName */
     public function setDisplayName(null $displayName): void
     {
         $this->displayName = $displayName;
@@ -104,9 +102,7 @@ class User extends TimestampedEntity
         return BlobResourceGetter::protoBufWrapper($this->icon, UserIconWrapper::class);
     }
 
-    /**
-     * @param resource|null $icon
-     */
+    /** @param resource|null $icon */
     public function setIcon(null $icon): void
     {
         $this->icon = $icon;

@@ -8,9 +8,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Component\DependencyInjection\Attribute\Exclude;
 
-/**
- * @extends PostRepository<SubReplyContent>
- */
+/** @extends PostRepository<SubReplyContent> */
 #[Exclude]
 class SubReplyContentRepository extends PostContentRepository
 {
