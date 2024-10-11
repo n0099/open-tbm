@@ -21,17 +21,23 @@ class BaseRepository extends ServiceEntityRepository
         return $this->getEntityManager()->createQuery($dql);
     }
 
-    protected function createQueryWithSingleParam(string $dql, string $paramName, int|\ArrayAccess $paramValue): Query
-    {
+    protected function createQueryWithSingleParam(
+        string $dql,
+        string $paramName,
+        int|array|\ArrayAccess $paramValue,
+    ): Query {
         return $this->createQuery($dql)->setParameter($paramName, $paramValue);
     }
 
-    protected function getQueryResultWithSingleParam(string $dql, string $paramName, int|\ArrayAccess $paramValue): array
-    {
+    protected function getQueryResultWithSingleParam(
+        string $dql,
+        string $paramName,
+        int|array|\ArrayAccess $paramValue,
+    ): array {
         return $this->createQueryWithSingleParam($dql, $paramName, $paramValue)->getResult();
     }
 
-    protected function isEntityExists(string $dql, string $paramName, int|\ArrayAccess $paramValue): bool
+    protected function isEntityExists(string $dql, string $paramName, int|array|\ArrayAccess $paramValue): bool
     {
         return $this->createQueryWithSingleParam($dql, $paramName, $paramValue)
             ->getOneOrNullResult(AbstractQuery::HYDRATE_SINGLE_SCALAR) === 1;

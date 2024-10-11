@@ -22,7 +22,7 @@ abstract class PostRepository extends RepositoryWithSplitFid
             ->all());
     }
 
-    abstract public function getPosts(\ArrayAccess $postsId): array;
+    abstract public function getPosts(array|\ArrayAccess $postsId): array;
 
     abstract public function isPostExists(int $postId): bool;
 }

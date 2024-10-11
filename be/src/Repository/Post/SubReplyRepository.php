@@ -21,7 +21,7 @@ class SubReplyRepository extends PostRepository
         return 'subReply';
     }
 
-    public function getPosts(\ArrayAccess $postsId): array
+    public function getPosts(array|\ArrayAccess $postsId): array
     {
         $dql = 'SELECT t FROM App\Entity\Post\SubReply t WHERE t.spid IN (:spid)';
         return $this->getQueryResultWithSingleParam($dql, 'spid', $postsId);

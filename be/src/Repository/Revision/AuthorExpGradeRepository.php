@@ -16,7 +16,7 @@ class AuthorExpGradeRepository extends BaseRepository
         parent::__construct($registry, AuthorExpGrade::class);
     }
 
-    public function getLatestOfUsers(int $fid, \ArrayAccess $usersId)
+    public function getLatestOfUsers(int $fid, array|\ArrayAccess $usersId)
     {
         $entityManager = $this->getEntityManager();
         $tableName = $entityManager->getClassMetadata(AuthorExpGrade::class)->getTableName();

@@ -21,7 +21,7 @@ class ThreadRepository extends PostRepository
         return 'thread';
     }
 
-    public function getPosts(\ArrayAccess $postsId): array
+    public function getPosts(array|\ArrayAccess $postsId): array
     {
         $dql = 'SELECT t FROM App\Entity\Post\Thread t WHERE t.tid IN (:tid)';
         return $this->getQueryResultWithSingleParam($dql, 'tid', $postsId);

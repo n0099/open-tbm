@@ -14,7 +14,7 @@ class LatestReplierRepository extends BaseRepository
         parent::__construct($registry, LatestReplier::class);
     }
 
-    public function getLatestRepliersWithoutNameWhenHasUid(\ArrayAccess $latestRepliersId): Collection
+    public function getLatestRepliersWithoutNameWhenHasUid(array|\ArrayAccess $latestRepliersId): Collection
     {
         // removeSelect('t.name', 't.displayName')
         return collect($this->getQueryResultWithSingleParam(<<<'DQL'

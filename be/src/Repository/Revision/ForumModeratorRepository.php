@@ -16,7 +16,7 @@ class ForumModeratorRepository extends BaseRepository
         parent::__construct($registry, ForumModerator::class);
     }
 
-    public function getLatestOfUsers(int $fid, \ArrayAccess $portraits)
+    public function getLatestOfUsers(int $fid, array|\ArrayAccess $portraits)
     {
         $entityManager = $this->getEntityManager();
         $tableName = $entityManager->getClassMetadata(ForumModerator::class)->getTableName();

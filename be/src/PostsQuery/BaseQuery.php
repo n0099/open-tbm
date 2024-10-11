@@ -178,8 +178,8 @@ abstract class BaseQuery
         $parentThreadsID = $replies->pluck('tid')->concat($subReplies->pluck('tid'))->unique();
         /** @var Collection<int, Thread> $threads */
         $threads = collect($postModels['thread']->getPosts($parentThreadsID->concat($tids)))
-        ->each(static fn(Thread $thread) =>
-            $thread->setIsMatchQuery($tids->contains($thread->getTid())));
+            ->each(static fn(Thread $thread) =>
+                $thread->setIsMatchQuery($tids->contains($thread->getTid())));
         $this->stopwatch->stop('fillWithThreadsFields');
 
         $this->stopwatch->start('fillWithRepliesFields');
@@ -187,8 +187,8 @@ abstract class BaseQuery
         $parentRepliesID = $subReplies->pluck('pid')->unique();
         $allRepliesId = $parentRepliesID->concat($pids);
         $replies = collect($postModels['reply']->getPosts($allRepliesId))
-        ->each(static fn(Reply $reply) =>
-            $reply->setIsMatchQuery($pids->contains($reply->getPid())));
+            ->each(static fn(Reply $reply) =>
+                $reply->setIsMatchQuery($pids->contains($reply->getPid())));
         $this->stopwatch->stop('fillWithRepliesFields');
 
         $this->stopwatch->start('fillWithSubRepliesFields');

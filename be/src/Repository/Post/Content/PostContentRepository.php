@@ -11,5 +11,5 @@ use App\Repository\RepositoryWithSplitFid;
  */
 abstract class PostContentRepository extends RepositoryWithSplitFid
 {
-    abstract public function getPostsContent(\ArrayAccess $postsId): array;
+    abstract public function getPostsContent(array|\ArrayAccess $postsId): array;
 }
