@@ -199,12 +199,12 @@ abstract class BaseQuery
 
         $this->stopwatch->start('parsePostContentProtoBufBytes');
         // not using one-to-one association due to relying on PostRepository->getTableNameSuffix()
-        $replyContents = collect($this->postRepositoryFactory->newReplyContent($fid)->getPosts($allRepliesId))
+        $replyContents = collect($this->postRepositoryFactory->newReplyContent($fid)->getPostsContent($allRepliesId))
             ->mapWithKeys(fn(ReplyContent $content) => [$content->getPid() => $content->getContent()]);
         $replies->each(fn(Reply $reply) =>
             $reply->setContent($replyContents->get($reply->getPid())));
 
-        $subReplyContents = collect($this->postRepositoryFactory->newSubReplyContent($fid)->getPosts($spids))
+        $subReplyContents = collect($this->postRepositoryFactory->newSubReplyContent($fid)->getPostsContent($spids))
             ->mapWithKeys(fn(SubReplyContent $content) => [$content->getSpid() => $content->getContent()]);
         $subReplies->each(fn(SubReply $subReply) =>
             $subReply->setContent($subReplyContents->get($subReply->getSpid())));

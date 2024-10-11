@@ -3,16 +3,15 @@
 namespace App\Repository\Post\Content;
 
 use App\Entity\Post\Content\ReplyContent;
-use App\Repository\Post\PostRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Component\DependencyInjection\Attribute\Exclude;
 
 /**
- * @extends PostRepository<ReplyContent>
+ * @extends PostContentRepository<ReplyContent>
  */
 #[Exclude]
-class ReplyContentRepository extends PostRepository
+class ReplyContentRepository extends PostContentRepository
 {
     public function __construct(ManagerRegistry $registry, EntityManagerInterface $entityManager, int $fid)
     {
@@ -24,7 +23,7 @@ class ReplyContentRepository extends PostRepository
         return 'reply_content';
     }
 
-    public function getPosts(\ArrayAccess $postsId): array
+    public function getPostsContent(\ArrayAccess $postsId): array
     {
         $dql = 'SELECT t FROM App\Entity\Post\Content\ReplyContent t WHERE t.pid IN (:pid)';
         return $this->getQueryResultWithSingleParam($dql, 'pid', $postsId);

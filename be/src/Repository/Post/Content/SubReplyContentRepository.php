@@ -12,7 +12,7 @@ use Symfony\Component\DependencyInjection\Attribute\Exclude;
  * @extends PostRepository<SubReplyContent>
  */
 #[Exclude]
-class SubReplyContentRepository extends PostRepository
+class SubReplyContentRepository extends PostContentRepository
 {
     public function __construct(ManagerRegistry $registry, EntityManagerInterface $entityManager, int $fid)
     {
@@ -24,7 +24,7 @@ class SubReplyContentRepository extends PostRepository
         return 'subReply_content';
     }
     
-    public function getPosts(\ArrayAccess $postsId): array
+    public function getPostsContent(\ArrayAccess $postsId): array
     {
         $dql = 'SELECT t FROM App\Entity\Post\Content\SubReplyContent t WHERE t.spid IN (:spid)';
         return $this->getQueryResultWithSingleParam($dql, 'spid', $postsId);
