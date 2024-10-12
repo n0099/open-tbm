@@ -9,27 +9,11 @@ use Symfony\Component\Serializer\Attribute\Ignore;
 readonly class AuthorExpGrade
 {
     public function __construct(
-        #[ORM\Column, ORM\Id]
-        private int $uid,
+        #[ORM\Column, ORM\Id, Ignore]
+        public int $uid,
         #[ORM\Column]
-        private int $discoveredAt,
+        public int $discoveredAt,
         #[ORM\Column]
-        private int $authorExpGrade,
+        public int $authorExpGrade,
     ) {}
-
-    #[Ignore]
-    public function getUid(): int
-    {
-        return $this->uid;
-    }
-
-    public function getDiscoveredAt(): int
-    {
-        return $this->discoveredAt;
-    }
-
-    public function getAuthorExpGrade(): int
-    {
-        return $this->authorExpGrade;
-    }
 }

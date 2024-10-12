@@ -82,7 +82,6 @@ abstract class BaseQuery
             // remove queries for post types with encoded cursor ',,'
             $orderedQueries = $orderedQueries->intersectByKeys($cursorsKeyByPostType);
         }
-        $this->stopwatch->start('initPaginators');
         /** @var Collection<string, QueryBuilder> $paginators key by post type */
         $paginators = $orderedQueries->each(function (QueryBuilder $qb, string $type) use ($cursorsKeyByPostType) {
             $cursors = $cursorsKeyByPostType?->get($type);
@@ -99,7 +98,6 @@ abstract class BaseQuery
             $cursors->mapWithKeys(fn($fieldValue, string $fieldName) =>
                 $qb->setParameter("cursor_$fieldName", $fieldValue)); // prevent overwriting existing param
         });
-        $this->stopwatch->stop('initPaginators');
 
         $resultsAndHasMorePages = $paginators->map(fn(QueryBuilder $paginator) =>
             self::hasQueryResultMorePages($paginator, $this->perPageItems));

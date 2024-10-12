@@ -101,12 +101,12 @@ class PostsController extends AbstractController
         $this->stopwatch->start('queryUserRelated');
         $fid = $result['fid'];
         $authorExpGrades = collect($this->authorExpGradeRepository->getLatestOfUsers($fid, $uids))
-            ->keyBy(fn(AuthorExpGrade $authorExpGrade) => $authorExpGrade->getUid());
+            ->keyBy(fn(AuthorExpGrade $authorExpGrade) => $authorExpGrade->uid);
         $users->each(fn(User $user) => $user->setCurrentAuthorExpGrade($authorExpGrades[$user->getUid()]));
 
         $forumModerators = collect($this->forumModeratorRepository
                 ->getLatestOfUsers($fid, $users->map(fn(User $user) => $user->getPortrait())))
-            ->keyBy(fn(ForumModerator $forumModerator) => $forumModerator->getPortrait());
+            ->keyBy(fn(ForumModerator $forumModerator) => $forumModerator->portrait);
         $users->each(fn(User $user) => $user->setCurrentForumModerator($forumModerators->get($user->getPortrait())));
         $this->stopwatch->stop('queryUserRelated');
 
