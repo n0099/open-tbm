@@ -26,13 +26,22 @@ class SearchQuery extends BaseQuery
     {
         /** @var int $fid */
         $fid = $params->getUniqueParamValue('fid');
+
+        $orderByParam = $params->pick('orderBy')[0];
+        $this->orderByField = $orderByParam->value;
+        $this->orderByDesc = $orderByParam->getSub('direction');
+        if ($this->orderByField === 'default') {
+            $this->orderByField = 'postedAt';
+            $this->orderByDesc = true;
+        }
+
         /** @var array<string, array> $cachedUserQueryResult key by param name */
         $cachedUserQueryResult = [];
         /** @var Collection<string, QueryBuilder> $queries key by post type */
         $queries = collect($this->postRepositoryFactory->newForumPosts($fid))
             ->only($params->getUniqueParamValue('postTypes'))
             ->map(function (PostRepository $repository) use ($params, &$cachedUserQueryResult): QueryBuilder {
-                $postQuery = $repository->selectCurrentAndParentPostID();
+                $postQuery = $repository->selectPostKeyDTO($this->orderByField);
                 foreach ($params->omit() as $paramIndex => $param) { // omit nothing to get all params
                     // even when $cachedUserQueryResult[$param->name] is null
                     // it will still pass as a reference to the array item
@@ -46,14 +55,6 @@ class SearchQuery extends BaseQuery
                 }
                 return $postQuery;
             });
-
-        $orderByParam = $params->pick('orderBy')[0];
-        $this->orderByField = $orderByParam->value;
-        $this->orderByDesc = $orderByParam->getSub('direction');
-        if ($this->orderByField === 'default') {
-            $this->orderByField = 'postedAt';
-            $this->orderByDesc = true;
-        }
 
         $this->setResult($fid, $queries, $cursor);
     }

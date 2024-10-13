@@ -2,12 +2,15 @@
 
 namespace App\PostsQuery;
 
+use App\DTO\PostKey\BasePostKey;
 use App\Entity\Post\Content\ReplyContent;
 use App\Entity\Post\Content\SubReplyContent;
-use App\Entity\Post\Post;
 use App\Entity\Post\Reply;
 use App\Entity\Post\SubReply;
 use App\Entity\Post\Thread;
+use App\DTO\PostKey\Thread as ThreadKey;
+use App\DTO\PostKey\Reply as ReplyKey;
+use App\DTO\PostKey\SubReply as SubReplyKey;
 use App\Helper;
 use App\Repository\Post\PostRepositoryFactory;
 use Doctrine\ORM\Query\Expr;
@@ -21,9 +24,9 @@ abstract class BaseQuery
 {
     /** @type array{
      *     fid: int,
-     *     threads: ?Collection<int, Thread>,
-     *     replies: ?Collection<int, Reply>,
-     *     subReplies: ?Collection<int, SubReply>
+     *     threads: ?Collection<int, ThreadKey>,
+     *     replies: ?Collection<int, ReplyKey>,
+     *     subReplies: ?Collection<int, SubReplyKey>
      *  }
      */
     private array $queryResult;
@@ -65,9 +68,6 @@ abstract class BaseQuery
         $this->stopwatch->start('setResult');
 
         $orderedQueries = $queries->map(fn(QueryBuilder $qb, string $postType): QueryBuilder => $qb
-            // we don't have to select the post ID
-            // since it's already selected by invokes of PostRepository->selectCurrentAndParentPostID()
-            ->addSelect("t.$this->orderByField")
             ->addOrderBy("t.$this->orderByField", $this->orderByDesc === true ? 'DESC' : 'ASC')
             // cursor paginator requires values of orderBy column are unique
             // if not it should fall back to other unique field (here is the post ID primary key)
@@ -116,7 +116,6 @@ abstract class BaseQuery
                     $queryByPostIDParamName === null
                         ? $postsKeyByTypePluralName
                         : $postsKeyByTypePluralName->except([Helper::POST_ID_TO_TYPE_PLURAL[$queryByPostIDParamName]]),
-                    $this->orderByField,
                 )
                 : null,
         ];
@@ -151,20 +150,19 @@ abstract class BaseQuery
         /** @var Collection<int, int> $tids */
         /** @var Collection<int, int> $pids */
         /** @var Collection<int, int> $spids */
-        /** @var Collection<int, Reply> $replies */
-        /** @var Collection<int, SubReply> $subReplies */
-        [[, $tids], [$replies, $pids], [$subReplies, $spids]] = array_map(
-            /**
-             * @param string $postIDName
-             * @return array{0: Collection<int, Post>, 1: Collection<int, int>}
-             */
-            static function (string $postIDName) use ($result): array {
-                $postTypePluralName = Helper::POST_ID_TO_TYPE_PLURAL[$postIDName];
+        /** @var Collection<int, ReplyKey> $replyKeys */
+        /** @var Collection<int, SubReplyKey> $subReplyKeys */
+        [[, $tids], [$replyKeys, $pids], [$subReplyKeys, $spids]] = array_map(
+            /** @return array{0: Collection<int, BasePostKey>, 1: Collection<int, int>} */
+            static function (string $postTypePluralName) use ($result): array {
                 return \array_key_exists($postTypePluralName, $result)
-                    ? [$result[$postTypePluralName], $result[$postTypePluralName]->pluck($postIDName)]
+                    ? [
+                        $result[$postTypePluralName],
+                        $result[$postTypePluralName]->map(fn(BasePostKey $postKey) => $postKey->postId),
+                    ]
                     : [collect(), collect()];
             },
-            Helper::POST_ID,
+            Helper::POST_TYPES_PLURAL,
         );
 
         /** @var int $fid */
@@ -173,7 +171,10 @@ abstract class BaseQuery
 
         $this->stopwatch->start('fillWithThreadsFields');
         /** @var Collection<int, int> $parentThreadsID parent tid of all replies and their sub replies */
-        $parentThreadsID = $replies->pluck('tid')->concat($subReplies->pluck('tid'))->unique();
+        $parentThreadsID = $replyKeys
+            ->map(fn(ReplyKey $postKey) => $postKey->parentPostId)
+            ->concat($subReplyKeys->map(fn(SubReplyKey $postKey) => $postKey->tid))
+            ->unique();
         /** @var Collection<int, Thread> $threads */
         $threads = collect($postModels['thread']->getPosts($parentThreadsID->concat($tids)))
             ->each(static fn(Thread $thread) =>
@@ -182,14 +183,16 @@ abstract class BaseQuery
 
         $this->stopwatch->start('fillWithRepliesFields');
         /** @var Collection<int, int> $parentRepliesID parent pid of all sub replies */
-        $parentRepliesID = $subReplies->pluck('pid')->unique();
+        $parentRepliesID = $subReplyKeys->map(fn(SubReplyKey $postKey) => $postKey->parentPostId)->unique();
         $allRepliesId = $parentRepliesID->concat($pids);
+        /** @var Collection<int, Reply> $replies */
         $replies = collect($postModels['reply']->getPosts($allRepliesId))
             ->each(static fn(Reply $reply) =>
                 $reply->setIsMatchQuery($pids->contains($reply->getPid())));
         $this->stopwatch->stop('fillWithRepliesFields');
 
         $this->stopwatch->start('fillWithSubRepliesFields');
+        /** @var Collection<int, SubReply> $subReplies */
         $subReplies = collect($postModels['subReply']->getPosts($spids));
         $this->stopwatch->stop('fillWithSubRepliesFields');
 

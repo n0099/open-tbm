@@ -2,8 +2,10 @@
 
 namespace App\Repository\Post;
 
+use App\DTO\PostKey\Thread as ThreadKey;
 use App\Entity\Post\Thread;
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Component\DependencyInjection\Attribute\Exclude;
 
@@ -19,6 +21,12 @@ class ThreadRepository extends PostRepository
     protected function getTableNameSuffix(): string
     {
         return 'thread';
+    }
+
+    public function selectPostKeyDTO(string $orderByField): QueryBuilder
+    {
+        return $this->createQueryBuilder('t')
+            ->select('new ' . ThreadKey::class . "(t.tid, '$orderByField', t.$orderByField)");
     }
 
     public function getPosts(array|\ArrayAccess $postsId): array

@@ -2,8 +2,10 @@
 
 namespace App\Repository\Post;
 
+use App\DTO\PostKey\SubReply as SubReplyKey;
 use App\Entity\Post\SubReply;
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Component\DependencyInjection\Attribute\Exclude;
 
@@ -19,6 +21,12 @@ class SubReplyRepository extends PostRepository
     protected function getTableNameSuffix(): string
     {
         return 'subReply';
+    }
+
+    public function selectPostKeyDTO(string $orderByField): QueryBuilder
+    {
+        return $this->createQueryBuilder('t')
+            ->select('new ' . SubReplyKey::class . "(t.tid, t.pid, t.spid, '$orderByField', t.$orderByField)");
     }
 
     public function getPosts(array|\ArrayAccess $postsId): array

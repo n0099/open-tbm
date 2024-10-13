@@ -2,27 +2,30 @@
 
 namespace App\PostsQuery;
 
+use App\DTO\PostKey\BasePostKey;
+use App\DTO\PostKey\Reply;
+use App\DTO\PostKey\SubReply;
+use App\DTO\PostKey\Thread;
 use App\Helper;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 
 /** @psalm-type PostsKeyByTypePluralName = Collection{
- *     threads: Collection<array{tid: int, postedAt: int}>,
- *     replies: Collection<array{tid: int, pid: int, postedAt: int}>,
- *     subReplies: Collection<array{tid: int, pid: int, spid: int, postedAt: int}>,
+ *     threads: Collection<Thread>,
+ *     replies: Collection<Reply>,
+ *     subReplies: Collection<SubReply>,
  * } */
 class CursorCodec
 {
     /** @param PostsKeyByTypePluralName $postsKeyByTypePluralName */
-    public function encodeNextCursor(Collection $postsKeyByTypePluralName, string $orderByField): string
+    public function encodeNextCursor(Collection $postsKeyByTypePluralName): string
     {
         $encodedCursorsKeyByPostType = $postsKeyByTypePluralName
             ->mapWithKeys(static fn(Collection $posts, string $type) => [
                 Helper::POST_TYPE_PLURAL_TO_SINGULAR[$type] => $posts->last(), // null when no posts
             ]) // [singularPostTypeName => lastPostInResult]
             ->filter() // remove post types that have no posts
-            ->map(fn(array $post, string $typePluralName) =>
-                [$post[Helper::POST_TYPE_TO_ID[$typePluralName]], $post[$orderByField]])
+            ->map(fn(BasePostKey $post) => [$post->postId, $post->orderByFieldValue])
             ->map(static fn(array $cursors) => collect($cursors)
                 ->map(static function (int|string $cursor): string {
                     if ($cursor === 0) { // quick exit to keep 0 as is

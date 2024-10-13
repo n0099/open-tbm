@@ -22,7 +22,7 @@ class CursorCodecTest extends TestCase
     #[DataProvider('provideEncodeNextCursor')]
     public function testEncodeNextCursor(string $cursor, Collection $input): void
     {
-        self::assertEquals($cursor, $this->sut->encodeNextCursor($input, 'postedAt'));
+        self::assertEquals($cursor, $this->sut->encodeNextCursor($input));
     }
 
     public static function provideEncodeNextCursor(): array

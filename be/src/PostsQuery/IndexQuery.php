@@ -41,6 +41,15 @@ class IndexQuery extends BaseQuery
         /** @var array<string> $postTypes */
         $postTypes = $flatParams['postTypes'];
 
+        if ($flatParams['orderBy'] === 'default') {
+            $this->orderByField = 'postedAt'; // order by postedAt to prevent posts out of order when order by post ID
+            if (\array_key_exists('fid', $flatParams) && $postIDParam->count() === 0) { // query by fid only
+                $this->orderByDesc = true;
+            } elseif ($hasPostIDParam) { // query by post ID (with or without fid)
+                $this->orderByDesc = false;
+            }
+        }
+
         /**
          * @param int $fid
          * @return Collection<string, PostRepository> key by post type
@@ -48,7 +57,7 @@ class IndexQuery extends BaseQuery
         $getQueryBuilders = fn(int $fid): Collection =>
             collect($this->postRepositoryFactory->newForumPosts($fid))
                 ->only($postTypes)
-                ->transform(static fn(PostRepository $repository) => $repository->selectCurrentAndParentPostID());
+                ->transform(fn(PostRepository $repository) => $repository->selectPostKeyDTO($this->orderByField));
         $getFidByPostIDParam = function (string $postIDName, int $postID): int {
             $postExistencesKeyByFid = collect($this->forumRepository->getOrderedForumsId())
                 ->mapWithKeys(fn(int $fid) => [$fid => $this->postRepositoryFactory
@@ -88,18 +97,8 @@ class IndexQuery extends BaseQuery
                     $qb->where("t.$postIDParamName = :postIDParamValue")
                         ->setParameter('postIDParamValue', $postIDParamValue));
         }
-
         if (array_diff($postTypes, Helper::POST_TYPES) !== []) {
             $queries = $queries->only($postTypes);
-        }
-
-        if ($flatParams['orderBy'] === 'default') {
-            $this->orderByField = 'postedAt'; // order by postedAt to prevent posts out of order when order by post ID
-            if (\array_key_exists('fid', $flatParams) && $postIDParam->count() === 0) { // query by fid only
-                $this->orderByDesc = true;
-            } elseif ($hasPostIDParam) { // query by post ID (with or without fid)
-                $this->orderByDesc = false;
-            }
         }
 
         $this->setResult($fid, $queries, $cursor, $hasPostIDParam ? $postIDParamName : null);
