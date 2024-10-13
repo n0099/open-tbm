@@ -10,14 +10,14 @@ use Illuminate\Support\Collection;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 use Symfony\Component\Stopwatch\Stopwatch;
 
-class SearchQuery extends BaseQuery
+readonly class SearchQuery extends BaseQuery
 {
     public function __construct(
         NormalizerInterface $normalizer,
         Stopwatch $stopwatch,
         CursorCodec $cursorCodec,
-        private readonly PostRepositoryFactory $postRepositoryFactory,
-        private readonly UserRepository $userRepository,
+        private PostRepositoryFactory $postRepositoryFactory,
+        private UserRepository $userRepository,
     ) {
         parent::__construct($normalizer, $stopwatch, $cursorCodec, $postRepositoryFactory);
     }
@@ -28,12 +28,8 @@ class SearchQuery extends BaseQuery
         $fid = $params->getUniqueParamValue('fid');
 
         $orderByParam = $params->pick('orderBy')[0];
-        $this->orderByField = $orderByParam->value;
-        $this->orderByDesc = $orderByParam->getSub('direction');
-        if ($this->orderByField === 'default') {
-            $this->orderByField = 'postedAt';
-            $this->orderByDesc = true;
-        }
+        $this->setOrderByField($orderByParam->value === 'default' ? 'postedAt' : $orderByParam->value);
+        $this->setOrderByDesc($orderByParam->value === 'default' ? true : $orderByParam->getSub('direction'));
 
         /** @var array<string, array> $cachedUserQueryResult key by param name */
         $cachedUserQueryResult = [];

@@ -20,7 +20,7 @@ use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 use Symfony\Component\Stopwatch\Stopwatch;
 
 /** @psalm-import-type PostsKeyByTypePluralName from CursorCodec */
-abstract class BaseQuery
+abstract readonly class BaseQuery
 {
     /** @type array{
      *     fid: int,
@@ -37,24 +37,34 @@ abstract class BaseQuery
 
     protected bool $orderByDesc;
 
-    abstract public function query(QueryParams $params, ?string $cursor): void;
-
     public function __construct(
-        private readonly NormalizerInterface $normalizer,
-        private readonly Stopwatch $stopwatch,
-        private readonly CursorCodec $cursorCodec,
-        private readonly PostRepositoryFactory $postRepositoryFactory,
-        private readonly int $perPageItems = 50,
+        private NormalizerInterface $normalizer,
+        private Stopwatch $stopwatch,
+        private CursorCodec $cursorCodec,
+        private PostRepositoryFactory $postRepositoryFactory,
+        private int $perPageItems = 50,
     ) {}
+
+    abstract public function query(QueryParams $params, ?string $cursor): void;
 
     public function getResultPages(): array
     {
         return $this->queryResultPages;
     }
 
+    protected function setOrderByField(string $orderByField): void
+    {
+        $this->orderByField = $orderByField;
+    }
+
+    protected function setOrderByDesc(bool $orderByDesc): void
+    {
+        $this->orderByDesc = $orderByDesc;
+    }
+
     /**
      * @param int $fid
-     * @param Collection<string, QueryBuilder> $queries key by post type
+     * @param Collection<Helper::POST_TYPE, QueryBuilder> $queries key by post type
      * @param string|null $cursorParamValue
      * @param string|null $queryByPostIDParamName
      * @return void
@@ -67,7 +77,7 @@ abstract class BaseQuery
     ): void {
         $this->stopwatch->start('setResult');
 
-        $orderedQueries = $queries->map(fn(QueryBuilder $qb, string $postType): QueryBuilder => $qb
+        $orderedQueries = $queries->each(fn(QueryBuilder $qb, string $postType): QueryBuilder => $qb
             ->addOrderBy("t.$this->orderByField", $this->orderByDesc === true ? 'DESC' : 'ASC')
             // cursor paginator requires values of orderBy column are unique
             // if not it should fall back to other unique field (here is the post ID primary key)
@@ -82,7 +92,7 @@ abstract class BaseQuery
             // remove queries for post types with encoded cursor ',,'
             $orderedQueries = $orderedQueries->intersectByKeys($cursorsKeyByPostType);
         }
-        /** @var Collection<string, QueryBuilder> $paginators key by post type */
+        /** @var Collection<Helper::POST_TYPE, QueryBuilder> $paginators key by post type */
         $paginators = $orderedQueries->each(function (QueryBuilder $qb, string $type) use ($cursorsKeyByPostType) {
             $cursors = $cursorsKeyByPostType?->get($type);
             if ($cursors === null) {

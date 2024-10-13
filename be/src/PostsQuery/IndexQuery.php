@@ -11,14 +11,14 @@ use Illuminate\Support\Collection;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 use Symfony\Component\Stopwatch\Stopwatch;
 
-class IndexQuery extends BaseQuery
+readonly class IndexQuery extends BaseQuery
 {
     public function __construct(
         NormalizerInterface $normalizer,
         Stopwatch $stopwatch,
         CursorCodec $cursorCodec,
-        private readonly PostRepositoryFactory $postRepositoryFactory,
-        private readonly ForumRepository $forumRepository,
+        private PostRepositoryFactory $postRepositoryFactory,
+        private ForumRepository $forumRepository,
     ) {
         parent::__construct($normalizer, $stopwatch, $cursorCodec, $postRepositoryFactory);
     }
@@ -42,11 +42,11 @@ class IndexQuery extends BaseQuery
         $postTypes = $flatParams['postTypes'];
 
         if ($flatParams['orderBy'] === 'default') {
-            $this->orderByField = 'postedAt'; // order by postedAt to prevent posts out of order when order by post ID
+            $this->setOrderByField('postedAt'); // order by postedAt to prevent posts out of order when order by post ID
             if (\array_key_exists('fid', $flatParams) && $postIDParam->count() === 0) { // query by fid only
-                $this->orderByDesc = true;
+                $this->setOrderByDesc(true);
             } elseif ($hasPostIDParam) { // query by post ID (with or without fid)
-                $this->orderByDesc = false;
+                $this->setOrderByDesc(false);
             }
         }
 
