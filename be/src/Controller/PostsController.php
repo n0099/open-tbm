@@ -113,7 +113,8 @@ class PostsController extends AbstractController
         return [
             'type' => $isIndexQuery ? 'index' : 'search',
             'pages' => [
-                ...$query->getResultPages(),
+                'currentCursor' => $query->queryResult->currentCursor,
+                'nextCursor' => $query->queryResult->nextCursor,
                 ...Arr::except($result, ['fid', ...Helper::POST_TYPES_PLURAL]),
             ],
             'forum' => $this->forumRepository->getForum($fid),

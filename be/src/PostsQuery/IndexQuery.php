@@ -16,11 +16,11 @@ readonly class IndexQuery extends BaseQuery
     public function __construct(
         NormalizerInterface $normalizer,
         Stopwatch $stopwatch,
-        CursorCodec $cursorCodec,
         private PostRepositoryFactory $postRepositoryFactory,
+        QueryResult $queryResult,
         private ForumRepository $forumRepository,
     ) {
-        parent::__construct($normalizer, $stopwatch, $cursorCodec, $postRepositoryFactory);
+        parent::__construct($normalizer, $stopwatch, $postRepositoryFactory, $queryResult);
     }
 
     /** @SuppressWarnings(PHPMD.ElseExpression) */
@@ -101,6 +101,13 @@ readonly class IndexQuery extends BaseQuery
             $queries = $queries->only($postTypes);
         }
 
-        $this->setResult($fid, $queries, $cursor, $hasPostIDParam ? $postIDParamName : null);
+        $this->queryResult->setResult(
+            $fid,
+            $queries,
+            $cursor,
+            $this->orderByField,
+            $this->orderByDesc,
+            queryByPostIDParamName: $hasPostIDParam ? $postIDParamName : null
+        );
     }
 }

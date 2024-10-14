@@ -15,11 +15,11 @@ readonly class SearchQuery extends BaseQuery
     public function __construct(
         NormalizerInterface $normalizer,
         Stopwatch $stopwatch,
-        CursorCodec $cursorCodec,
         private PostRepositoryFactory $postRepositoryFactory,
+        QueryResult $queryResult,
         private UserRepository $userRepository,
     ) {
-        parent::__construct($normalizer, $stopwatch, $cursorCodec, $postRepositoryFactory);
+        parent::__construct($normalizer, $stopwatch, $postRepositoryFactory, $queryResult);
     }
 
     public function query(QueryParams $params, ?string $cursor): void
@@ -52,7 +52,7 @@ readonly class SearchQuery extends BaseQuery
                 return $postQuery;
             });
 
-        $this->setResult($fid, $queries, $cursor);
+        $this->queryResult->setResult($fid, $queries, $cursor, $this->orderByField, $this->orderByDesc);
     }
 
     /**

@@ -2,7 +2,6 @@
 
 namespace App\PostsQuery;
 
-use App\DTO\PostKey\BasePostKey;
 use App\Entity\Post\Content\ReplyContent;
 use App\Entity\Post\Content\SubReplyContent;
 use App\Entity\Post\Reply;
@@ -13,26 +12,12 @@ use App\DTO\PostKey\Reply as ReplyKey;
 use App\DTO\PostKey\SubReply as SubReplyKey;
 use App\Helper;
 use App\Repository\Post\PostRepositoryFactory;
-use Doctrine\ORM\Query\Expr;
-use Doctrine\ORM\QueryBuilder;
 use Illuminate\Support\Collection;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 use Symfony\Component\Stopwatch\Stopwatch;
 
-/** @psalm-import-type PostsKeyByTypePluralName from CursorCodec */
 abstract readonly class BaseQuery
 {
-    /** @type array{
-     *     fid: int,
-     *     threads: ?Collection<int, ThreadKey>,
-     *     replies: ?Collection<int, ReplyKey>,
-     *     subReplies: ?Collection<int, SubReplyKey>
-     *  }
-     */
-    private array $queryResult;
-
-    private array $queryResultPages;
-
     protected string $orderByField;
 
     protected bool $orderByDesc;
@@ -40,17 +25,11 @@ abstract readonly class BaseQuery
     public function __construct(
         private NormalizerInterface $normalizer,
         private Stopwatch $stopwatch,
-        private CursorCodec $cursorCodec,
         private PostRepositoryFactory $postRepositoryFactory,
-        private int $perPageItems = 50,
+        public QueryResult $queryResult,
     ) {}
 
     abstract public function query(QueryParams $params, ?string $cursor): void;
-
-    public function getResultPages(): array
-    {
-        return $this->queryResultPages;
-    }
 
     protected function setOrderByField(string $orderByField): void
     {
@@ -60,88 +39,6 @@ abstract readonly class BaseQuery
     protected function setOrderByDesc(bool $orderByDesc): void
     {
         $this->orderByDesc = $orderByDesc;
-    }
-
-    /**
-     * @param int $fid
-     * @param Collection<Helper::POST_TYPE, QueryBuilder> $queries key by post type
-     * @param string|null $cursorParamValue
-     * @param string|null $queryByPostIDParamName
-     * @return void
-     */
-    protected function setResult(
-        int $fid,
-        Collection $queries,
-        ?string $cursorParamValue,
-        ?string $queryByPostIDParamName = null,
-    ): void {
-        $this->stopwatch->start('setResult');
-
-        $orderedQueries = $queries->each(fn(QueryBuilder $qb, string $postType): QueryBuilder => $qb
-            ->addOrderBy("t.$this->orderByField", $this->orderByDesc === true ? 'DESC' : 'ASC')
-            // cursor paginator requires values of orderBy column are unique
-            // if not it should fall back to other unique field (here is the post ID primary key)
-            // https://use-the-index-luke.com/no-offset
-            // https://mysql.rjweb.org/doc.php/pagination
-            // https://medium.com/swlh/how-to-implement-cursor-pagination-like-a-pro-513140b65f32
-            // https://slack.engineering/evolving-api-pagination-at-slack/
-            ->addOrderBy('t.' . Helper::POST_TYPE_TO_ID[$postType]));
-        $cursorsKeyByPostType = null;
-        if ($cursorParamValue !== null) {
-            $cursorsKeyByPostType = $this->cursorCodec->decodeCursor($cursorParamValue, $this->orderByField);
-            // remove queries for post types with encoded cursor ',,'
-            $orderedQueries = $orderedQueries->intersectByKeys($cursorsKeyByPostType);
-        }
-        /** @var Collection<Helper::POST_TYPE, QueryBuilder> $paginators key by post type */
-        $paginators = $orderedQueries->each(function (QueryBuilder $qb, string $type) use ($cursorsKeyByPostType) {
-            $cursors = $cursorsKeyByPostType?->get($type);
-            if ($cursors === null) {
-                return;
-            }
-            $cursors = collect($cursors);
-            $comparisons = $cursors->keys()->map(
-                fn(string $fieldName): Expr\Comparison => $this->orderByDesc
-                    ? $qb->expr()->lt("t.$fieldName", ":cursor_$fieldName")
-                    : $qb->expr()->gt("t.$fieldName", ":cursor_$fieldName"),
-            );
-            $qb->andWhere($qb->expr()->orX(...$comparisons));
-            $cursors->mapWithKeys(fn($fieldValue, string $fieldName) =>
-                $qb->setParameter("cursor_$fieldName", $fieldValue)); // prevent overwriting existing param
-        });
-
-        $resultsAndHasMorePages = $paginators->map(fn(QueryBuilder $paginator) =>
-            self::hasQueryResultMorePages($paginator, $this->perPageItems));
-        /** @var PostsKeyByTypePluralName $postsKeyByTypePluralName */
-        $postsKeyByTypePluralName = $resultsAndHasMorePages
-            ->mapWithKeys(fn(array $resultAndHasMorePages, string $postType) =>
-                [Helper::POST_TYPE_TO_PLURAL[$postType] => $resultAndHasMorePages['result']]);
-        Helper::abortAPIIf(40401, $postsKeyByTypePluralName->every(static fn(Collection $i) => $i->isEmpty()));
-        $this->queryResult = ['fid' => $fid, ...$postsKeyByTypePluralName];
-
-        $this->queryResultPages = [
-            'currentCursor' => $cursorParamValue ?? '',
-            'nextCursor' => $resultsAndHasMorePages->pluck('hasMorePages')
-                    ->filter()->isNotEmpty() // filter() remove falsy
-                ? $this->cursorCodec->encodeNextCursor(
-                    $queryByPostIDParamName === null
-                        ? $postsKeyByTypePluralName
-                        : $postsKeyByTypePluralName->except([Helper::POST_ID_TO_TYPE_PLURAL[$queryByPostIDParamName]]),
-                )
-                : null,
-        ];
-
-        $this->stopwatch->stop('setResult');
-    }
-
-    /** @return array{result: Collection, hasMorePages: bool} */
-    public static function hasQueryResultMorePages(QueryBuilder $query, int $limit): array
-    {
-        $results = collect($query->setMaxResults($limit + 1)->getQuery()->getResult());
-        if ($results->count() === $limit + 1) {
-            $results->pop();
-            $hasMorePages = true;
-        }
-        return ['result' => $results, 'hasMorePages' => $hasMorePages ?? false];
     }
 
     /**
@@ -157,33 +54,19 @@ abstract readonly class BaseQuery
     public function fillWithParentPost(): array
     {
         $result = $this->queryResult;
-        /** @var Collection<int, int> $tids */
-        /** @var Collection<int, int> $pids */
-        /** @var Collection<int, int> $spids */
-        /** @var Collection<int, ReplyKey> $replyKeys */
-        /** @var Collection<int, SubReplyKey> $subReplyKeys */
-        [[, $tids], [$replyKeys, $pids], [$subReplyKeys, $spids]] = array_map(
-            /** @return array{0: Collection<int, BasePostKey>, 1: Collection<int, int>} */
-            static function (string $postTypePluralName) use ($result): array {
-                return \array_key_exists($postTypePluralName, $result)
-                    ? [
-                        $result[$postTypePluralName],
-                        $result[$postTypePluralName]->map(fn(BasePostKey $postKey) => $postKey->postId),
-                    ]
-                    : [collect(), collect()];
-            },
-            Helper::POST_TYPES_PLURAL,
-        );
-
-        /** @var int $fid */
-        $fid = $result['fid'];
-        $postModels = $this->postRepositoryFactory->newForumPosts($fid);
+        /** @var Collection<int> $tids */
+        $tids = $result->threads->map(fn(ThreadKey $postKey) => $postKey->postId);
+        /** @var Collection<int> $pids */
+        $pids = $result->replies->map(fn(ReplyKey $postKey) => $postKey->postId);
+        /** @var Collection<int> $spids */
+        $spids = $result->subReplies->map(fn(SubReplyKey $postKey) => $postKey->postId);
+        $postModels = $this->postRepositoryFactory->newForumPosts($result->fid);
 
         $this->stopwatch->start('fillWithThreadsFields');
         /** @var Collection<int, int> $parentThreadsID parent tid of all replies and their sub replies */
-        $parentThreadsID = $replyKeys
+        $parentThreadsID = $result->replies
             ->map(fn(ReplyKey $postKey) => $postKey->parentPostId)
-            ->concat($subReplyKeys->map(fn(SubReplyKey $postKey) => $postKey->tid))
+            ->concat($result->subReplies->map(fn(SubReplyKey $postKey) => $postKey->tid))
             ->unique();
         /** @var Collection<int, Thread> $threads */
         $threads = collect($postModels['thread']->getPosts($parentThreadsID->concat($tids)))
@@ -193,7 +76,7 @@ abstract readonly class BaseQuery
 
         $this->stopwatch->start('fillWithRepliesFields');
         /** @var Collection<int, int> $parentRepliesID parent pid of all sub replies */
-        $parentRepliesID = $subReplyKeys->map(fn(SubReplyKey $postKey) => $postKey->parentPostId)->unique();
+        $parentRepliesID = $result->subReplies->map(fn(SubReplyKey $postKey) => $postKey->parentPostId)->unique();
         $allRepliesId = $parentRepliesID->concat($pids);
         /** @var Collection<int, Reply> $replies */
         $replies = collect($postModels['reply']->getPosts($allRepliesId))
@@ -208,19 +91,19 @@ abstract readonly class BaseQuery
 
         $this->stopwatch->start('parsePostContentProtoBufBytes');
         // not using one-to-one association due to relying on PostRepository->getTableNameSuffix()
-        $replyContents = collect($this->postRepositoryFactory->newReplyContent($fid)->getPostsContent($allRepliesId))
+        $replyContents = collect($this->postRepositoryFactory->newReplyContent($result->fid)->getPostsContent($allRepliesId))
             ->mapWithKeys(fn(ReplyContent $content) => [$content->getPid() => $content->getContent()]);
         $replies->each(fn(Reply $reply) =>
             $reply->setContent($replyContents->get($reply->getPid())));
 
-        $subReplyContents = collect($this->postRepositoryFactory->newSubReplyContent($fid)->getPostsContent($spids))
+        $subReplyContents = collect($this->postRepositoryFactory->newSubReplyContent($result->fid)->getPostsContent($spids))
             ->mapWithKeys(fn(SubReplyContent $content) => [$content->getSpid() => $content->getContent()]);
         $subReplies->each(fn(SubReply $subReply) =>
             $subReply->setContent($subReplyContents->get($subReply->getSpid())));
         $this->stopwatch->stop('parsePostContentProtoBufBytes');
 
         return [
-            'fid' => $fid,
+            'fid' => $result->fid,
             'matchQueryPostCount' => collect(Helper::POST_TYPES)
                 ->combine([$tids, $pids, $spids])
                 ->map(static fn(Collection $ids, string $type) => $ids->count()),

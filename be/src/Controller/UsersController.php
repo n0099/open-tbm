@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Helper;
 use App\PostsQuery\BaseQuery;
+use App\PostsQuery\QueryResult;
 use App\Repository\UserRepository;
 use App\Validator\Validator;
 use Doctrine\ORM\QueryBuilder;
@@ -51,7 +52,7 @@ class UsersController extends AbstractController
             )[1]->orderBy('t.uid', 'DESC');
 
         ['result' => $result, 'hasMorePages' => $hasMorePages] =
-            BaseQuery::hasQueryResultMorePages($queries, $this->perPageItems);
+            QueryResult::hasQueryResultMorePages($queries, $this->perPageItems);
         $resultCount = count($result);
         Helper::abortAPIIf(40402, $resultCount === 0);
 
