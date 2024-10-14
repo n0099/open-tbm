@@ -83,7 +83,7 @@ class PostsController extends AbstractController
         $query->query($params, $request->query->get('cursor'));
         $this->stopwatch->stop('$queryClass->query()');
         $this->stopwatch->start('fillWithParentPost');
-        $result = $query->fillWithParentPost();
+        $result = $query->postsTree->fillWithParentPost($query->queryResult);
         $this->stopwatch->stop('fillWithParentPost');
 
         $this->stopwatch->start('queryUsers');
@@ -118,7 +118,11 @@ class PostsController extends AbstractController
                 ...Arr::except($result, ['fid', ...Helper::POST_TYPES_PLURAL]),
             ],
             'forum' => $this->forumRepository->getForum($fid),
-            'threads' => $query->reOrderNestedPosts($query->nestPostsWithParent(...$result)),
+            'threads' => $query->postsTree->reOrderNestedPosts(
+                $query->postsTree->nestPostsWithParent(),
+                $query->orderByField,
+                $query->orderByDesc,
+            ),
             'users' => $users,
             'latestRepliers' => $latestRepliers,
         ];

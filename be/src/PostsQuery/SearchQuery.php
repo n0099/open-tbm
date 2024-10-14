@@ -7,19 +7,16 @@ use App\Repository\Post\PostRepositoryFactory;
 use App\Repository\UserRepository;
 use Doctrine\ORM\QueryBuilder;
 use Illuminate\Support\Collection;
-use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
-use Symfony\Component\Stopwatch\Stopwatch;
 
 readonly class SearchQuery extends BaseQuery
 {
     public function __construct(
-        NormalizerInterface $normalizer,
-        Stopwatch $stopwatch,
-        private PostRepositoryFactory $postRepositoryFactory,
         QueryResult $queryResult,
+        PostsTree $postsTree,
+        private PostRepositoryFactory $postRepositoryFactory,
         private UserRepository $userRepository,
     ) {
-        parent::__construct($normalizer, $stopwatch, $postRepositoryFactory, $queryResult);
+        parent::__construct($queryResult, $postsTree);
     }
 
     public function query(QueryParams $params, ?string $cursor): void

@@ -8,19 +8,16 @@ use App\Repository\Post\PostRepositoryFactory;
 use App\Helper;
 use Doctrine\ORM\QueryBuilder;
 use Illuminate\Support\Collection;
-use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
-use Symfony\Component\Stopwatch\Stopwatch;
 
 readonly class IndexQuery extends BaseQuery
 {
     public function __construct(
-        NormalizerInterface $normalizer,
-        Stopwatch $stopwatch,
-        private PostRepositoryFactory $postRepositoryFactory,
         QueryResult $queryResult,
+        PostsTree $postsTree,
+        private PostRepositoryFactory $postRepositoryFactory,
         private ForumRepository $forumRepository,
     ) {
-        parent::__construct($normalizer, $stopwatch, $postRepositoryFactory, $queryResult);
+        parent::__construct($queryResult, $postsTree);
     }
 
     /** @SuppressWarnings(PHPMD.ElseExpression) */
