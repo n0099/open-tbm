@@ -48,7 +48,7 @@ class SitemapController extends AbstractController
     #[Route('/sitemaps/forums/{fid}/threads', requirements: ['fid' => /** @lang JSRegexp */'\d+'])]
     public function threads(Request $request, Validator $validator, int $fid): Response
     {
-        $cursor = $request->query->get('cursor') ?? 0;
+        $cursor = $request->query->get('cursor') ?? '0';
         $validator->validate($cursor, new Assert\Type('digit'));
         Helper::abortAPIIfNot(40406, $this->forumRepository->isForumExists($fid));
 

@@ -29,7 +29,7 @@ readonly class SearchQuery extends BaseQuery
 
         $orderByParam = $params->pick('orderBy')[0];
         $this->setOrderByField($orderByParam->value === 'default' ? 'postedAt' : $orderByParam->value);
-        $this->setOrderByDesc($orderByParam->value === 'default' ? true : $orderByParam->getSub('direction'));
+        $this->setOrderByDesc($orderByParam->value === 'default' || $orderByParam->getSub('direction') === 'DESC');
 
         /** @var array<string, array> $cachedUserQueryResult key by param name */
         $cachedUserQueryResult = [];
