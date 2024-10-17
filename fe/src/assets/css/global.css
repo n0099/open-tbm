@@ -6,10 +6,6 @@
     background: url('/assets/icon-huaji-loading-spinner-2nd-frames-removed.gif') no-repeat center;
 }
 
-.grecaptcha-badge {
-    visibility: hidden;
-}
-
 a {
     color: #1890ff; /* use antd color to stress bootstrap hover animation */
     text-decoration: none !important; /* override browser underline */

@@ -2644,13 +2644,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/grecaptcha@npm:^3.0.9":
-  version: 3.0.9
-  resolution: "@types/grecaptcha@npm:3.0.9"
-  checksum: 10c0/65986cd1d060309ca0eaa1ab5a758ba0203f09c20941534d05b5dfe0fb6fd258ea0e20fa77980d5abf741ba98846e874fd7d2f883aead65dedfa56b278a811e9
-  languageName: node
-  linkType: hard
-
 "@types/http-proxy@npm:^1.17.14":
   version: 1.17.15
   resolution: "@types/http-proxy@npm:1.17.15"
@@ -10195,7 +10188,6 @@ __metadata:
     "@tanstack/vue-query-devtools": "npm:^5.59.13"
     "@types/bootstrap": "npm:^5.2.10"
     "@types/eslint": "npm:^9.6.1"
-    "@types/grecaptcha": "npm:^3.0.9"
     "@types/lodash": "npm:^4.17.10"
     "@types/luxon": "npm:^3.4.2"
     "@types/node": "npm:^22.7.5"

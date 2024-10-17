@@ -3,8 +3,6 @@ import { CheckCSS } from 'checkcss';
 const checkcss = new CheckCSS();
 checkcss.onClassnameDetected = className =>
     ![
-        'grecaptcha',
-        'g-recaptcha',
         'router-link-', // vue-router
         'tsqd-', // @tanstack/vue-query-devtools
         'noty_',

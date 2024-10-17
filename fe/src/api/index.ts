@@ -52,46 +52,13 @@ export const queryFunction = async <TResponse>
         }
     }
 };
-const checkReCAPTCHA = async (config: PublicRuntimeConfig, action = '') =>
-    new Promise<{ reCAPTCHA?: string }>((reslove, reject) => {
-        if (config.recaptchaSiteKey === '') {
-            reslove({});
-        } else {
-            grecaptcha.ready(() => {
-                grecaptcha.execute(config.recaptchaSiteKey, { action }).then(
-                    reCAPTCHA => {
-                        reslove({ reCAPTCHA });
-                    }, (...args: [unknown]) => {
-                        reject(new Error(JSON.stringify(args)));
-                    }
-                );
-            });
-        }
-    });
-const queryFunctionWithReCAPTCHA = async <TResponse>
-(
-    config: PublicRuntimeConfig,
-    requestHeaders: Record<string, string>,
-    endpoint: string,
-    queryParam?: ObjUnknown,
-    signal?: AbortSignal,
-    action = ''
-): Promise<TResponse> =>
-    queryFunction<TResponse>(
-        config,
-        requestHeaders,
-        endpoint,
-        { ...queryParam, ...await checkReCAPTCHA(config, action) },
-        signal
-    );
 
 export type ApiErrorClass = ApiResponseError | FetchError;
-type QueryFunctions = typeof queryFunction | typeof queryFunctionWithReCAPTCHA;
 const useApi = <
     TApi extends Api<TResponse, TQueryParam>,
     TResponse = TApi['response'],
     TQueryParam extends ObjUnknown = TApi['queryParam']>
-(endpoint: string, queryFn: QueryFunctions) =>
+(endpoint: string) =>
     (
         queryParam?: Ref<TQueryParam | undefined>,
         options?: MaybeRef<Partial<Exclude<UseQueryOptions<TResponse, ApiErrorClass>, Ref>>>
@@ -100,7 +67,7 @@ const useApi = <
         const clientRequestHeaders = useRequestHeaders(['Authorization']);
         const ret = useQuery<TResponse, ApiErrorClass>({
             queryKey: [endpoint, queryParam],
-            queryFn: async () => queryFn<TResponse>(
+            queryFn: async () => queryFunction<TResponse>(
                 config,
                 clientRequestHeaders,
                 endpoint,
@@ -128,7 +95,7 @@ const useApiWithCursor = <
     TApi extends Api<TResponse, TQueryParam>,
     TResponse extends CursorPagination = TApi['response'],
     TQueryParam extends ObjUnknown = TApi['queryParam']>
-(endpoint: string, queryFn: QueryFunctions) => {
+(endpoint: string) => {
     type Data = InfiniteData<TResponse, Cursor>;
     type QueryKey = [string, TQueryParam | undefined];
     type QueryOptions = UseInfiniteQueryOptions<TResponse, ApiErrorClass, Data, TResponse, QueryKey, Cursor>;
@@ -143,7 +110,7 @@ const useApiWithCursor = <
         const ret = useInfiniteQuery<TResponse, ApiErrorClass, Data, QueryKey, Cursor>({
             queryKey: [endpoint, queryParam] as QueryOptions['queryKey'],
             queryFn: async ({ pageParam }) =>
-                queryFn<TResponse>(
+                queryFunction<TResponse>(
                     config,
                     clientRequestHeaders,
                     endpoint,
@@ -170,6 +137,6 @@ const useApiWithCursor = <
         return ret;
     };
 };
-export const useApiForums = useApi<ApiForums>('forums', queryFunction);
-export const useApiUsers = useApi<ApiUsers>('users', queryFunctionWithReCAPTCHA);
-export const useApiPosts = useApiWithCursor<ApiPosts>('posts', queryFunctionWithReCAPTCHA);
+export const useApiForums = useApi<ApiForums>('forums');
+export const useApiUsers = useApi<ApiUsers>('users');
+export const useApiPosts = useApiWithCursor<ApiPosts>('posts');

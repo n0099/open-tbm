@@ -66,8 +66,6 @@ export default defineNuxtConfig({
     runtimeConfig: {
         public: keysWithSameValue([
             'beUrl',
-            'gaMeasurementId',
-            'recaptchaSiteKey',
             'instanceName',
             'footerText'
         ], '')

@@ -18,25 +18,6 @@
         </AConfigProvider>
     </main>
     <footer class="text-light pt-4 mt-auto" id="footer-upper">
-        <div class="text-center">
-            <p>
-                <span v-if="isGoogleAnalyticsEnabled">
-                    Google <NuxtLink
-                        class="text-white"
-                        to="https://www.google.com/analytics/terms/cn.html"
-                        target="_blank">Analytics 服务条款</NuxtLink> |
-                    <NuxtLink
-                        class="text-white"
-                        to="https://policies.google.com/privacy" target="_blank">Analytics 隐私条款</NuxtLink>
-                </span>
-                <span v-if="isReCAPTCHAEnabled && isGoogleAnalyticsEnabled"> | </span>
-                <NuxtLink
-                    v-if="isReCAPTCHAEnabled" class="text-white"
-                    to="https://policies.google.com/terms" target="_blank">
-                    Google reCAPTCHA 服务条款
-                </NuxtLink>
-            </p>
-        </div>
         <footer class="text-center p-3" id="footer-lower">
             <span>{{ config.footerText }}</span>
         </footer>
@@ -51,8 +32,6 @@ import AntdZhCn from 'ant-design-vue/es/locale/zh_CN';
 const config = useRuntimeConfig().public;
 const routeUpdatingStore = useRouteUpdatingStore();
 const globalLoadingStore = useGlobalLoadingStore();
-const isReCAPTCHAEnabled = config.recaptchaSiteKey !== '';
-const isGoogleAnalyticsEnabled = config.gaMeasurementId !== '';
 
 useNoScript(`<style>
     #app-wrapper {
