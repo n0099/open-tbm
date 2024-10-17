@@ -3,6 +3,8 @@
 namespace App\Repository\Post;
 
 use App\DTO\PostKey\Thread as ThreadKey;
+use App\Entity\Post\Reply;
+use App\Entity\Post\SubReply;
 use App\Entity\Post\Thread;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\QueryBuilder;
@@ -13,8 +15,12 @@ use Symfony\Component\DependencyInjection\Attribute\Exclude;
 #[Exclude]
 class ThreadRepository extends PostRepository
 {
-    public function __construct(ManagerRegistry $registry, EntityManagerInterface $entityManager, int $fid)
-    {
+    public function __construct(
+        ManagerRegistry $registry,
+        EntityManagerInterface $entityManager,
+        int $fid,
+        private readonly PostRepositoryFactory $postRepositoryFactory,
+    ) {
         parent::__construct($registry, $entityManager, Thread::class, $fid);
     }
 
@@ -46,9 +52,8 @@ class ThreadRepository extends PostRepository
         // https://github.com/doctrine/orm/issues/3542
         // https://github.com/doctrine/dbal/issues/5018#issuecomment-2395177479
         $entityManager = $this->getEntityManager();
-        $connection = $entityManager->getConnection();
         $tableName = $entityManager->getClassMetadata(Thread::class)->getTableName();
-        $statement = $connection->prepare(<<<"SQL"
+        $statement = $entityManager->getConnection()->prepare(<<<"SQL"
             SELECT tid FROM (
                 SELECT tid, ROW_NUMBER() OVER (ORDER BY tid) rn FROM $tableName
             ) t WHERE rn % :chunkSize = 0
@@ -57,10 +62,23 @@ class ThreadRepository extends PostRepository
         return $statement->executeQuery()->fetchFirstColumn();
     }
 
-    public function getThreadsIdAfter(int $after, int $limit): array
+    public function getThreadsIdWithMaxPostedAtAfter(int $after, int $limit): array
     {
-        $dql = 'SELECT t.tid FROM App\Entity\Post\Thread t WHERE t.tid > :after ORDER BY t.tid';
-        return $this->createQuery($dql)->setMaxResults($limit)
-            ->setParameters(compact('after'))->getSingleColumnResult();
+        $entityManager = $this->getEntityManager();
+        $threadTable = $entityManager->getClassMetadata(Thread::class)->getTableName();
+        $replyTable = $this->postRepositoryFactory->newReply($this->getFid())
+            ->getEntityManager()->getClassMetadata(Reply::class)->getTableName();
+        $subReplyTable = $this->postRepositoryFactory->newSubReply($this->getFid())
+            ->getEntityManager()->getClassMetadata(SubReply::class)->getTableName();
+        $statement = $entityManager->getConnection()->prepare(<<<"SQL"
+            SELECT t.tid, GREATEST(t."postedAt", MAX(r."postedAt"), MAX(sr."postedAt")) AS "maxPostedAt"
+            FROM $threadTable t
+                JOIN $replyTable r ON r.tid = t.tid
+                JOIN $subReplyTable sr ON sr.pid = r.pid
+            WHERE t.tid > :after GROUP BY t.tid ORDER BY t.tid LIMIT :limit
+            SQL);
+        $statement->bindValue('after', $after);
+        $statement->bindValue('limit', $limit);
+        return $statement->executeQuery()->fetchAllAssociative();
     }
 }

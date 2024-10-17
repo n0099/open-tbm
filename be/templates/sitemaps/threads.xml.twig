@@ -3,9 +3,10 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd"
     xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-    {%- for tid in threads_id ~%}
+    {%- for thread in threads ~%}
         <url>
-            <loc>{{ base_url_fe }}/posts/tid/{{ tid }}</loc>
+            <loc>{{ base_url_fe }}/posts/tid/{{ thread.tid }}</loc>
+            <lastmod>{{ thread.maxPostedAt | date(constant('DateTimeInterface::ATOM'), 'UTC') }}</lastmod>
         </url>
     {%- endfor ~%}
 </urlset>

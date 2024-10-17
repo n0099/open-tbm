@@ -27,16 +27,15 @@ class SitemapController extends AbstractController
     #[Route('/sitemaps/forums')]
     public function forums(): Response
     {
-        $threadsIdKeyByFid = collect($this->forumRepository->getOrderedForumsId())
-            ->mapWithKeys(fn(int $fid) => [
-                $fid => $this->postRepositoryFactory->newThread($fid)->getThreadsIdByChunks(self::$maxUrls),
-            ])
-            ->toArray();
-
         return $this->cache->get(
             '/sitemaps/forums',
-            function (ItemInterface $item) use ($threadsIdKeyByFid) {
-                $item->expiresAfter(86400);
+            function (ItemInterface $item) {
+                $item->expiresAfter(new \DateInterval('P1D'));
+                $threadsIdKeyByFid = collect($this->forumRepository->getOrderedForumsId())
+                    ->mapWithKeys(fn(int $fid) => [
+                        $fid => $this->postRepositoryFactory->newThread($fid)->getThreadsIdByChunks(self::$maxUrls),
+                    ])
+                    ->toArray();
                 return $this->renderXml(
                     'sitemaps/forums.xml.twig',
                     ['threads_id_key_by_fid' => $threadsIdKeyByFid],
@@ -55,12 +54,12 @@ class SitemapController extends AbstractController
         return $this->cache->get(
             "/sitemaps/forums/$fid/threads?cursor=$cursor",
             function (ItemInterface $item) use ($fid, $cursor) {
-                $item->expiresAfter(86400);
+                $item->expiresAfter(new \DateInterval('P1D'));
                 return $this->renderXml(
                     'sitemaps/threads.xml.twig',
                     [
-                        'threads_id' =>
-                            $this->postRepositoryFactory->newThread($fid)->getThreadsIdAfter($cursor, self::$maxUrls),
+                        'threads' => $this->postRepositoryFactory->newThread($fid)
+                            ->getThreadsIdWithMaxPostedAtAfter($cursor, self::$maxUrls),
                         'base_url_fe' => $this->getParameter('app.base_url.fe'),
                     ],
                 );

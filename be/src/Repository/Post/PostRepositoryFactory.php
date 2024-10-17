@@ -17,7 +17,7 @@ readonly class PostRepositoryFactory
 
     public function newThread(int $fid): ThreadRepository
     {
-        return new ThreadRepository($this->registry, $this->entityManager, $fid);
+        return new ThreadRepository($this->registry, $this->entityManager, $fid, $this);
     }
 
     public function newReply(int $fid): ReplyRepository
