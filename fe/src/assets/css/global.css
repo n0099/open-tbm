@@ -2,7 +2,7 @@
     block-size: 38px; /* adopt to bootstrap input group */
 }
 
-.loading {
+.loading-huaji {
     background: url('/assets/icon-huaji-loading-spinner-2nd-frames-removed.gif') no-repeat center;
 }
 

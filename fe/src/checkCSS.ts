@@ -11,8 +11,7 @@ checkcss.onClassnameDetected = className =>
         'statsjs',
 
         // own usages
-        'loading',
-        'echarts',
+        'loading-huaji',
         'bs-callout',
         'post-render-list',
         'reply-content',

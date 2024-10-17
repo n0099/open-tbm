@@ -3,19 +3,19 @@ import type { InfiniteData } from '@tanstack/vue-query';
 import { DateTime } from 'luxon';
 
 type PartialPostPageProvision = Pick<PostPageProvision, 'getUser'>;
+const resolvePath = createSitePathResolver({ withBase: true });
 
 // https://developers.google.com/search/docs/appearance/structured-data/discussion-forum
 export const usePostsSchemaOrg = (data: Ref<InfiniteData<ApiPosts['response']> | undefined>) => {
     const router = useRouter();
-    const baseUrlWithDomain = useSiteConfig().url;
     const definePostComment = <T extends Post>(post: T, postIDKey: keyof T & PostIDOf<T>): Comment => ({
         /* eslint-disable @typescript-eslint/naming-convention */
         '@type': 'Comment',
         '@id': (post[postIDKey] as PostID).toString(),
-        url: baseUrlWithDomain + router.resolve({
+        url: resolvePath(router.resolve({
             name: `posts/${postIDKey}`,
             params: { [postIDKey]: post[postIDKey] as PostID }
-        }).fullPath,
+        }).fullPath).value,
         dateCreated: DateTime.fromSeconds(post.createdAt).toISO(),
         datePublished: DateTime.fromSeconds(post.postedAt).toISO(),
         upvoteCount: post.agreeCount,
@@ -25,7 +25,7 @@ export const usePostsSchemaOrg = (data: Ref<InfiniteData<ApiPosts['response']> |
     const defineUserPerson = (uid: BaiduUserID): Exclude<Person, string> => ({
         '@type': 'Person',
         '@id': uid.toString(),
-        url: baseUrlWithDomain + router.resolve(toUserRoute(uid)).fullPath
+        url: resolvePath(router.resolve(toUserRoute(uid)).fullPath).value
     });
     const definePostAuthorPerson = (post: Post, { getUser }: PartialPostPageProvision): Pick<Comment, 'author'> => {
         const uid = post.authorUid;

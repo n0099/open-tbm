@@ -20,12 +20,12 @@
     <hr />
     <div
         ref="top50CandidateCountRef"
-        :class="{ loading: isChartLoading.top50CandidateCount }"
+        :class="{ 'loading-huaji': isChartLoading.top50CandidateCount }"
         class="echarts" id="top50CandidateCount" />
     <hr />
     <div
         ref="top10CandidatesTimelineRef"
-        :class="{ loading: isChartLoading.top10CandidatesTimeline }"
+        :class="{ 'loading-huaji': isChartLoading.top10CandidatesTimeline }"
         class="echarts" id="top10CandidatesTimeline" />
     <hr />
     <div class="row justify-content-end">
@@ -42,7 +42,7 @@
     </div>
     <div
         ref="top5CandidateCountGroupByTimeRef"
-        :class="{ loading: isChartLoading.top5CandidateCountGroupByTime }"
+        :class="{ 'loading-huaji': isChartLoading.top5CandidateCountGroupByTime }"
         class="echarts" id="top5CandidateCountGroupByTime" />
     <hr />
     <div class="row justify-content-end">
@@ -59,7 +59,7 @@
     </div>
     <div
         ref="allVoteCountGroupByTimeRef"
-        :class="{ loading: isChartLoading.allVoteCountGroupByTime }"
+        :class="{ 'loading-huaji': isChartLoading.allVoteCountGroupByTime }"
         class="echarts" id="allVoteCountGroupByTime" />
     <hr />
     <LazyATable
