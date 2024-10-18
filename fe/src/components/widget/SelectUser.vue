@@ -2,18 +2,17 @@
 <div class="col-5">
     <div class="input-group">
         <select v-model="selectBy" class="select-user-by form-select">
-            <option value="">未选择</option>
-            <option value="uid">百度UID</option>
-            <option value="name">用户名</option>
-            <option value="nameNULL">NULL用户名</option>
-            <option value="displayName">覆盖名</option>
-            <option value="displayNameNULL">NULL覆盖名</option>
+            <option
+                v-for="[description, pssibleSelecteBy] in Object.entries(possibleSelectByDescription)"
+                :key="pssibleSelecteBy" :selected="pssibleSelecteBy === selectBy">
+                {{ description }}
+            </option>
         </select>
         <template v-if="selectBy === 'uid'">
             <select v-model="params.uidCompareBy" class="uid-compare-by form-select">
-                <option>&lt;</option>
-                <option>=</option>
-                <option>&gt;</option>
+                <option :selected="params.uidCompareBy === '<'">&lt;</option>
+                <option :selected="params.uidCompareBy === '='">=</option>
+                <option :selected="params.uidCompareBy === '>'">&gt;</option>
             </select>
             <input
                 v-model="params.uid" type="number" placeholder="4000000000"
@@ -59,7 +58,16 @@ const emit = defineEmits({
         && selectUserBy.includes(p.selectBy)
         && _.isObject(p.params) // todo: check p.params against props.paramsNameMap
 });
-const selectBy = ref<SelectUserBy | 'displayNameNULL' | 'nameNULL'>('');
+const selectBy = ref<SelectUserBy>('');
+const possibleSelectByDescription: Record<SelectUserBy, string> = {
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    '': '未选择',
+    uid: '百度UID',
+    name: '用户名',
+    nameNULL: 'NULL用户名',
+    displayName: '覆盖名',
+    displayNameNULL: 'NULL覆盖名'
+};
 const params = ref<SelectUserParams>({});
 
 const emitModelChange = () => {

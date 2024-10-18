@@ -41,26 +41,32 @@
     <div class="row mt-2 mb-3">
         <label class="col-1 col-form-label" for="paramOrder">排序方式</label>
         <div class="col-8">
-            <div class="input-group">
+            <div v-for="orderBy in [uniqueParams.orderBy]" :key="orderBy.value" class="input-group">
                 <span class="input-group-text"><FontAwesome :icon="faSortAmountDown" /></span>
                 <select
-                    v-model="uniqueParams.orderBy.value"
+                    v-model="orderBy.value"
                     :class="{ 'is-invalid': isOrderByInvalid }"
                     class="form-select form-control" id="paramOrder">
-                    <option value="default">默认（按帖索引查询按帖子ID正序，按吧索引/搜索查询按发帖时间倒序）</option>
-                    <option value="postedAt">发帖时间</option>
+                    <option :selected="orderBy.value === 'default'" value="default">
+                        默认（按帖索引查询按帖子ID正序，按吧索引/搜索查询按发帖时间倒序）
+                    </option>
+                    <option :selected="orderBy.value === 'postedAt'" value="postedAt">发帖时间</option>
                     <optgroup label="帖子ID">
-                        <option value="tid">主题帖tid</option>
-                        <option value="pid">回复帖pid</option>
-                        <option value="spid">楼中楼spid</option>
+                        <option :selected="orderBy.value === 'tid'" value="tid">主题帖tid</option>
+                        <option :selected="orderBy.value === 'pid'" value="pid">回复帖pid</option>
+                        <option :selected="orderBy.value === 'spid'" value="spid">楼中楼spid</option>
                     </optgroup>
                 </select>
                 <select
-                    v-show="uniqueParams.orderBy.value !== 'default'"
-                    v-model="uniqueParams.orderBy.subParam.direction"
+                    v-show="orderBy.value !== 'default'"
+                    v-model="orderBy.subParam.direction"
                     class="form-select form-control" id="paramOrderBy">
-                    <option value="ASC">正序（从小到大，旧到新）</option>
-                    <option value="DESC">倒序（从大到小，新到旧）</option>
+                    <option :selected="orderBy.subParam.direction === 'ASC'" value="ASC">
+                        正序（从小到大，旧到新）
+                    </option>
+                    <option :selected="orderBy.subParam.direction === 'DESC'" value="DESC">
+                        倒序（从大到小，新到旧）
+                    </option>
                 </select>
             </div>
         </div>
@@ -145,17 +151,20 @@
             </template>
             <template v-if="p.name === 'authorManagerType'">
                 <select v-model="p.value" class="form-control flex-grow-0 w-25">
-                    <option value="NULL">吧友</option>
-                    <option value="manager">吧主</option>
-                    <option value="assist">小吧主</option>
-                    <option value="voiceadmin">语音小编</option>
+                    <option :selected="p.value === 'NULL'" value="NULL">吧友</option>
+                    <option
+                        v-for="[moderatorType, moderatorTypeDescription] in Object.entries(knownModeratorTypes)
+                            .flatMap(i => [i[0], i[1]])"
+                        :key="moderatorType" :value="moderatorType" :selected="moderatorType === p.value">
+                        {{ moderatorTypeDescription }}
+                    </option>
                 </select>
             </template>
-            <template v-if="['authorGender', 'latestReplierGender'].includes(p.name)">
+            <template v-if="p.name === 'authorGender' || p.name === 'latestReplierGender'">
                 <select v-model="p.value" class="form-control flex-grow-0 w-25">
-                    <option selected value="0">未设置（显示为男）</option>
-                    <option value="1">男 ♂</option>
-                    <option value="2">女 ♀</option>
+                    <option :selected="p.value === '0'" value="0">未设置（显示为男）</option>
+                    <option :selected="p.value === '1'" value="1">男 ♂</option>
+                    <option :selected="p.value === '2'" value="2">女 ♀</option>
                 </select>
             </template>
             <template v-if="p.name === 'authorExpGrade'">

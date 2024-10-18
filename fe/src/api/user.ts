@@ -8,6 +8,15 @@ export type ForumModeratorType = 'assist'
 | 'publication'
 | 'videoadmin'
 | 'voiceadmin';
+export const knownModeratorTypes: { [P in ForumModeratorType]: [string, BootstrapColor] } = {
+    ...keysWithSameValue(['fourth_manager', 'fourthmanager'], ['第四吧主', 'danger']),
+    manager: ['吧主', 'danger'],
+    assist: ['小吧', 'primary'],
+    picadmin: ['图片小编', 'warning'],
+    videoadmin: ['视频小编', 'warning'],
+    voiceadmin: ['语音小编', 'secondary'],
+    ...keysWithSameValue(['publication_editor', 'publication'], ['吧刊小编', 'secondary'])
+};
 export type AuthorExpGrade = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18;
 export type UserGender = 0 | 1 | 2 | null;
 export type UserGenderQueryParam = '0' | '1' | '2' | 'NULL';

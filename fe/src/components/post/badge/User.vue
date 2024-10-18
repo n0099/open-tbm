@@ -37,16 +37,6 @@ const { user } = defineProps<{
     threadAuthorUid?: BaiduUserID,
     replyAuthorUid?: BaiduUserID
 }>();
-
-const knownModeratorTypes: { [P in ForumModeratorType]: [string, BootstrapColor] } = {
-    ...keysWithSameValue(['fourth_manager', 'fourthmanager'], ['第四吧主', 'danger']),
-    manager: ['吧主', 'danger'],
-    assist: ['小吧', 'primary'],
-    picadmin: ['图片小编', 'warning'],
-    videoadmin: ['视频小编', 'warning'],
-    voiceadmin: ['语音小编', 'secondary'],
-    ...keysWithSameValue(['publication_editor', 'publication'], ['吧刊小编', 'secondary'])
-};
 const moderators = computed(() => _.pick(knownModeratorTypes,
     user.currentForumModerator?.moderatorTypes.split(',') ?? []));
 </script>
