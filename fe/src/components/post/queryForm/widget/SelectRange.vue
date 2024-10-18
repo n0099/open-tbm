@@ -1,10 +1,10 @@
 <template>
 <select v-model="modelValue" class="form-select form-control flex-grow-0">
-    <option>&lt;</option>
-    <option>=</option>
-    <option>&gt;</option>
-    <option>IN</option>
-    <option>BETWEEN</option>
+    <option
+        v-for="value in numericParamSubParamRangeValues" :key="value"
+        :selected="value === modelValue">
+        {{ value }}
+    </option>
 </select>
 </template>
 

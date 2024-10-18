@@ -1,8 +1,7 @@
 // eslint-disable-next-line import-x/extensions
 import { withNuxt } from './.nuxt/eslint.config.mjs';
 import * as vueESLintParser from 'vue-eslint-parser';
-// eslint-disable-next-line import-x/extensions
-import vueESLintConfigTypescriptRecommendedExtends from '@vue/eslint-config-typescript/recommended.js';
+import vueEslintConfigTypeScript from '@vue/eslint-config-typescript';
 import pluginVue from 'eslint-plugin-vue';
 import { FlatCompat } from '@eslint/eslintrc';
 import eslintJs from '@eslint/js';
@@ -548,7 +547,7 @@ const compat = new FlatCompat();
 export default withNuxt(
     eslintJs.configs.recommended,
     ...pluginVue.configs['flat/recommended'],
-    ...compat.config(vueESLintConfigTypescriptRecommendedExtends), // https://github.com/vuejs/eslint-config-typescript/issues/76#issuecomment-2148720004
+    ...vueEslintConfigTypeScript({ extends: ['recommended'] }),
     ...compat.extends( // https://github.com/ota-meshi/typescript-eslint-parser-for-extra-files/issues/95#issuecomment-2148604881
         'plugin:@typescript-eslint/strict-type-checked',
         'plugin:@typescript-eslint/stylistic-type-checked',
