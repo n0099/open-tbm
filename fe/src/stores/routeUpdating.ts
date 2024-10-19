@@ -9,8 +9,9 @@ export const useRouteUpdatingStore = defineStore('isRouteUpdating', () => {
         if (!import.meta.client)
             return;
         if (isUpdating.value) {
+            // eslint-disable-next-line unicorn/prefer-global-this
             debounceId = window.setTimeout(() => { globalLoadingStore.start() }, 100);
-            window.setTimeout(stop, 10000);
+            setTimeout(stop, 10000);
         } else {
             clearTimeout(debounceId);
             globalLoadingStore.stop();

@@ -37,6 +37,7 @@ const isAlreadySeen = ref(false);
 useIntersectionObserver(rootEl, entries => {
     _.orderBy(entries, 'time').forEach(({ isIntersecting }) => { // https://github.com/vueuse/vueuse/issues/4197
         clearTimeout(isVisibleDeounceId);
+        // eslint-disable-next-line unicorn/prefer-global-this
         isVisibleDeounceId = window.setTimeout(() => {
             isVisible.value = isIntersecting;
         }, isIntersecting ? 500 : 0);

@@ -410,6 +410,7 @@ const rules = [{ // as of eslint-plugin-unicorn@50.0.1
         'vue/require-default-prop': 'off',
     },
     optin: {
+        'vue/block-lang': ['error', { script: { lang: ['ts', 'tsx'] } }],
         'vue/html-indent': ['error', 4, { baseIndent: 0 }],
         'vue/attribute-hyphenation': ['error', 'never'],
         'vue/attributes-order': ['error', {
