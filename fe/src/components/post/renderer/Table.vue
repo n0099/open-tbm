@@ -11,18 +11,10 @@
 </DefineUser>
 <DefineLatestReplier v-slot="{ latestReplier }">
     <template v-if="latestReplier !== undefined">
-        <span v-if="!(latestReplier.name === null && latestReplier.displayName === null)">
-            <NuxtLink
-                v-if="latestReplier.name !== null"
-                :to="{ name: 'users/name', params: _.pick(latestReplier, 'name') }"
-                noPrefetch class="link-dark">{{ latestReplier.name }}</NuxtLink>
-            <template v-if="latestReplier.displayName !== null">
-                <span>&nbsp;</span>
-                <NuxtLink
-                    :to="{ name: 'users/displayName', params: _.pick(latestReplier, 'displayName') }"
-                    noPrefetch class="link-dark">{{ latestReplier.displayName }}</NuxtLink>
-            </template>
-        </span>
+        <PostBadgeThreadLatestReplier
+            v-if="latestReplier.uid === null
+                && !(latestReplier.name === null && latestReplier.displayName === null)"
+            :users="expandLatestReplierToRoutes(latestReplier)" />
         <ReuseUser v-else-if="latestReplier.uid !== null" :user="getUser(latestReplier.uid)" />
     </template>
 </DefineLatestReplier>
@@ -90,6 +82,7 @@
 </template>
 
 <script setup lang="ts">
+import { expandLatestReplierToRoutes } from '@/components/post/badge/ThreadLatestReplier.vue';
 import type User from '@/components/post/badge/User.vue';
 import type { ColumnType } from 'ant-design-vue/es/table/interface';
 import _ from 'lodash';

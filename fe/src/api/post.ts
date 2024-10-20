@@ -14,10 +14,9 @@ interface Agree {
 }
 
 export type LatestReplierId = UInt;
-export interface LatestReplier extends Pick<User, 'name' | 'displayName'>, TimestampFields {
-    id: LatestReplierId,
-    uid: BaiduUserID | null
-}
+export type LatestReplier = TimestampFields
+    & { id: LatestReplierId }
+    & (Pick<User, 'uid'> | ({ uid: null } & Pick<User, 'name' | 'displayName'>));
 
 export interface Thread extends Post {
     // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents

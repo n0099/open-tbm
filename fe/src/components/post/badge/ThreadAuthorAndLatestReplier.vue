@@ -14,23 +14,15 @@
 <DefineLatestReplier v-slot="{ users }">
     <span class="ms-2">
         <span class="fw-normal link-secondary">最后回复：</span>
-        <template v-if="users !== undefined">
-            <NuxtLink
-                v-for="(user, index) in users" :key="user.name" :to="user.route"
-                :class="{ 'ms-1': users.length > 1 && index !== 0 }"
-                noPrefetch class="fw-bold link-dark">
-                {{ user.name }}
-            </NuxtLink>
-        </template>
+        <PostBadgeThreadLatestReplier v-if="users !== undefined" :users="users" />
         <span v-else class="fw-bold link-dark">未知用户</span>
     </span>
 </DefineLatestReplier>
 <ReuseLatestReplier v-if="latestReplier?.uid === undefined" />
 <ReuseLatestReplier
     v-else-if="latestReplier.uid === null
-        && latestReplier !== undefined
         && !(latestReplier.name === null && latestReplier.displayName === null)"
-    :users="toReuseLatestReplierUsersProp(latestReplier)" />
+    :users="expandLatestReplierToRoutes(latestReplier)" />
 <template v-else-if="latestReplier.uid !== null && latestReplier.uid !== authorUid">
     <ReuseLatestReplier :users="[{ name: renderUsername(latestReplier.uid), route: toUserRoute(latestReplier.uid) }]" />
     <PostBadgeUser
@@ -40,33 +32,19 @@
 </template>
 
 <script setup lang="ts">
-import type { LocationAsRelativeRaw } from 'vue-router';
+import type ThreadLatestReplier from './ThreadLatestReplier.vue';
+import { expandLatestReplierToRoutes } from './ThreadLatestReplier.vue';
 import _ from 'lodash';
 
 const { thread } = defineProps<{ thread: Thread }>();
 const { getUser, renderUsername, getLatestReplier } = usePostPageProvision().inject();
+const [DefineLatestReplier, ReuseLatestReplier] = createReusableTemplate<Partial<InstanceType<typeof ThreadLatestReplier>['$props']>>();
 
 const authorUid = computed(() => thread.authorUid);
 const authorUser = computed(() => getUser.value(authorUid.value));
 const latestReplier = computed(() => getLatestReplier.value(thread.latestReplierId));
 const latestReplierUser = computed(() => (
     _.isNil(latestReplier.value?.uid) ? undefined : getUser.value(latestReplier.value.uid)));
-
-interface ReuseLatestReplierProps { users?: Array<{ name: string, route: LocationAsRelativeRaw }> }
-const [DefineLatestReplier, ReuseLatestReplier] = createReusableTemplate<ReuseLatestReplierProps>();
-const toReuseLatestReplierUsersProp = (latestReplier: LatestReplier): ReuseLatestReplierProps['users'] => _.reduce<
-    Pick<LatestReplier, 'name' | 'displayName'>,
-    NonNullable<ReuseLatestReplierProps['users']>
->(
-    _.pick(latestReplier, 'name', 'displayName'),
-    (acc, name, type) => {
-        if (name !== null)
-            acc.push({ name, route: { name: `users/${type}`, params: { [type]: name } } });
-
-        return acc;
-    },
-    []
-);
 </script>
 
 <style scoped>
