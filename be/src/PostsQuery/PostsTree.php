@@ -111,7 +111,8 @@ readonly class PostsTree
      * @return Collection<int, Collection<string, mixed|Collection<int, Collection<string, mixed|Collection<int, Collection<string, mixed>>>>>>
      * @SuppressWarnings(PHPMD.CamelCaseParameterName)
      */
-    public function nestPostsWithParent(): Collection {
+    public function nestPostsWithParent(): Collection
+    {
         $this->stopwatch->start('nestPostsWithParent');
 
         $replies = $this->replies->groupBy(fn(Reply $reply) => $reply->getTid());
@@ -141,9 +142,8 @@ readonly class PostsTree
         Collection $nestedPosts,
         string $orderByField,
         bool $orderByDesc,
-        bool $shouldRemoveSortingKey = true
-    ): array
-    {
+        bool $shouldRemoveSortingKey = true,
+    ): array {
         $this->stopwatch->start('reOrderNestedPosts');
 
         /**
@@ -194,10 +194,10 @@ readonly class PostsTree
             : static fn($i) => $i;
         $ret = $removeSortingKey($sortBySortingKey(
             $nestedPosts->map(
-            /**
-             * @param Collection{replies: Collection} $thread
-             * @return Collection{replies: Collection}
-             */
+                /**
+                 * @param Collection{replies: Collection} $thread
+                 * @return Collection{replies: Collection}
+                 */
                 function (Collection $thread) use (
                     $orderByField,
                     $orderByDesc,
@@ -206,10 +206,10 @@ readonly class PostsTree
                     $setSortingKeyFromCurrentAndChildPosts
                 ) {
                     $thread['replies'] = $sortBySortingKey($thread['replies']->map(
-                    /**
-                     * @param Collection{subReplies: Collection} $reply
-                     * @return Collection{subReplies: Collection}
-                     */
+                        /**
+                         * @param Collection{subReplies: Collection} $reply
+                         * @return Collection{subReplies: Collection}
+                         */
                         function (Collection $reply) use ($orderByField, $orderByDesc, $setSortingKeyFromCurrentAndChildPosts) {
                             $reply['subReplies'] = $reply['subReplies']->sortBy(
                                 fn(Collection $subReplies) => $subReplies->get($orderByField),

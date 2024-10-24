@@ -3,7 +3,6 @@
 namespace App\Controller;
 
 use App\Helper;
-use App\PostsQuery\BaseQuery;
 use App\PostsQuery\QueryResult;
 use App\Repository\UserRepository;
 use App\Validator\Validator;

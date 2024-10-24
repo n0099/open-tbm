@@ -104,7 +104,7 @@ readonly class IndexQuery extends BaseQuery
             $cursor,
             $this->orderByField,
             $this->orderByDesc,
-            queryByPostIDParamName: $hasPostIDParam ? $postIDParamName : null
+            queryByPostIDParamName: $hasPostIDParam ? $postIDParamName : null,
         );
     }
 }
