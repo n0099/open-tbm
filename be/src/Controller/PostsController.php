@@ -83,15 +83,14 @@ class PostsController extends AbstractController
         $query->query($params, $request->query->get('cursor'));
         $this->stopwatch->stop('$queryClass->query()');
         $this->stopwatch->start('fillWithParentPost');
-        $result = $query->postsTree->fillWithParentPost($query->queryResult);
+        $matchQueryPostCounts = $query->postsTree->fillWithParentPost($query->queryResult);
         $this->stopwatch->stop('fillWithParentPost');
 
         $this->stopwatch->start('queryUsers');
         $latestRepliers = $this->latestReplierRepository->getLatestRepliersWithoutNameWhenHasUid(
-            $result['threads']->map(fn(Thread $thread) => $thread->getLatestReplierId()),
+            $query->postsTree->threads->map(fn(Thread $thread) => $thread->getLatestReplierId()),
         );
-        $uids = collect($result)
-            ->only(Helper::POST_TYPES_PLURAL)
+        $uids = collect([$query->postsTree->threads, $query->postsTree->replies, $query->postsTree->subReplies])
             ->flatMap(static fn(Collection $posts) => $posts->map(fn(Post $post) => $post->getAuthorUid()))
             ->concat($latestRepliers->pluck('uid')->filter()) // filter() will remove NULLs
             ->unique();
@@ -99,7 +98,7 @@ class PostsController extends AbstractController
         $this->stopwatch->stop('queryUsers');
 
         $this->stopwatch->start('queryUserRelated');
-        $fid = $result['fid'];
+        $fid = $query->queryResult->fid;
         $authorExpGrades = collect($this->authorExpGradeRepository->getLatestOfUsers($fid, $uids))
             ->keyBy(fn(AuthorExpGrade $authorExpGrade) => $authorExpGrade->uid);
         $users->each(fn(User $user) => $user->setCurrentAuthorExpGrade($authorExpGrades[$user->getUid()]));
@@ -115,7 +114,7 @@ class PostsController extends AbstractController
             'pages' => [
                 'currentCursor' => $query->queryResult->currentCursor,
                 'nextCursor' => $query->queryResult->nextCursor,
-                ...Arr::except($result, ['fid', ...Helper::POST_TYPES_PLURAL]),
+                ...$matchQueryPostCounts,
             ],
             'forum' => $this->forumRepository->getForum($fid),
             'threads' => $query->postsTree->reOrderNestedPosts(

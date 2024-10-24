@@ -19,13 +19,13 @@ use Symfony\Component\Stopwatch\Stopwatch;
 /** @psalm-import-type PostsKeyByTypePluralName from CursorCodec */
 readonly class PostsTree
 {
-    /** @var Collection<int, Thread> $threads */
+    /** @var Collection<int, Thread> */
     public Collection $threads;
 
-    /** @var Collection<int, Reply> $replies */
+    /** @var Collection<int, Reply> */
     public Collection $replies;
 
-    /** @var Collection<int, SubReply> $subReplies */
+    /** @var Collection<int, SubReply> */
     public Collection $subReplies;
 
     public function __construct(
@@ -36,11 +36,7 @@ readonly class PostsTree
 
     /**
      * @return array{
-     *     fid: int,
-     *     threads: Collection<int, Thread>,
-     *     replies: Collection<int, Reply>,
-     *     subReplies: Collection<int, SubReply>,
-     *     matchQueryPostCount: array{thread: int, reply: int, subReply: int},
+     *     matchQueryPostCount: array{thread?: int, reply?: int, subReply?: int},
      *     notMatchQueryParentPostCount: array{thread: int, reply: int},
      * }
      */
@@ -94,15 +90,14 @@ readonly class PostsTree
         $this->stopwatch->stop('parsePostContentProtoBufBytes');
 
         return [
-            'fid' => $result->fid,
             'matchQueryPostCount' => collect(Helper::POST_TYPES)
                 ->combine([$tids, $pids, $spids])
-                ->map(static fn(Collection $ids, string $type) => $ids->count()),
+                ->map(static fn(Collection $ids, string $type) => $ids->count())
+                ->toArray(),
             'notMatchQueryParentPostCount' => [
                 'thread' => $parentThreadsID->diff($tids)->count(),
                 'reply' => $parentRepliesID->diff($pids)->count(),
             ],
-            ...array_combine(Helper::POST_TYPES_PLURAL, [$this->threads, $this->replies, $this->subReplies]),
         ];
     }
 
@@ -151,7 +146,7 @@ readonly class PostsTree
          * @param string $childPostTypePluralName
          * @return Collection<int, Collection<string, mixed|Collection<int, Collection<string, mixed>>>>
          */
-        $setSortingKeyFromCurrentAndChildPosts = function (
+        $setSortingKeyFromCurrentAndChildPosts = static function (
             Collection $curPost,
             string $childPostTypePluralName,
         ) use ($orderByField, $orderByDesc): Collection {
@@ -185,7 +180,7 @@ readonly class PostsTree
 
             return $curPost;
         };
-        $sortBySortingKey = fn(Collection $posts): Collection => $posts
+        $sortBySortingKey = static fn(Collection $posts): Collection => $posts
             ->sortBy(fn(Collection $i) => $i['sortingKey'], descending: $orderByDesc);
         $removeSortingKey = $shouldRemoveSortingKey
             ? /** @psalm-return Collection<array-key, Collection> */
