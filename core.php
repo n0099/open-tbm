@@ -1,5 +1,5 @@
 <?php
-ini_set('display_errors', 'On');
+ini_set('display_errors', 'Off');
 date_default_timezone_set('PRC');
 $sql = new mysqli('localhost', '', '', '');
 $sql -> query("SET collation_connection = utf8mb4_unicode_ci");

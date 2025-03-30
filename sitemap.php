@@ -31,7 +31,7 @@ $posts = $sql -> query("SELECT tid, latest_reply_time FROM tbmonitor_post WHERE 
 
 foreach ($posts as $post) {
     $sitemap_content .= "<url>\r\n";
-    $sitemap_content .= "<loc>https://n0099.cf/tbm/?tid={$post['tid']}</loc>\r\n";
+    $sitemap_content .= "<loc>https://n0099.net/tbm/?tid={$post['tid']}</loc>\r\n";
     $lastmod = date(DATE_ATOM, strtotime($post['latest_reply_time']));
     $sitemap_content .= "<lastmod>{$lastmod}</lastmod>\r\n";
     $changefreq = get_changefreq($post['latest_reply_time']);

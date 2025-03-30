@@ -20,12 +20,12 @@ $users = $sql -> query("SELECT author, COUNT(*) FROM tbmonitor_post WHERE post_t
             <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
-            <a class="navbar-brand" href="https://n0099.cf/tbm">贴吧云监控</a>
+            <a class="navbar-brand" href="https://n0099.net/tbm">贴吧云监控</a>
             <div class="collapse navbar-collapse" id="navbar">
                 <ul class="navbar-nav mr-auto mt-2 mt-lg-0">
-                    <li class="nav-item"><a class="nav-link" href="https://n0099.cf">返回主站</a></li>
-                    <li class="nav-item"><a class="nav-link" href="https://n0099.cf/tc">贴吧云签到</a></li>
-                    <li class="nav-item"><a class="nav-link" href="https://n0099.cf/vtop">模拟城市吧吧务公开后台</a></li>
+                    <li class="nav-item"><a class="nav-link" href="https://n0099.net">返回主站</a></li>
+                    <li class="nav-item"><a class="nav-link" href="https://n0099.net/tc">贴吧云签到</a></li>
+                    <li class="nav-item"><a class="nav-link" href="https://n0099.net/vtop">模拟城市吧吧务公开后台</a></li>
                 </ul>
                 <a class="navbar-text my-2 my-lg-0" href="https://jq.qq.com/?_wv=1027&k=41RdoBF">四叶重工QQ群：292311751</a>
             </div>

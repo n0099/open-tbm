@@ -24,7 +24,7 @@ function get_url_arguments($forum = null, $author = null) {
     } else {
         unset($arguments['type']);
     }
-    return 'https://n0099.cf/tbm/?' . implode('&', $arguments);
+    return 'https://n0099.net/tbm/?' . implode('&', $arguments);
 }
 
 $sql_limit = 'LIMIT 30';

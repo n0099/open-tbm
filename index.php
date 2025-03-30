@@ -9,7 +9,7 @@ $_GET['type'] = empty($_GET['type']) ? ['post', 'reply', 'lzl'] : $_GET['type'];
 $_GET['forum'] = $sql -> escape_string($_GET['forum']);
 $_GET['tid'] = (int)$_GET['tid'];
 $_GET['kw'] = $sql -> escape_string($_GET['kw']);
-$_GET['kw_regex'] = $_GET['kw_regex'] == 'true' ? $_GET['kw_regex'] : null;
+$_GET['kw_regex'] = $_GET['kw_regex'] == 'true' ? 'true' : null;
 $_GET['author'] = $sql -> escape_string($_GET['author']);
 $_GET['start_date'] = empty($_GET['start_date']) ? null : date('Y-m-d', strtotime($_GET['start_date']));
 $_GET['end_date'] = empty($_GET['end_date']) ? null : date('Y-m-d', strtotime($_GET['end_date']));
@@ -97,8 +97,9 @@ foreach($sql_results as $type => $query) {
             echo "【{$post_info['forum']}吧】{$post_info['title']} - ";
         } ?>贴吧云监控</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <link href="https://cdn.bootcss.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css" rel="stylesheet" />
-        <link href="https://cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" />
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0-alpha.6/dist/css/bootstrap.min.css" integrity="sha256-rr9hHBQ43H7HSOmmNkxzQGazS/Khx+L8ZRHteEY1tQ4=" crossorigin="anonymous">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" integrity="sha256-eZrrJcwDc/3uDhsdt61sL2oOBY362qM3lon1gyExkL0=" crossorigin="anonymous">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tether@1.4.7/dist/css/tether.min.css" integrity="sha256-y4TDcAD4/j5o4keZvggf698Cr9Oc7JZ+gGMax23qmVA=" crossorigin="anonymous">
         <style>
             body {font-family: Microsoft YaHei, Helvetica, Arial, sans-serif !important;}
         </style>
@@ -271,7 +272,7 @@ foreach($sql_results as $type => $query) {
                                                         <?php echo "{$row['title']}（点击展开/折叠）"; ?>
                                                     </a>
                                                 </div>
-                                                <div id=<?php echo "\"post_{$row['tid']}\""; ?> class="collapse">
+                                                <div id=<?php echo "\"post_{$row['tid']}\""; ?> class="collapse show">
                                                     <div class="card card-block">
                                                         <span><?php echo preg_replace('/<img(.*?)src="(https:\/\/imgsa.baidu.com)(.*?)"(.*?)>/', '<img$1src="http://imgsrc.baidu.com$3"$4', $sql -> query("SELECT content FROM tbmonitor_reply WHERE tid = {$row['tid']} AND floor = 1") -> fetch_assoc()['content']); ?></span>
                                                     </div>
@@ -415,7 +416,8 @@ foreach($sql_results as $type => $query) {
             }
         }
         </script>
-        <script src="https://cdn.bootcss.com/jquery/3.1.1/jquery.min.js"></script>
-        <script src="https://cdn.bootcss.com/bootstrap/4.0.0-alpha.6/js/bootstrap.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+        <script src="https://cdn.jsdelivr.net/npm/tether@1.4.7/dist/js/tether.min.js" integrity="sha256-4lietOiwRDBKx1goZZbRiwB06L+/bPYEGDIKZt82bgg=" crossorigin="anonymous"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0-alpha.6/dist/js/bootstrap.min.js" integrity="sha256-+kIbbrvS+0dNOjhmQJzmwe/RILR/8lb/+4+PUNVW09k=" crossorigin="anonymous"></script>
     </body>
 </html>
