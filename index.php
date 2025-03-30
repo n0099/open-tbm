@@ -5,6 +5,10 @@ $time = microtime(true);
 $items_per_page = 20;
 
 $_GET['pn'] = (int)$_GET['pn'];
+if ($_GET['pn'] > 5000) {
+    http_response_code(429);
+    die('wow so many pages such a slow query big cpu usage');
+}
 $_GET['type'] = empty($_GET['type']) ? ['post', 'reply', 'lzl'] : $_GET['type'];
 $_GET['forum'] = $sql -> escape_string($_GET['forum']);
 $_GET['tid'] = (int)$_GET['tid'];
@@ -77,7 +81,15 @@ if (in_array('lzl', $_GET['type'])) {
     $sql_counts[] = "SELECT COUNT(*) FROM tbmonitor_lzl {$sql_condition}";
     $sql_lzl = "SELECT * FROM tbmonitor_lzl {$sql_condition} {$sql_order_by} {$sql_limit}";
 }
-$sql_count = $sql -> query(implode(' UNION ALL ', $sql_counts)) -> fetch_all(MYSQLI_NUM);
+if ($sql_counts === [ // when $sql_condition is always empty
+    'SELECT COUNT(*) FROM tbmonitor_post ',
+    'SELECT COUNT(*) FROM tbmonitor_reply WHERE floor != 1',
+    'SELECT COUNT(*) FROM tbmonitor_lzl '
+]) {
+    $sql_count = [['387390'], ['2036159'], ['685258']]; // hard coded after tbmv1 EOL
+} else {
+    $sql_count = $sql -> query(implode(' UNION ALL ', $sql_counts)) -> fetch_all(MYSQLI_NUM);
+}
 
 $max_page_num = intval(max($sql_count)[0] / $items_per_page);
 $sql_results = [
@@ -103,15 +115,6 @@ foreach($sql_results as $type => $query) {
         <style>
             body {font-family: Microsoft YaHei, Helvetica, Arial, sans-serif !important;}
         </style>
-        <!-- Global site tag (gtag.js) - Google Analytics -->
-        <script async src="https://www.googletagmanager.com/gtag/js?id=UA-79460112-1"></script>
-        <script>
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-            gtag('js', new Date());
-
-            gtag('config', 'UA-79460112-1');
-        </script>
     </head>
     <body onload="sortTable(5);sortTable(5);">
         <nav class="navbar navbar-toggleable-md navbar-light bg-faded">
@@ -175,8 +178,8 @@ foreach($sql_results as $type => $query) {
                                 <select class="form-control" name="forum">
                                     <option selected="selected" value="">全部</option>
                                     <?php
-                                    foreach ($sql -> query("SELECT DISTINCT forum FROM tbmonitor_post") -> fetch_all(MYSQLI_ASSOC) as $tieba) {
-                                        echo '<option' . ($tieba['forum'] == $_GET['forum'] ? ' selected="selected"' : null) . ">{$tieba['forum']}</option>";
+                                    foreach (['模拟城市','贴吧意见反馈','贴吧曝光台','台风吧官方水','西奥小镇','transportfever','百家号'] as $tieba) {
+                                        echo '<option' . ($tieba == $_GET['forum'] ? ' selected="selected"' : null) . ">{$tieba}</option>";
                                     }
                                     ?>
                                 </select>
@@ -345,7 +348,6 @@ foreach($sql_results as $type => $query) {
                     </nav>
                     <div class="text-center">
                         <p><?php echo 'PHP耗时' . round(microtime(true) - $time, 10) . '秒，共使用' . round(memory_get_peak_usage() / 1024 / 1024, 2) . 'MB内存'; ?></p>
-                        <script type="text/javascript">var cnzz_protocol = (("https:" == document.location.protocol) ? " https://" : " http://");document.write(unescape("%3Cspan id='cnzz_stat_icon_1261354059'%3E%3C/span%3E%3Cscript src='" + cnzz_protocol + "s95.cnzz.com/stat.php%3Fid%3D1261354059%26online%3D1%26show%3Dline' type='text/javascript'%3E%3C/script%3E"));</script>
                     </div>
                 </div>
             </div>

@@ -11,15 +11,6 @@ require 'core.php';
         <style>
             body {font-family: Microsoft YaHei, Helvetica, Arial, sans-serif !important;}
         </style>
-        <!-- Global site tag (gtag.js) - Google Analytics -->
-        <script async src="https://www.googletagmanager.com/gtag/js?id=UA-79460112-1"></script>
-        <script>
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-            gtag('js', new Date());
-
-            gtag('config', 'UA-79460112-1');
-        </script>
     </head>
     <body>
         <nav class="navbar navbar-toggleable-md navbar-light bg-faded">
@@ -77,9 +68,6 @@ require 'core.php';
                     <div id="transportfever_post_count_month_chart" style="height: 350px"></div>
                     <div id="模拟城市_post_count_hour_chart" style="height: 350px"></div>
                     <div id="transportfever_post_count_hour_chart" style="height: 350px"></div>
-                    <div class="text-center">
-                        <script type="text/javascript">var cnzz_protocol = (("https:" == document.location.protocol) ? " https://" : " http://");document.write(unescape("%3Cspan id='cnzz_stat_icon_1261354059'%3E%3C/span%3E%3Cscript src='" + cnzz_protocol + "s95.cnzz.com/stat.php%3Fid%3D1261354059%26online%3D1%26show%3Dline' type='text/javascript'%3E%3C/script%3E"));</script>
-                    </div>
                 </div>
             </div>
         </div>
