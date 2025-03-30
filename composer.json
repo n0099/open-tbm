@@ -2,7 +2,6 @@
   "require": {
     "smarty/smarty": "~3.1",
     "php-console/php-console": "*",
-    "vlucas/phpdotenv": "~2.2",
-    "sergeytsalkov/meekrodb": "^2.3"
+    "vlucas/phpdotenv": "~2.2"
   }
 }
