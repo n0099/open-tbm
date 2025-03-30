@@ -85,10 +85,6 @@ class ForumDb implements ISyncable
         );
     }
 
-    /**
-     * @param $name
-     * @return \Forum
-     */
     public function &getForum($name) {
         return $this->forums[$name];
     }
