@@ -1,5 +1,5 @@
 <?php
-class PostReply implements JsonSerializable
+class PostReply
 {
     /**
      * 回复ID
@@ -132,16 +132,5 @@ class PostReply implements JsonSerializable
     public function setComments($comments)
     {
         $this->comments = $comments;
-    }
-
-    public function jsonSerialize()
-    {
-        return array(
-            'id' => $this->id,
-            'text' => $this->text,
-            'author' => $this->author,
-            'replyTime' => date_timestamp_get($this->replyTime),
-            'comments' => $this->comments
-        );
     }
 }
