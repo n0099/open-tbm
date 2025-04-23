@@ -68,7 +68,8 @@ export default defineNuxtConfig({
             'beUrl',
             'instanceName',
             'footerText',
-            'tiebaImageProxy'
+            'tiebaImageProxy',
+            'tiebaImageReferrerPolicy'
         ], '')
     }
 });

@@ -2,12 +2,18 @@
 <div v-viewer.static>
     <!-- eslint-disable-next-line vue/no-unused-vars -->
     <DefineUGCImage v-slot="{ $slots, src, ...attrs }">
-        <NuxtLink v-if="useHydrationStore().isHydratingOrSSR" :to="src" target="_blank" class="tieba-ugc-image">
+        <NuxtLink
+            v-if="useHydrationStore().isHydratingOrSSR"
+            :to="src" target="_blank" class="tieba-ugc-image">
             <!-- eslint-disable-next-line vue/no-duplicate-attr-inheritance -->
-            <img :src="src" referrerpolicy="no-referrer" loading="lazy" class="tieba-ugc-image" v-bind="attrs" />
+            <img
+                :src="src" :referrerpolicy="config.tiebaImageReferrerPolicy"
+                loading="lazy" class="tieba-ugc-image" v-bind="attrs" />
         </NuxtLink>
         <!-- eslint-disable-next-line vue/no-duplicate-attr-inheritance -->
-        <img v-else :src="src" referrerpolicy="no-referrer" loading="lazy" class="tieba-ugc-image" v-bind="attrs" />
+        <img
+            v-else :src="src" :referrerpolicy="config.tiebaImageReferrerPolicy"
+            loading="lazy" class="tieba-ugc-image" v-bind="attrs" />
     </DefineUGCImage>
     <div v-for="(i, index) in content" :key="index" class="post-content-item">
         <NewlineToBr is="span" v-if="i.type === undefined" :text="i.text" />
@@ -18,7 +24,7 @@
         </NuxtLink>
         <img
             v-if="i.type === 2" :src="emoticonUrl(i.text)" :alt="i.c"
-            referrerpolicy="no-referrer" loading="lazy" />
+            :referrerpolicy="config.tiebaImageReferrerPolicy" loading="lazy" />
         <ReuseUGCImage v-if="i.type === 3" :src="imageUrl(i.originSrc)" />
         <NuxtLink
             v-if="i.type === 4"
@@ -46,7 +52,7 @@
         </span>
         <img
             v-if="i.type === 11" :src="toHTTPS(i.dynamic)" :alt="i.c"
-            referrerpolicy="no-referrer" loading="lazy" class="d-block" />
+            :referrerpolicy="config.tiebaImageReferrerPolicy" loading="lazy" class="d-block" />
         <ReuseUGCImage v-if="i.type === 16" :src="toHTTPS(i.graffitiInfo?.url)" alt="贴吧涂鸦" />
         <NuxtLink v-if="i.type === 20" :to="i.memeInfo?.detailLink" target="_blank">
             <ReuseUGCImage v-if="i.type === 20" :src="toHTTPS(i.src)" />
@@ -59,6 +65,7 @@
 import _ from 'lodash';
 
 defineProps<{ content: PostContent | null }>();
+const config = useRuntimeConfig().public;
 const [DefineUGCImage, ReuseUGCImage] = createReusableTemplate<{ src?: string }>({ inheritAttrs: false });
 useViewerStore().enable();
 </script>
