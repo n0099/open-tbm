@@ -1,10 +1,15 @@
 export const extractContentTexts = (content?: PostContent | null) => content
     ?.reduce((acc, i) => acc + ('text' in i ? i.text ?? '' : ''), '') ?? '';
 export const toHTTPS = (url?: string) => url?.replace('http://', 'https://');
-export const imageUrl = (originSrc?: string) =>
-    (originSrc !== undefined && /^(?:[0-9a-f]{40}|[0-9a-f]{24})$/u.test(originSrc)
-        ? `https://imgsrc.baidu.com/forum/pic/item/${originSrc}.jpg`
-        : originSrc);
+const config = useRuntimeConfig().public;
+export const imageUrl = (originSrc?: string) => {
+    if (originSrc === undefined || !/^(?:[0-9a-f]{40}|[0-9a-f]{24})$/u.test(originSrc))
+        return originSrc;
+    if (config.tiebaImageProxy !== '')
+        return `${config.tiebaImageProxy}/${originSrc}`;
+
+    return `https://imgsrc.baidu.com/forum/pic/item/${originSrc}.jpg`;
+};
 export const tryExtractTiebaOutboundUrl = (rawURL?: string) => {
     const url = new URL(rawURL ?? '');
     if (url.hostname === 'tieba.baidu.com' && url.pathname === '/mo/q/checkurl')
