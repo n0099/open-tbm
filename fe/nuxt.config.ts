@@ -67,7 +67,8 @@ export default defineNuxtConfig({
         public: keysWithSameValue([
             'beUrl',
             'instanceName',
-            'footerText'
+            'footerText',
+            'tiebaImageProxy'
         ], '')
     }
 });
