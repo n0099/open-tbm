@@ -1,14 +1,13 @@
 // eslint-disable-next-line import-x/extensions
 import { withNuxt } from './.nuxt/eslint.config.mjs';
 import * as vueESLintParser from 'vue-eslint-parser';
-import vueEslintConfigTypeScript from '@vue/eslint-config-typescript';
+import { defineConfigWithVueTs, vueTsConfigs } from '@vue/eslint-config-typescript';
 import pluginVue from 'eslint-plugin-vue';
-import { FlatCompat } from '@eslint/eslintrc';
 import eslintJs from '@eslint/js';
 import pluginStylistic from '@stylistic/eslint-plugin';
 import pluginTanstackQuery from '@tanstack/eslint-plugin-query';
 import * as typescriptESLintParser from '@typescript-eslint/parser';
-import pluginImportX from 'eslint-plugin-import-x';
+import { flatConfigs as pluginImportX } from 'eslint-plugin-import-x';
 import pluginPinia from 'eslint-plugin-pinia';
 import pluginUnicorn from 'eslint-plugin-unicorn';
 import * as typescriptESLintParserForExtraFiles from 'typescript-eslint-parser-for-extra-files';
@@ -535,22 +534,15 @@ const rules = [{ // as of eslint-plugin-unicorn@50.0.1
     },
 }];
 
-// https://github.com/eslint/eslint/issues/18093
-// https://github.com/eslint/eslint/issues/18391
-const compat = new FlatCompat();
-
-export default withNuxt(
+export default withNuxt(defineConfigWithVueTs(
     eslintJs.configs.recommended,
-    ...pluginVue.configs['flat/recommended'],
-    ...vueEslintConfigTypeScript({ extends: ['recommended'] }),
-    ...compat.extends( // https://github.com/ota-meshi/typescript-eslint-parser-for-extra-files/issues/95#issuecomment-2148604881
-        'plugin:@typescript-eslint/strict-type-checked',
-        'plugin:@typescript-eslint/stylistic-type-checked',
-    ),
-    pluginImportX.flatConfigs.recommended,
-    pluginImportX.flatConfigs.typescript,
+    pluginVue.configs['flat/recommended'],
+    vueTsConfigs.strictTypeChecked,
+    vueTsConfigs.stylisticTypeChecked,
+    pluginImportX.recommended,
+    pluginImportX.typescript,
     ...pluginTanstackQuery.configs['flat/recommended'],
-    pluginUnicorn.configs['flat/recommended'],
+    pluginUnicorn.configs.recommended,
     pluginPinia.configs['all-flat'],
     { languageOptions: { ecmaVersion: 'latest' } },
     { ignores: ['node_modules/', '.nuxt/', '.yarn/', '.pnp.*'] },
@@ -559,8 +551,7 @@ export default withNuxt(
         languageOptions: {
             parser: typescriptESLintParser,
             parserOptions: {
-                EXPERIMENTAL_useProjectService: true, // https://github.com/typescript-eslint/typescript-eslint/issues/2094
-                project: true, // https://typescript-eslint.io/blog/parser-options-project-true/
+                projectService: true, // https://typescript-eslint.io/blog/announcing-typescript-eslint-v8-beta/#project-service
                 tsconfigRootDir: import.meta.dirname, // https://github.com/typescript-eslint/typescript-eslint/issues/251
             },
         },
@@ -586,7 +577,7 @@ export default withNuxt(
             parser: vueESLintParser,
             parserOptions: {
                 parser: typescriptESLintParserForExtraFiles,
-                project: true, // https://typescript-eslint.io/blog/parser-options-project-true/
+                projectService: true, // https://typescript-eslint.io/blog/announcing-typescript-eslint-v8-beta/#project-service
                 tsconfigRootDir: import.meta.dirname, // https://github.com/typescript-eslint/typescript-eslint/issues/251
             },
         },
@@ -596,7 +587,7 @@ export default withNuxt(
         languageOptions: {
             parser: typescriptESLintParser,
             parserOptions: {
-                project: ['./tsconfig.json', './tsconfig.node.json'], // https://typescript-eslint.io/blog/parser-options-project-true/
+                projectService: true, // https://typescript-eslint.io/blog/announcing-typescript-eslint-v8-beta/#project-service
             },
         },
     },
@@ -612,4 +603,4 @@ export default withNuxt(
             '@typescript-eslint/no-unsafe-member-access': 'off',
         },
     },
-);
+));

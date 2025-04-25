@@ -99,16 +99,22 @@ const useApiWithCursor = <
     type Data = InfiniteData<TResponse, Cursor>;
     type QueryKey = [string, TQueryParam | undefined];
     type QueryOptions = UseInfiniteQueryOptions<TResponse, ApiErrorClass, Data, TResponse, QueryKey, Cursor>;
+    type PartialMaybeRef<TMaybeRef> = TMaybeRef extends ComputedRef
+        ? ComputedRef<Partial<TMaybeRef['value']>>
+        : TMaybeRef extends Ref
+            ? Ref<Partial<TMaybeRef['value']>>
+            : Partial<TMaybeRef>;
 
     return (
         queryParam?: Ref<TQueryParam | undefined>,
-        options?: Partial<QueryOptions>
+        options?: PartialMaybeRef<QueryOptions>
     ) => {
         const config = useRuntimeConfig().public;
         const clientRequestHeaders = useRequestHeaders(['Authorization']);
         type TQueryParamWithCursor = TQueryParam & { cursor?: Cursor };
+        type UseInfiniteQueryOptions = Parameters<typeof useInfiniteQuery<TResponse, ApiErrorClass, Data, QueryKey, Cursor>>[0];
         const ret = useInfiniteQuery<TResponse, ApiErrorClass, Data, QueryKey, Cursor>({
-            queryKey: [endpoint, queryParam] as QueryOptions['queryKey'],
+            queryKey: [endpoint, queryParam],
             queryFn: async ({ pageParam }) =>
                 queryFunction<TResponse>(
                     config,
@@ -119,9 +125,9 @@ const useApiWithCursor = <
             getNextPageParam: lastPage => lastPage.pages.nextCursor,
             initialPageParam: '',
             ...options
-        });
+        } as UseInfiniteQueryOptions);
         onServerPrefetch(async () => { // https://github.com/TanStack/query/issues/7609
-            const enabled = options?.enabled;
+            const enabled = unref(options)?.enabled;
             if ((_.isFunction(enabled)
                 ? (enabled as Exclude<Enabled<TResponse, ApiErrorClass, Data, QueryKey>, boolean>)(
                     new QueryObserver<TResponse, ApiErrorClass, Data, TResponse, QueryKey>(
