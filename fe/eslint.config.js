@@ -176,6 +176,7 @@ const rules = [{ // as of eslint-plugin-unicorn@50.0.1
 
         // https://github.com/eslint-stylistic/eslint-stylistic/issues/249
         // '@stylistic/type-annotation-spacing': 'error',
+        '@stylistic/multiline-comment-style': ['error', 'separate-lines'],
     },
 }, { // as of eslint@8.56.0
     optout: {
@@ -238,7 +239,6 @@ const rules = [{ // as of eslint-plugin-unicorn@50.0.1
         'capitalized-comments': ['error', 'never'],
         'consistent-this': 'error',
         'func-name-matching': 'error',
-        'multiline-comment-style': ['error', 'separate-lines'],
         'new-cap': 'error',
 
         // 'newline-per-chained-call': ['error', { 'ignoreChainWithDepth': 3 }],
@@ -258,7 +258,6 @@ const rules = [{ // as of eslint-plugin-unicorn@50.0.1
 
         // 'sort-keys': ['error', 'asc', { 'caseSensitive': false, 'natural': true }],
         'sort-vars': ['error', { ignoreCase: true }],
-        'no-new-symbol': 'error',
         'no-useless-computed-key': ['error', { enforceForClassMembers: true }],
         'no-useless-rename': 'error',
         'no-var': 'error',
@@ -293,8 +292,6 @@ const rules = [{ // as of eslint-plugin-unicorn@50.0.1
         '@typescript-eslint/no-invalid-this': 'error',
         'no-loop-func': 'off',
         '@typescript-eslint/no-loop-func': 'error',
-        'no-loss-of-precision': 'off',
-        '@typescript-eslint/no-loss-of-precision': 'error',
         'no-redeclare': 'off',
         '@typescript-eslint/no-redeclare': 'error',
 
@@ -307,7 +304,6 @@ const rules = [{ // as of eslint-plugin-unicorn@50.0.1
         '@typescript-eslint/no-use-before-define': 'error',
         'no-useless-constructor': 'off',
         '@typescript-eslint/no-useless-constructor': 'error',
-        'no-return-await': 'off',
         '@typescript-eslint/return-await': 'error',
         'require-await': 'off',
         '@typescript-eslint/require-await': 'error',
@@ -381,7 +377,6 @@ const rules = [{ // as of eslint-plugin-unicorn@50.0.1
         '@typescript-eslint/prefer-readonly': 'error',
         '@typescript-eslint/prefer-reduce-type-parameter': 'error',
         '@typescript-eslint/prefer-string-starts-ends-with': 'error',
-        '@typescript-eslint/prefer-ts-expect-error': 'error',
         '@typescript-eslint/promise-function-async': 'error',
         '@typescript-eslint/require-array-sort-compare': 'error',
         '@typescript-eslint/strict-boolean-expressions': 'error',
@@ -447,7 +442,6 @@ const rules = [{ // as of eslint-plugin-unicorn@50.0.1
         'vue/html-comment-indent': ['error', 4],
         'vue/no-duplicate-attr-inheritance': 'error',
         'vue/no-empty-component-block': 'error',
-        'vue/no-invalid-model-keys': 'error',
         'vue/no-multiple-objects-in-class': 'error',
 
         // https://github.com/nuxt/nuxt/issues/15015

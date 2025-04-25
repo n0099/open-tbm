@@ -3,9 +3,8 @@ import { keysWithSameValue } from './src/utils';
 import { analyzer } from 'vite-bundle-analyzer';
 
 export default defineNuxtConfig({
-    compatibilityDate: '2024-07-04',
+    compatibilityDate: '2025-04-24',
     devServer: { https: true },
-    devtools: { enabled: false },
     srcDir: 'src',
     imports: { dirs: ['api/**', 'utils/**'] },
     modules: [
@@ -31,9 +30,14 @@ export default defineNuxtConfig({
         }
     },
     site: {
-        name: `open-tbm @ ${process.env.NUXT_PUBLIC_INSTANCE_NAME}`,
+        name: `open-tbm${
+            process.env.NUXT_PUBLIC_INSTANCE_NAME === undefined
+                ? ''
+                : ` @ ${process.env.NUXT_PUBLIC_INSTANCE_NAME}`
+        }`,
         defaultLocale: 'zh'
     },
+    robots: { robotsTxt: false }, // https://github.com/nuxt-modules/robots/commit/c8958975b09d0e9aa3651505d023be43b0da4ec2
     sitemap: {
         sitemaps: true,
         appendSitemaps: [{ sitemap: `${process.env.NUXT_PUBLIC_BE_URL}/sitemaps/forums` }]

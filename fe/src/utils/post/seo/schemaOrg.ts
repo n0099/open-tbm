@@ -3,11 +3,11 @@ import type { InfiniteData } from '@tanstack/vue-query';
 import { DateTime } from 'luxon';
 
 type PartialPostPageProvision = Pick<PostPageProvision, 'getUser'>;
-const resolvePath = createSitePathResolver({ withBase: true });
 
 // https://developers.google.com/search/docs/appearance/structured-data/discussion-forum
 export const usePostsSchemaOrg = (data: Ref<InfiniteData<ApiPosts['response']> | undefined>) => {
     const router = useRouter();
+    const resolvePath = createSitePathResolver({ withBase: true });
     const definePostComment = <T extends Post>(post: T, postIDKey: keyof T & PostIDOf<T>): Comment => ({
         /* eslint-disable @typescript-eslint/naming-convention */
         '@type': 'Comment',
