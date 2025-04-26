@@ -1,0 +1,13 @@
+<Solution>
+    <Folder Name="/Solution Items/">
+        <File Path=".editorconfig" />
+        <File Path=".gitignore" />
+        <File Path="stylecop.json" />
+        <File Path="GlobalSuppressions.cs" />
+        <File Path="Directory.Build.props" />
+    </Folder>
+    <Project Path="tbClient\TbClient.csproj" />
+    <Project Path="shared\tbm.Shared.csproj" />
+    <Project Path="crawler\tbm.Crawler.csproj" />
+    <Project Path="imagePipeline\tbm.ImagePipeline.csproj" />
+</Solution>
