@@ -23,7 +23,7 @@ class SerializeToJsonTest extends KernelTestCase
     }
 
     #[DataProvider('provide')]
-    public function test($provided, string $expected)
+    public function test($provided, string $expected): void
     {
         $event = new ViewEvent(self::$kernel, new Request(), HttpKernelInterface::MAIN_REQUEST, $provided);
         ($this->sut)($event);
