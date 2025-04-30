@@ -10,5 +10,7 @@ readonly class SubReply extends PostKeyWithParent
         public int $postId,
         public string $orderByFieldName,
         public mixed $orderByFieldValue,
-    ) {}
+    ) {
+        parent::__construct($this->parentPostId, $this->postId, $this->orderByFieldName, $this->$orderByFieldValue);
+    }
 }

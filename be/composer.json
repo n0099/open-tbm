@@ -29,6 +29,8 @@
         "thecodingmachine/safe": "^2.5.0"
     },
     "require-dev": {
+        "dama/doctrine-test-bundle": "^8.3",
+        "doctrine/doctrine-fixtures-bundle": "^4.1",
         "friendsofphp/php-cs-fixer": "^3.75.0",
         "infection/infection": "^0.27.11",
         "laravel/pint": "^1.22.0",

@@ -9,5 +9,7 @@ abstract readonly class PostKeyWithParent extends BasePostKey
         public int $postId,
         public string $orderByFieldName,
         public mixed $orderByFieldValue,
-    ) {}
+    ) {
+        parent::__construct($this->postId, $this->orderByFieldName, $this->$orderByFieldValue);
+    }
 }
