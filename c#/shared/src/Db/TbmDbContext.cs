@@ -129,19 +129,11 @@ public abstract class TbmDbContext(ILogger<TbmDbContext> logger) : DbContext
                 "RETURNING xmin",
                 "RETURNING pg_current_xact_id()::xid");
     }
-}
 
-public class TbmDbContext<TModelCacheKeyFactory>(ILogger<TbmDbContext<TModelCacheKeyFactory>> logger)
-    : TbmDbContext(logger)
-    where TModelCacheKeyFactory : class, IModelCacheKeyFactory
-{
     // ReSharper disable once UnusedAutoPropertyAccessor.Global
     public required IConfiguration Config { private get; init; }
     public DbSet<ImageInReply> ImageInReplies => Set<ImageInReply>();
     public DbSet<ReplyContentImage> ReplyContentImages => Set<ReplyContentImage>();
-
-    protected static void OnModelCreatingWithFid(ModelBuilder b, uint fid) =>
-        b.Entity<ReplyContentImage>().ToTable($"tbmc_f{fid}_reply_content_image");
 
     [SuppressMessage("Naming", "CA1725:Parameter names should match base declaration")]
     [SuppressMessage("Critical Code Smell", "S927:Parameter names should match base declaration and other partial definitions")]
@@ -149,7 +141,6 @@ public class TbmDbContext<TModelCacheKeyFactory>(ILogger<TbmDbContext<TModelCach
     protected override void OnConfiguring(DbContextOptionsBuilder options)
     {
         options.UseNpgsql(Config.GetConnectionString("Main"), OnConfiguringNpgsql)
-            .ReplaceService<IModelCacheKeyFactory, TModelCacheKeyFactory>()
             .ReplaceService<IRelationalTransactionFactory, NoSavePointTransactionFactory>()
             .AddInterceptors(UseCurrentXactIdAsConcurrencyTokenCommandInterceptor.Instance)
             .UseCamelCaseNamingConvention();
@@ -171,6 +162,7 @@ public class TbmDbContext<TModelCacheKeyFactory>(ILogger<TbmDbContext<TModelCach
     protected override void OnModelCreating(ModelBuilder b)
     {
         b.Entity<ImageInReply>().ToTable("tbmi_imageInReply");
+        b.Entity<ReplyContentImage>().ToTable("tbmc_reply_content_image");
         b.Entity<ReplyContentImage>().HasKey(e => new {e.Pid, e.ImageId});
         b.Entity<ReplyContentImage>().HasOne(e => e.ImageInReply).WithMany();
     }

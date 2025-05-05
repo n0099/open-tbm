@@ -4,6 +4,7 @@ namespace tbm.Crawler.Db.Post;
 
 public class ThreadPost : TimestampedEntity, IPost
 {
+    public uint Fid { get; set; }
     [Key] public ulong Tid { get; set; }
     public long AuthorUid { get; set; }
     public uint? LastSeenAt { get; set; }

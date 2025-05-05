@@ -1,5 +1,3 @@
-using Microsoft.EntityFrameworkCore.Infrastructure;
-using Npgsql;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Infrastructure;
 using static tbm.Crawler.Db.Revision.Splitting.ReplyRevision;
 using static tbm.Crawler.Db.Revision.Splitting.SubReplyRevision;
@@ -8,13 +6,11 @@ using static tbm.Crawler.Db.Revision.Splitting.UserRevision;
 
 namespace tbm.Crawler.Db;
 
-public class CrawlerDbContext(ILogger<CrawlerDbContext> logger, Fid fid = 0)
-    : TbmDbContext<CrawlerDbContext.ModelCacheKeyFactory>(logger)
+public class CrawlerDbContext(ILogger<CrawlerDbContext> logger)
+    : TbmDbContext(logger)
 {
-    public delegate CrawlerDbContext NewDefault();
-    public delegate CrawlerDbContext New(Fid fid);
+    public delegate CrawlerDbContext New();
 
-    public Fid Fid { get; } = fid;
     public DbSet<User> Users => Set<User>();
     public DbSet<LatestReplier> LatestRepliers => Set<LatestReplier>();
     public DbSet<LatestReplierRevision> LatestReplierRevisions => Set<LatestReplierRevision>();
@@ -68,20 +64,19 @@ public class CrawlerDbContext(ILogger<CrawlerDbContext> logger, Fid fid = 0)
     protected override void OnModelCreating(ModelBuilder b)
     {
         base.OnModelCreating(b);
-        OnModelCreatingWithFid(b, Fid);
         b.Entity<User>().ToTable("tbmc_user");
         b.Entity<LatestReplier>().ToTable("tbmc_latestReplier");
         b.Entity<LatestReplier>().Property(e => e.DisplayName).HasConversion<byte[]>();
         b.Entity<LatestReplierRevision>().ToTable("tbmcr_latestReplier").HasKey(e => new {e.TakenAt, e.Uid});
         b.Entity<LatestReplierRevision>().Property(e => e.DisplayName).HasConversion<byte[]>();
-        b.Entity<ThreadPost>().ToTable($"tbmc_f{Fid}_thread")
+        b.Entity<ThreadPost>().ToTable("tbmc_thread")
             .HasOne<LatestReplier>(e => e.LatestReplier).WithMany().HasForeignKey(e => e.LatestReplierId);
         b.Entity<ThreadMissingFirstReply>().ToTable("tbmc_thread_missingFirstReply");
-        b.Entity<ReplyPost>().ToTable($"tbmc_f{Fid}_reply");
-        b.Entity<ReplyContent>().ToTable($"tbmc_f{Fid}_reply_content");
+        b.Entity<ReplyPost>().ToTable("tbmc_reply");
+        b.Entity<ReplyContent>().ToTable("tbmc_reply_content");
         b.Entity<ReplySignature>().ToTable("tbmc_reply_signature").HasKey(e => new {e.SignatureId, e.XxHash3});
-        b.Entity<SubReplyPost>().ToTable($"tbmc_f{Fid}_subReply");
-        b.Entity<SubReplyContent>().ToTable($"tbmc_f{Fid}_subReply_content");
+        b.Entity<SubReplyPost>().ToTable("tbmc_subReply");
+        b.Entity<SubReplyContent>().ToTable("tbmc_subReply_content");
 
         _ = new RevisionWithSplitting<BaseThreadRevision>
                 .ModelBuilder(b, "tbmcr_thread", e => new {e.Tid, e.TakenAt, e.DuplicateIndex})
@@ -120,13 +115,4 @@ public class CrawlerDbContext(ILogger<CrawlerDbContext> logger, Fid fid = 0)
 
     protected override void OnConfiguringNpgsql(NpgsqlDbContextOptionsBuilder builder) =>
         builder.MapEnum<PostType>("tbmcr_triggeredBy", nameTranslator: NpgsqlCamelCaseNameTranslator.Instance);
-
-    public class ModelCacheKeyFactory : IModelCacheKeyFactory
-    { // https://stackoverflow.com/questions/51864015/entity-framework-map-model-class-to-table-at-run-time/51899590#51899590
-        // https://docs.microsoft.com/en-us/ef/core/modeling/dynamic-model
-        public object Create(DbContext context, bool designTime) =>
-            context is CrawlerDbContext dbContext
-                ? (context.GetType(), dbContext.Fid, designTime)
-                : context.GetType();
-    }
 }

@@ -3,6 +3,7 @@ namespace tbm.Crawler.Db.Post;
 
 public class ReplyPost : TimestampedEntity, IPost
 {
+    public uint Fid { get; set; }
     public ulong Tid { get; set; }
     public long AuthorUid { get; set; }
     public uint? LastSeenAt { get; set; }
