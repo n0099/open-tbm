@@ -219,9 +219,9 @@ public class ImageBatchConsumingWorker(
                 return imageKeysWithMatrix.IntersectBy(
                     from replyContentImage in db.ReplyContentImages.AsNoTracking()
                     where replyContentImage.Fid == fid
-                        && imageKeysWithMatrix
-                            .Select(imageKeyWithMatrix => imageKeyWithMatrix.ImageId)
-                            .Contains(replyContentImage.ImageId)
+                    where imageKeysWithMatrix
+                        .Select(imageKeyWithMatrix => imageKeyWithMatrix.ImageId)
+                        .Contains(replyContentImage.ImageId)
                     select replyContentImage.ImageId,
                     imageKeyWithMatrix => imageKeyWithMatrix.ImageId);
             }

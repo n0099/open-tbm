@@ -97,7 +97,8 @@ public partial class SaverWithRevision<TBaseRevision, TRevisionId>
             // for all fields of TimestampedEntity and IPost.LastSeenAt
             // this will also affect the entity instance which existingEntity references to it
             entityEntry.Properties
-                .Where(prop => prop.IsModified && IsTimestampingFieldName(prop.Metadata.Name))
+                .Where(prop => prop.IsModified)
+                .Where(prop => IsTimestampingFieldName(prop.Metadata.Name))
                 .ForEach(prop => prop.IsModified = false);
         });
 
