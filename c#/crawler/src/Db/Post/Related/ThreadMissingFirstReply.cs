@@ -5,6 +5,7 @@ public class ThreadMissingFirstReply : RowVersionedEntity
 {
     [Key] [Column(TypeName = "bigint")]
     public ulong Tid { get; set; }
+    [Column(TypeName = "bigint")]
     public ulong? Pid { get; set; }
     public byte[]? Excerpt { get; set; }
     public uint? LastSeenAt { get; set; }

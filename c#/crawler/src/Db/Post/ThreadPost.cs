@@ -4,7 +4,8 @@ namespace tbm.Crawler.Db.Post;
 
 public class ThreadPost : TimestampedEntity, IPost
 {
-    [Key] public ulong Tid { get; set; }
+    [Key] [Column(TypeName = "bigint")]
+    public ulong Tid { get; set; }
     public long AuthorUid { get; set; }
     public uint? LastSeenAt { get; set; }
     [Column(TypeName = "bigint")]

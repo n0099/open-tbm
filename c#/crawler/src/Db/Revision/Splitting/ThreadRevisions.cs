@@ -11,6 +11,7 @@ public abstract class BaseThreadRevision : RevisionWithSplitting<BaseThreadRevis
 
 public class ThreadRevision : BaseThreadRevision
 {
+    [Column(TypeName = "bigint")]
     public ulong? ThreadType { get; set; }
     public string? StickyType { get; set; }
     public string? TopicType { get; set; }
