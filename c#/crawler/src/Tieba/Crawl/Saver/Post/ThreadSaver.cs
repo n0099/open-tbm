@@ -2,12 +2,13 @@ namespace tbm.Crawler.Tieba.Crawl.Saver.Post;
 
 public partial class ThreadSaver(
     ILogger<ThreadSaver> logger,
+    Fid fid,
     ConcurrentDictionary<Tid, ThreadPost.Parsed> posts,
     ThreadLatestReplierSaver threadLatestReplierSaver)
     : PostSaver<ThreadPost, ThreadPost.Parsed, BaseThreadRevision, Tid>(
-        logger, posts, PostType.Thread)
+        logger, fid, posts, PostType.Thread)
 {
-    public delegate ThreadSaver New(ConcurrentDictionary<Tid, ThreadPost.Parsed> posts);
+    public delegate ThreadSaver New(Fid fid, ConcurrentDictionary<Tid, ThreadPost.Parsed> posts);
 
     public override SaverChangeSet<ThreadPost, ThreadPost.Parsed> Save(CrawlerDbContext db) => Save(db,
         th => th.Tid,

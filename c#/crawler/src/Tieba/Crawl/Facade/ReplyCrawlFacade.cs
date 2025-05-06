@@ -24,7 +24,11 @@ public class ReplyCrawlFacade(
         CrawlRequestFlag flag,
         IReadOnlyDictionary<PostId, ReplyPost.Parsed> parsedPosts)
     {
-        parsedPosts.Values.ForEach(r => r.Tid = tid);
+        foreach (var reply in parsedPosts.Values)
+        {
+            reply.Fid = Fid;
+            reply.Tid = tid;
+        }
         var data = response.Data;
         UserParser.Parse(data.UserList.Where(u => !(u.LevelId == 0 && u.AlaInfo?.LiveStatus != 0)));
         if (data.Page.CurrentPage == 1)

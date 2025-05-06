@@ -23,6 +23,7 @@ public class ThreadCrawlFacade(
         CrawlRequestFlag flag,
         IReadOnlyDictionary<PostId, ThreadPost.Parsed> parsedPosts)
     {
+        parsedPosts.Values.ForEach(th => th.Fid = Fid);
         var data = response.Data;
         if (flag == CrawlRequestFlag.ThreadClientVersion602) FillFromRequestingWith602(data.ThreadList);
         if (flag != CrawlRequestFlag.None) return;

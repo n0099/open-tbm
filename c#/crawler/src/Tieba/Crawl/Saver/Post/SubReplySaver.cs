@@ -2,11 +2,12 @@ namespace tbm.Crawler.Tieba.Crawl.Saver.Post;
 
 public partial class SubReplySaver(
     ILogger<SubReplySaver> logger,
+    Fid fid,
     ConcurrentDictionary<PostId, SubReplyPost.Parsed> posts)
     : PostSaver<SubReplyPost, SubReplyPost.Parsed, BaseSubReplyRevision, Spid>(
-        logger, posts, PostType.SubReply)
+        logger, fid, posts, PostType.SubReply)
 {
-    public delegate SubReplySaver New(ConcurrentDictionary<PostId, SubReplyPost.Parsed> posts);
+    public delegate SubReplySaver New(Fid fid, ConcurrentDictionary<PostId, SubReplyPost.Parsed> posts);
 
     public override SaverChangeSet<SubReplyPost, SubReplyPost.Parsed> Save(CrawlerDbContext db)
     {
@@ -15,7 +16,7 @@ public partial class SubReplySaver(
             posts => posts.Where(sr => Posts.Keys.Contains(sr.Spid)));
 
         db.SubReplyContents.AddRange(changeSet.NewlyAdded.Select(sr => // https://github.com/dotnet/efcore/issues/33945
-            new SubReplyContent {Spid = sr.Spid, ProtoBufBytes = sr.Content}));
+            new SubReplyContent {Fid = Fid, Spid = sr.Spid, ProtoBufBytes = sr.Content}));
 
         return changeSet;
     }
