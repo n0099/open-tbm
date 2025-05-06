@@ -45,7 +45,7 @@ public abstract class CrawlFacade<TPostEntity, TParsedPost, TResponse, TPostProt
         var retryTimes = 0;
         while (true)
         {
-            using var db = DbContextFactory(Fid); // dispose after each loop when retrying
+            using var db = DbContextFactory(); // dispose after each loop when retrying
             using var transaction = db.Database.BeginTransaction(IsolationLevel.ReadCommitted);
 
             var postSaver = postSaverFactory(Posts);

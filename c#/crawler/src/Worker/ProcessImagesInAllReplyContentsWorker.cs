@@ -4,7 +4,6 @@ namespace tbm.Crawler.Worker;
 public class ProcessImagesInAllReplyContentsWorker(
     ILogger<ProcessImagesInAllReplyContentsWorker> logger,
     IConfiguration config,
-    Func<Owned<CrawlerDbContext.NewDefault>> dbContextDefaultFactory,
     Func<Owned<CrawlerDbContext.New>> dbContextFactory,
     ReplyContentImageSaver replyContentImageSaver)
     : TransformEntityWorker<CrawlerDbContext, ReplyContent, ReplyContent, Pid>(logger)
@@ -16,19 +15,20 @@ public class ProcessImagesInAllReplyContentsWorker(
             .GetValue("SaveWritingEntitiesBatchSize", 1000);
         var stopwatch = new Stopwatch();
         stopwatch.Start();
-        await using var dbDefaultFactory = dbContextDefaultFactory();
-        var db = dbDefaultFactory.Value();
+        await using var dbFactoryForums = dbContextFactory();
+        var db = dbFactoryForums.Value();
         foreach (var fid in from e in db.Forums select e.Fid)
         {
             logger.LogInformation("Simplify images in reply contents of fid {} started", fid);
             var replyContentsKeyByPid = new Dictionary<Pid, RepeatedField<Content>>(saveWritingEntitiesBatchSize);
             await using var dbFactory = dbContextFactory();
             await Transform(
-                () => dbFactory.Value(fid),
+                () => dbFactory.Value(),
                 saveWritingEntitiesBatchSize,
                 readingEntity => readingEntity.Pid,
                 readingEntity => new()
                 {
+                    Fid = fid,
                     Pid = readingEntity.Pid,
                     ProtoBufBytes = readingEntity.ProtoBufBytes,
                     Version = readingEntity.Version
@@ -57,6 +57,7 @@ public class ProcessImagesInAllReplyContentsWorker(
                     _ = replyContentImageSaver.Save(writingDb,
                         replyContentsKeyByPid.Select(pair => new ReplyPost.Parsed
                         {
+                            Fid = fid,
                             Pid = pair.Key,
                             Content = null!,
                             ContentsProtoBuf = pair.Value

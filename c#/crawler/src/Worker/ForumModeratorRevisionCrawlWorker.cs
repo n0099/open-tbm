@@ -6,14 +6,14 @@ using IConfiguration = Microsoft.Extensions.Configuration.IConfiguration;
 namespace tbm.Crawler.Worker;
 
 public class ForumModeratorRevisionCrawlWorker
-    (IConfiguration config, Func<Owned<CrawlerDbContext.NewDefault>> dbContextDefaultFactory)
+    (IConfiguration config, Func<Owned<CrawlerDbContext.New>> dbContextFactory)
     : CyclicCrawlWorker(shouldRunAtFirst: false)
 {
     private readonly IConfiguration _config = config.GetSection("CrawlForumModeratorRevision");
 
     protected override async Task DoWork(CancellationToken stoppingToken)
     {
-        await using var dbFactory = dbContextDefaultFactory();
+        await using var dbFactory = dbContextFactory();
         foreach (var forum in
                  from e in dbFactory.Value().Forums.AsNoTracking()
                  where e.IsCrawling
@@ -58,7 +58,7 @@ public class ForumModeratorRevisionCrawlWorker
         IEnumerable<(string Type, string Portrait)> moderators,
         CancellationToken stoppingToken = default)
     {
-        await using var dbFactory = dbContextDefaultFactory();
+        await using var dbFactory = dbContextFactory();
         var db = dbFactory.Value();
         await using var transaction = await db.Database.BeginTransactionAsync
             (IsolationLevel.ReadCommitted, stoppingToken);

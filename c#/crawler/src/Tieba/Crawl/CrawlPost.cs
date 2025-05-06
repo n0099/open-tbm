@@ -30,8 +30,9 @@ public class CrawlPost(
             // and needs a full table scan on db
             // https://stackoverflow.com/questions/341264/max-or-default
             await using var dbFactory = dbContextFactory();
-            maxLatestReplyPostedAtOccurInPreviousCrawl = dbFactory.Value(fid)
-                .Threads.Max(th => (Time?)th.LatestReplyPostedAt) ?? Time.MaxValue;
+            maxLatestReplyPostedAtOccurInPreviousCrawl = dbFactory.Value().Threads
+                .Where(t => t.Fid == fid)
+                .Max(th => (Time?)th.LatestReplyPostedAt) ?? Time.MaxValue;
         }
         do
         {
@@ -148,9 +149,10 @@ public class CrawlPost(
         if (newEntity.Pid == null && newEntity.Excerpt == null) return; // skip if all fields are empty
 
         using var dbFactory = dbContextFactory();
-        var db = dbFactory.Value(fid);
+        var db = dbFactory.Value();
         using var transaction = db.Database.BeginTransaction(IsolationLevel.ReadCommitted);
         if ((from r in db.Replies.AsNoTracking()
+            where r.Fid == fid
             where r.Pid == thread.FirstReplyPid
             select r.Pid)
             .Any()) return; // skip if the first reply of parent thread had already saved

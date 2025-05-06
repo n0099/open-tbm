@@ -7,16 +7,15 @@ public class PushAllPostContentsIntoSonicWorker(
     ILogger<PushAllPostContentsIntoSonicWorker> logger,
     IConfiguration config,
     SonicPusher pusher,
-    Func<Owned<CrawlerDbContext.New>> dbContextFactory,
-    Func<Owned<CrawlerDbContext.NewDefault>> dbContextDefaultFactory)
+    Func<Owned<CrawlerDbContext.New>> dbContextFactory)
     : ErrorableWorker(shouldExitOnException: true, shouldExitOnFinish: true)
 {
     private readonly IConfiguration _config = config.GetSection("Sonic");
 
     protected override async Task DoWork(CancellationToken stoppingToken)
     {
-        await using var dbDefaultFactory = dbContextDefaultFactory();
-        var db = dbDefaultFactory.Value();
+        await using var dbFactory = dbContextFactory();
+        var db = dbFactory.Value();
 #pragma warning disable IDISP004 // Don't ignore created IDisposable
         var forumPostCountsTuples = (await db.Database.GetDbConnection()
 #pragma warning restore IDISP004 // Don't ignore created IDisposable
@@ -35,18 +34,18 @@ public class PushAllPostContentsIntoSonicWorker(
         foreach (var (index, (fid, replyCount, subReplyCount)) in forumPostCountsTuples.Index())
         {
             var forumIndex = (index + 1) * 2; // counting from one, including both reply and sub reply
-            await using var dbFactory = dbContextFactory();
-            var dbWithFid = dbFactory.Value(fid);
 
             _ = await pusher.Ingest.FlushBucketAsync($"{pusher.CollectionPrefix}replies_content", $"f{fid}");
+            var replyContents = (from r in db.ReplyContents where r.Fid == fid select r).AsNoTracking();
             pushedPostCount += PushPostContentsWithTiming(fid, forumIndex - 1, forumCount, "replies",
-                replyCount, totalPostCount, pushedPostCount, dbWithFid.ReplyContents.AsNoTracking(),
+                replyCount, totalPostCount, pushedPostCount, replyContents,
                 r => pusher.PushPost(fid, "replies", r.Pid, Helper.ParseThenUnwrapPostContent(r.ProtoBufBytes)), stoppingToken);
             await TriggerConsolidate();
 
             _ = await pusher.Ingest.FlushBucketAsync($"{pusher.CollectionPrefix}subReplies_content", $"f{fid}");
+            var subReplyContents = (from sr in db.SubReplyContents where sr.Fid == fid select sr).AsNoTracking();
             pushedPostCount += PushPostContentsWithTiming(fid, forumIndex, forumCount, "sub replies",
-                subReplyCount, totalPostCount, pushedPostCount, dbWithFid.SubReplyContents.AsNoTracking(),
+                subReplyCount, totalPostCount, pushedPostCount, subReplyContents,
                 sr => pusher.PushPost(fid, "subReplies", sr.Spid, Helper.ParseThenUnwrapPostContent(sr.ProtoBufBytes)), stoppingToken);
             await TriggerConsolidate();
 
