@@ -3,13 +3,14 @@ namespace tbm.ImagePipeline.Consumer;
 public class OcrConsumer(
     JointRecognizer.New recognizerFactory,
     FailedImageHandler failedImageHandler,
+    Fid fid,
     string script)
     : MatrixConsumer
 {
     private readonly JointRecognizer _recognizer = recognizerFactory(script);
     private readonly List<ImageOcrLine> _recognizedTextLines = [];
 
-    public delegate OcrConsumer New(string script);
+    public delegate OcrConsumer New(Fid fid, string script);
 
     public IEnumerable<ImageOcrLine> RecognizedTextLines => _recognizedTextLines.AsReadOnly();
 
@@ -41,6 +42,7 @@ public class OcrConsumer(
             .ToList();
         db.ImageOcrBoxes.AddRange(recognizedResults.Select(result => new ImageOcrBox
         {
+            Script = script,
             ImageId = result.ImageKey.ImageId,
             FrameIndex = result.ImageKey.FrameIndex,
             CenterPointX = result.TextBox.Center.X.RoundToUshort(),
@@ -61,6 +63,8 @@ public class OcrConsumer(
         var recognizedTextLines = _recognizer.GetRecognizedTextLines(recognizedResults)
             .Select(pair => new ImageOcrLine
             {
+                Fid = fid,
+                Script = script,
                 ImageId = pair.Key.ImageId,
                 FrameIndex = pair.Key.FrameIndex,
                 TextLines = pair.Value
