@@ -1,7 +1,6 @@
 using System.Data.Common;
 using System.Diagnostics.CodeAnalysis;
 using Microsoft.EntityFrameworkCore.Diagnostics;
-using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Configuration;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Infrastructure;

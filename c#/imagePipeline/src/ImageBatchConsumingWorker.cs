@@ -154,7 +154,7 @@ public class ImageBatchConsumingWorker(
             stoppingToken.ThrowIfCancellationRequested();
             var frameBytes = new Rgb24[frame.Width * frame.Height];
             frame.CopyPixelDataTo(frameBytes);
-            using var frameImage = Image.LoadPixelData<Rgb24>(frameBytes, frame.Width, frame.Height);
+            using var frameImage = Image.LoadPixelData(frameBytes, frame.Width, frame.Height);
             using var stream = new MemoryStream();
             frameImage.SaveAsPng(stream);
             ObjectDisposedException.ThrowIf(!stream.TryGetBuffer(out var buffer), stream);
