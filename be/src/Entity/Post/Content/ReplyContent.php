@@ -8,7 +8,7 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\Entity(repositoryClass: ReplyContentRepository::class)]
 class ReplyContent extends PostContent
 {
-    #[ORM\Column, ORM\Id] private int $pid;
+    #[ORM\Column(type: 'bigint'), ORM\Id] private int $pid;
 
     public function getPid(): int
     {

@@ -10,8 +10,8 @@ use TbClient\Post\Common\Lbs;
 #[ORM\Entity(repositoryClass: ReplyRepository::class)]
 class Reply extends Post
 {
-    #[ORM\Column] protected int $tid;
-    #[ORM\Column, ORM\Id] protected int $pid;
+    #[ORM\Column(type: 'bigint')] protected int $tid;
+    #[ORM\Column(type: 'bigint'), ORM\Id] protected int $pid;
     #[ORM\Column] protected int $floor;
     #[ORM\Column] protected ?int $subReplyCount;
     #[ORM\Column] protected ?int $isFold;

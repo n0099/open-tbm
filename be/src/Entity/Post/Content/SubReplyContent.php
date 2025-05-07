@@ -8,7 +8,7 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\Entity(repositoryClass: SubReplyContentRepository::class)]
 class SubReplyContent extends PostContent
 {
-    #[ORM\Column, ORM\Id] private int $spid;
+    #[ORM\Column(type: 'bigint'), ORM\Id] private int $spid;
 
     public function getSpid(): int
     {

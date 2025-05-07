@@ -11,8 +11,8 @@ use TbClient\Post\Common\Zan;
 #[ORM\Entity(repositoryClass: ThreadRepository::class)]
 class Thread extends Post
 {
-    #[ORM\Column, ORM\Id] protected int $tid;
-    #[ORM\Column] protected int $threadType;
+    #[ORM\Column(type: 'bigint'), ORM\Id] protected int $tid;
+    #[ORM\Column(type: 'bigint')] protected int $threadType;
     #[ORM\Column] protected ?string $stickyType;
     #[ORM\Column] protected ?string $topicType;
     #[ORM\Column] protected ?int $isGood;
