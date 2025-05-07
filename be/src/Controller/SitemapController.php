@@ -4,7 +4,7 @@ namespace App\Controller;
 
 use App\Helper;
 use App\Repository\ForumRepository;
-use App\Repository\Post\PostRepositoryFactory;
+use App\Repository\Post\ThreadRepository;
 use App\Validator\Validator;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -21,7 +21,7 @@ class SitemapController extends AbstractController
     public function __construct(
         private readonly CacheInterface $cache,
         private readonly ForumRepository $forumRepository,
-        private readonly PostRepositoryFactory $postRepositoryFactory,
+        private readonly ThreadRepository $threadRepository,
     ) {}
 
     #[Route('/sitemaps/forums')]
@@ -33,7 +33,7 @@ class SitemapController extends AbstractController
                 $item->expiresAfter(new \DateInterval('P1D'));
                 $threadsIdKeyByFid = collect($this->forumRepository->getOrderedForumsId())
                     ->mapWithKeys(fn(int $fid) => [
-                        $fid => $this->postRepositoryFactory->newThread($fid)->getThreadsIdByChunks(self::$maxUrls),
+                        $fid => $this->threadRepository->getThreadsIdByChunks(self::$maxUrls),
                     ])
                     ->toArray();
                 return $this->renderXml(
@@ -58,8 +58,7 @@ class SitemapController extends AbstractController
                 return $this->renderXml(
                     'sitemaps/threads.xml.twig',
                     [
-                        'threads' => $this->postRepositoryFactory->newThread($fid)
-                            ->getThreadsIdWithMaxPostedAtAfter($cursor, self::$maxUrls),
+                        'threads' => $this->threadRepository->getThreadsIdWithMaxPostedAtAfter($cursor, self::$maxUrls),
                         'base_url_fe' => $this->getParameter('app.base_url.fe'),
                     ],
                 );

@@ -12,7 +12,7 @@ use App\DTO\Post\Reply;
 use App\DTO\Post\SubReply;
 use App\DTO\Post\Thread;
 use App\Helper;
-use App\Repository\Post\PostRepositoryFactory;
+use App\Repository\Post\Content\ReplyContentRepository;
 use Illuminate\Support\Collection;
 use Symfony\Component\Stopwatch\Stopwatch;
 
@@ -30,7 +30,8 @@ readonly class PostsTree
 
     public function __construct(
         private Stopwatch $stopwatch,
-        private PostRepositoryFactory $postRepositoryFactory,
+        private ReplyContentRepository $replyContentRepository,
+        private SubReplyContentRepository $subReplyContentRepository,
     ) {}
 
     /**
@@ -78,15 +79,13 @@ readonly class PostsTree
 
         $this->stopwatch->start('parsePostContentProtoBufBytes');
         // not using one-to-one association due to relying on PostRepository->getTableNameSuffix()
-        $replyContents = collect($this->postRepositoryFactory
-            ->newReplyContent($result->fid)->getPostsContent($allRepliesId))
-                ->mapWithKeys(fn(ReplyContent $content) => [$content->getPid() => $content->getContent()]);
+        $replyContents = collect($this->replyContentRepository->getPostsContent($allRepliesId))
+            ->mapWithKeys(fn(ReplyContent $content) => [$content->getPid() => $content->getContent()]);
         $this->replies->each(fn(Reply $reply) =>
             $reply->setContent($replyContents->get($reply->getPid())));
 
-        $subReplyContents = collect($this->postRepositoryFactory
-            ->newSubReplyContent($result->fid)->getPostsContent($spids))
-                ->mapWithKeys(fn(SubReplyContent $content) => [$content->getSpid() => $content->getContent()]);
+        $subReplyContents = collect($this->subReplyContentRepository->getPostsContent($spids))
+            ->mapWithKeys(fn(SubReplyContent $content) => [$content->getSpid() => $content->getContent()]);
         $this->subReplies->each(fn(SubReply $subReply) =>
             $subReply->setContent($subReplyContents->get($subReply->getSpid())));
         $this->stopwatch->stop('parsePostContentProtoBufBytes');

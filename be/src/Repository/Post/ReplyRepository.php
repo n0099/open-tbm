@@ -4,25 +4,11 @@ namespace App\Repository\Post;
 
 use App\DTO\PostKey\Reply as ReplyKey;
 use App\Entity\Post\Reply;
-use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\QueryBuilder;
-use Doctrine\Persistence\ManagerRegistry;
-use Symfony\Component\DependencyInjection\Attribute\Exclude;
 
 /** @extends PostRepository<Reply> */
-#[Exclude]
 class ReplyRepository extends PostRepository
 {
-    public function __construct(ManagerRegistry $registry, EntityManagerInterface $entityManager, int $fid)
-    {
-        parent::__construct($registry, $entityManager, Reply::class, $fid);
-    }
-
-    protected function getTableNameSuffix(): string
-    {
-        return 'reply';
-    }
-
     public function selectPostKeyDTO(string $orderByField): QueryBuilder
     {
         return $this->createQueryBuilder('t')

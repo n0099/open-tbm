@@ -6,29 +6,11 @@ use App\DTO\PostKey\Thread as ThreadKey;
 use App\Entity\Post\Reply;
 use App\Entity\Post\SubReply;
 use App\Entity\Post\Thread;
-use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\QueryBuilder;
-use Doctrine\Persistence\ManagerRegistry;
-use Symfony\Component\DependencyInjection\Attribute\Exclude;
 
 /** @extends PostRepository<Thread> */
-#[Exclude]
 class ThreadRepository extends PostRepository
 {
-    public function __construct(
-        ManagerRegistry $registry,
-        EntityManagerInterface $entityManager,
-        int $fid,
-        private readonly PostRepositoryFactory $postRepositoryFactory,
-    ) {
-        parent::__construct($registry, $entityManager, Thread::class, $fid);
-    }
-
-    protected function getTableNameSuffix(): string
-    {
-        return 'thread';
-    }
-
     public function selectPostKeyDTO(string $orderByField): QueryBuilder
     {
         return $this->createQueryBuilder('t')
@@ -66,10 +48,8 @@ class ThreadRepository extends PostRepository
     {
         $entityManager = $this->getEntityManager();
         $threadTable = $entityManager->getClassMetadata(Thread::class)->getTableName();
-        $replyTable = $this->postRepositoryFactory->newReply($this->getFid())
-            ->getEntityManager()->getClassMetadata(Reply::class)->getTableName();
-        $subReplyTable = $this->postRepositoryFactory->newSubReply($this->getFid())
-            ->getEntityManager()->getClassMetadata(SubReply::class)->getTableName();
+        $replyTable = $entityManager->getClassMetadata(Reply::class)->getTableName();
+        $subReplyTable = $entityManager->getClassMetadata(SubReply::class)->getTableName();
         $statement = $entityManager->getConnection()->prepare(<<<"SQL"
             SELECT t.tid, GREATEST(t."postedAt", MAX(r."postedAt"), MAX(sr."postedAt")) AS "maxPostedAt"
             FROM $threadTable t

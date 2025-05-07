@@ -3,13 +3,13 @@
 namespace App\Repository\Post\Content;
 
 use App\Entity\Post\Content\PostContent;
-use App\Repository\RepositoryWithSplitFid;
+use App\Repository\BaseRepository;
 
 /**
  * @template T of PostContent
- * @extends RepositoryWithSplitFid<T>
+ * @extends BaseRepository<T>
  */
-abstract class PostContentRepository extends RepositoryWithSplitFid
+abstract class PostContentRepository extends BaseRepository
 {
     abstract public function getPostsContent(array|\ArrayAccess $postsId): array;
 }

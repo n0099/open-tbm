@@ -3,14 +3,14 @@
 namespace App\Repository\Post;
 
 use App\Entity\Post\Post;
-use App\Repository\RepositoryWithSplitFid;
+use App\Repository\BaseRepository;
 use Doctrine\ORM\QueryBuilder;
 
 /**
  * @template T of Post
- * @extends RepositoryWithSplitFid<T>
+ * @extends BaseRepository<T>
  */
-abstract class PostRepository extends RepositoryWithSplitFid
+abstract class PostRepository extends BaseRepository
 {
     abstract public function selectPostKeyDTO(string $orderByField): QueryBuilder;
 

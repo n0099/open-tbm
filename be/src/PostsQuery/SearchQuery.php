@@ -31,7 +31,7 @@ readonly class SearchQuery extends BaseQuery
         /** @var array<string, array> $cachedUserQueryResult key by param name */
         $cachedUserQueryResult = [];
         /** @var Collection<string, QueryBuilder> $queries key by post type */
-        $queries = collect($this->postRepositoryFactory->newForumPosts($fid))
+        $queries = collect($this->postRepositoryFactory->newForumPosts())
             ->only($params->getUniqueParamValue('postTypes'))
             ->map(function (PostRepository $repository) use ($params, &$cachedUserQueryResult): QueryBuilder {
                 $postQuery = $repository->selectPostKeyDTO($this->orderByField);

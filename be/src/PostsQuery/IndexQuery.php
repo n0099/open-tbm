@@ -52,13 +52,13 @@ readonly class IndexQuery extends BaseQuery
          * @return Collection<string, PostRepository> key by post type
          */
         $getQueryBuilders = fn(int $fid): Collection =>
-            collect($this->postRepositoryFactory->newForumPosts($fid))
+            collect($this->postRepositoryFactory->newForumPosts())
                 ->only($postTypes)
                 ->transform(fn(PostRepository $repository) => $repository->selectPostKeyDTO($this->orderByField));
         $getFidByPostIDParam = function (string $postIDName, int $postID): int {
             $postExistencesKeyByFid = collect($this->forumRepository->getOrderedForumsId())
                 ->mapWithKeys(fn(int $fid) => [$fid => $this->postRepositoryFactory
-                    ->new($fid, Helper::POST_ID_TO_TYPE[$postIDName])
+                    ->new(Helper::POST_ID_TO_TYPE[$postIDName])
                     ->isPostExists($postID)])
                 ->filter(fn(bool $isExists) => $isExists);
             Helper::abortAPIIf(50001, $postExistencesKeyByFid->count() > 1);
