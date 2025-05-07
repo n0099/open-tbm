@@ -15,15 +15,15 @@ class ReplyRepository extends PostRepository
             ->select('new ' . ReplyKey::class . "(t.tid, t.pid, '$orderByField', t.$orderByField)");
     }
 
-    public function getPosts(array|\ArrayAccess $postsId): array
+    public function getPosts(int $fid, array|\ArrayAccess $postsId): array
     {
-        $dql = 'SELECT t FROM App\Entity\Post\Reply t WHERE t.pid IN (:pid)';
-        return $this->getQueryResultWithSingleParam($dql, 'pid', $postsId);
+        $dql = 'SELECT t FROM App\Entity\Post\Reply t WHERE t.fid = :fid AND t.pid IN (:pid)';
+        return $this->getQueryResultWithParams($dql, ['fid' => $fid, 'pid' => $postsId]);
     }
 
-    public function isPostExists(int $postId): bool
+    public function isPostExists(int $fid, int $postId): bool
     {
-        $dql = 'SELECT 1 FROM App\Entity\Post\Reply t WHERE t.pid = :pid';
-        return $this->isEntityExists($dql, 'pid', $postId);
+        $dql = 'SELECT 1 FROM App\Entity\Post\Reply t WHERE t.fid = :fid AND t.pid = :pid';
+        return $this->isEntityExists($dql, ['fid' => $fid, 'pid' => $postId]);
     }
 }

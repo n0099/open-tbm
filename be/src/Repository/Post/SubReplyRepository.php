@@ -15,15 +15,15 @@ class SubReplyRepository extends PostRepository
             ->select('new ' . SubReplyKey::class . "(t.tid, t.pid, t.spid, '$orderByField', t.$orderByField)");
     }
 
-    public function getPosts(array|\ArrayAccess $postsId): array
+    public function getPosts(int $fid, array|\ArrayAccess $postsId): array
     {
-        $dql = 'SELECT t FROM App\Entity\Post\SubReply t WHERE t.spid IN (:spid)';
-        return $this->getQueryResultWithSingleParam($dql, 'spid', $postsId);
+        $dql = 'SELECT t FROM App\Entity\Post\SubReply t WHERE t.fid = :fid AND t.spid IN (:spid)';
+        return $this->getQueryResultWithParams($dql, ['fid' => $fid, 'spid' => $postsId]);
     }
 
-    public function isPostExists(int $postId): bool
+    public function isPostExists(int $fid, int $postId): bool
     {
-        $dql = 'SELECT 1 FROM App\Entity\Post\SubReply t WHERE t.spid = :spid';
-        return $this->isEntityExists($dql, 'spid', $postId);
+        $dql = 'SELECT 1 FROM App\Entity\Post\SubReply t WHERE t.fid = :fid AND t.spid = :spid';
+        return $this->isEntityExists($dql, ['fid' => $fid, 'spid' => $postId]);
     }
 }

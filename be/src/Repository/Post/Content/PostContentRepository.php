@@ -11,5 +11,5 @@ use App\Repository\BaseRepository;
  */
 abstract class PostContentRepository extends BaseRepository
 {
-    abstract public function getPostsContent(array|\ArrayAccess $postsId): array;
+    abstract public function getPostsContent(int $fid, array|\ArrayAccess $postsId): array;
 }

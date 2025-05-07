@@ -14,7 +14,7 @@ abstract class PostRepository extends BaseRepository
 {
     abstract public function selectPostKeyDTO(string $orderByField): QueryBuilder;
 
-    abstract public function getPosts(array|\ArrayAccess $postsId): array;
+    abstract public function getPosts(int $fid, array|\ArrayAccess $postsId): array;
 
-    abstract public function isPostExists(int $postId): bool;
+    abstract public function isPostExists(int $fid, int $postId): bool;
 }

@@ -28,7 +28,7 @@ class ForumRepository extends BaseRepository
     public function isForumExists(int $fid): bool
     {
         $dql = 'SELECT 1 FROM App\Entity\Forum t WHERE t.fid = :fid';
-        return $this->isEntityExists($dql, 'fid', $fid);
+        return $this->isEntityExists($dql, ['fid' => $fid]);
     }
 
     public function getForum(int $fid): array
