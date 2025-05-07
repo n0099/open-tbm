@@ -8,6 +8,7 @@ use Doctrine\ORM\Mapping as ORM;
 use TbClient\Post\Common\Lbs;
 
 #[ORM\Entity(repositoryClass: ReplyRepository::class)]
+#[ORM\Table(name: '"tbmc_reply"')]
 class Reply extends Post
 {
     #[ORM\Column] protected int $tid;
