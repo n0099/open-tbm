@@ -103,16 +103,14 @@ public static class ExtensionMethods
 
     private sealed class FilterByItemsExpressionReplacer(IDictionary<Expression, Expression> replaceMap) : ExpressionVisitor
     {
-        private readonly IDictionary<Expression, Expression> _replaceMap =
-            replaceMap ?? throw new ArgumentNullException(nameof(replaceMap));
-
+        [SuppressMessage("Correctness", "SS004:Implement Equals() and GetHashcode() methods for a type used in a collection.")]
         public static Expression Replace(Expression expr, Expression toReplace, Expression toExpr) =>
             new FilterByItemsExpressionReplacer(new Dictionary<Expression, Expression> {{toReplace, toExpr}})
                 .Visit(expr);
 
         [return: NotNullIfNotNull(nameof(node))]
         public override Expression? Visit(Expression? node) =>
-            node != null && _replaceMap.TryGetValue(node, out var replacement)
+            node != null && replaceMap.TryGetValue(node, out var replacement)
                 ? replacement
                 : base.Visit(node);
     }
