@@ -6,10 +6,10 @@ abstract readonly class PostKeyWithParent extends BasePostKey
 {
     public function __construct(
         public int $parentPostId,
-        public int $postId,
-        public string $orderByFieldName,
-        public mixed $orderByFieldValue,
+        int $postId,
+        string $orderByFieldName,
+        mixed $orderByFieldValue,
     ) {
-        parent::__construct($this->postId, $this->orderByFieldName, $this->orderByFieldValue);
+        parent::__construct($postId, $orderByFieldName, $orderByFieldValue);
     }
 }
