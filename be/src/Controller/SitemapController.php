@@ -33,7 +33,7 @@ class SitemapController extends AbstractController
                 $item->expiresAfter(new \DateInterval('P1D'));
                 $threadsIdKeyByFid = collect($this->forumRepository->getOrderedForumsId())
                     ->mapWithKeys(fn(int $fid) => [
-                        $fid => $this->threadRepository->getThreadsIdByChunks(self::$maxUrls),
+                        $fid => $this->threadRepository->getThreadsIdByChunks($fid, self::$maxUrls),
                     ])
                     ->toArray();
                 return $this->renderXml(
@@ -58,7 +58,7 @@ class SitemapController extends AbstractController
                 return $this->renderXml(
                     'sitemaps/threads.xml.twig',
                     [
-                        'threads' => $this->threadRepository->getThreadsIdWithMaxPostedAtAfter($cursor, self::$maxUrls),
+                        'threads' => $this->threadRepository->getThreadsIdWithMaxPostedAtAfter($fid, $cursor, self::$maxUrls),
                         'base_url_fe' => $this->getParameter('app.base_url.fe'),
                     ],
                 );
