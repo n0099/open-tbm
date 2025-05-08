@@ -7,10 +7,16 @@ use App\Entity\Post\Reply;
 use App\Entity\Post\SubReply;
 use App\Entity\Post\Thread;
 use Doctrine\ORM\QueryBuilder;
+use Doctrine\Persistence\ManagerRegistry;
 
 /** @extends PostRepository<Thread> */
 class ThreadRepository extends PostRepository
 {
+    public function __construct(ManagerRegistry $registry)
+    {
+        parent::__construct($registry, Thread::class);
+    }
+
     public function selectPostKeyDTO(string $orderByField): QueryBuilder
     {
         return $this->createQueryBuilder('t')
