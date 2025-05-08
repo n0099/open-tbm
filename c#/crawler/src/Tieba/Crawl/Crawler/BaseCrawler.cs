@@ -10,6 +10,7 @@ public abstract partial class BaseCrawler<TResponse, TPostProtoBuf>
     protected abstract IEnumerable<Request> GetRequestsForPage(Page page, CancellationToken stoppingToken = default);
 
     public record Response(TResponse Result, CrawlRequestFlag Flag = CrawlRequestFlag.None);
+
     // ReSharper disable once MemberHidesStaticFromOuterClass
     protected record Request(Task<TResponse> Response, CrawlRequestFlag Flag = CrawlRequestFlag.None);
 }
