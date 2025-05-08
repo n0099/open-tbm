@@ -37,11 +37,12 @@ class ThreadRepository extends PostRepository
     {
         // https://github.com/doctrine/orm/issues/3542
         // https://github.com/doctrine/dbal/issues/5018#issuecomment-2395177479
+        // https://github.com/beberlei/DoctrineExtensions/pull/453
         $entityManager = $this->getEntityManager();
         $tableName = $entityManager->getClassMetadata(Thread::class)->getTableName();
         $statement = $entityManager->getConnection()->prepare(<<<"SQL"
             SELECT tid FROM (
-                SELECT tid, ROW_NUMBER() OVER (ORDER BY tid) rn FROM $tableName
+                SELECT fid, tid, ROW_NUMBER() OVER (ORDER BY tid) rn FROM $tableName
             ) t WHERE fid = :fid AND rn % :chunkSize = 0
             SQL);
         $statement->bindValue('fid', $fid);
@@ -52,7 +53,7 @@ class ThreadRepository extends PostRepository
     public function getThreadsIdWithMaxPostedAtAfter(int $fid, int $after, int $limit): array
     {
         $dql = 'SELECT t.tid,
-                    GREATEST(t.postedAt, MAX(r.postedAt), MAX(sr.postedAt)) maxPostedAt
+                    GREATEST(MAX(t.postedAt), MAX(r.postedAt), MAX(sr.postedAt)) maxPostedAt
                 FROM App\Entity\Post\Thread t
                     JOIN App\Entity\Post\Reply r WITH r.tid = t.tid
                     JOIN App\Entity\Post\SubReply sr WITH sr.pid = r.pid
