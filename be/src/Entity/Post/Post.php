@@ -8,11 +8,23 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\MappedSuperclass]
 abstract class Post extends TimestampedEntity
 {
+    #[ORM\Column] private int $fid;
     #[ORM\Column] protected int $authorUid;
     #[ORM\Column] protected int $postedAt;
     #[ORM\Column] protected ?int $lastSeenAt;
     #[ORM\Column] protected ?int $agreeCount;
     #[ORM\Column] protected ?int $disagreeCount;
+
+    public function getFid(): int
+    {
+        return $this->fid;
+    }
+
+    public function setFid(int $fid): self
+    {
+        $this->fid = $fid;
+        return $this;
+    }
 
     public function getAuthorUid(): int
     {

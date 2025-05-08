@@ -3,6 +3,7 @@ namespace tbm.ImagePipeline.Db;
 
 public class ImageOcrBox : ImageWithFrameIndex
 {
+    public required string Script { get; set; }
     public ushort CenterPointX { get; set; }
     public ushort CenterPointY { get; set; }
     public ushort Width { get; set; }

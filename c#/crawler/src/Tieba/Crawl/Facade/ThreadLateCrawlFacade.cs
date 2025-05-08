@@ -14,7 +14,7 @@ public class ThreadLateCrawlFacade(
         var threads = await Task.WhenAll(
             failureCountsKeyByTid.Select(pair => crawlerFactory(fid).Crawl(pair.Key, pair.Value, stoppingToken)));
 
-        var db = dbContextFactory(fid);
+        var db = dbContextFactory();
         await using var transaction = await db.Database.BeginTransactionAsync(stoppingToken);
 
         db.AttachRange(threads.OfType<ThreadPost>()); // remove nulls due to exception

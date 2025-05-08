@@ -19,6 +19,7 @@ public partial class UserSaver(
 
     public void Save(
         CrawlerDbContext db,
+        Fid fid,
         PostType postType,
         FieldChangeIgnorance userFieldUpdateIgnorance,
         FieldChangeIgnorance userFieldRevisionIgnorance)
@@ -53,7 +54,7 @@ public partial class UserSaver(
             userFieldUpdateIgnorance,
             userFieldRevisionIgnorance);
 
-        PostSaveHandlers += authorRevisionSaverFactory(postType).SaveAuthorExpGrade(db, users.Values.ToList());
+        PostSaveHandlers += authorRevisionSaverFactory(fid, postType).SaveAuthorExpGrade(db, users.Values.ToList());
     }
 
     public void SaveParentThreadLatestReplierUid(CrawlerDbContext db, Tid tid) =>

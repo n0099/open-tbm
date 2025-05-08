@@ -9,6 +9,7 @@ use TbClient\Post\Common\Lbs;
 use TbClient\Post\Common\Zan;
 
 #[ORM\Entity(repositoryClass: ThreadRepository::class)]
+#[ORM\Table(name: '"tbmc_thread"')]
 class Thread extends Post
 {
     #[ORM\Column(type: 'bigint'), ORM\Id] protected int $tid;

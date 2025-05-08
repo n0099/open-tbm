@@ -41,6 +41,7 @@ public class OcrConsumer(
             .ToList();
         db.ImageOcrBoxes.AddRange(recognizedResults.Select(result => new ImageOcrBox
         {
+            Script = script,
             ImageId = result.ImageKey.ImageId,
             FrameIndex = result.ImageKey.FrameIndex,
             CenterPointX = result.TextBox.Center.X.RoundToUshort(),
@@ -61,6 +62,7 @@ public class OcrConsumer(
         var recognizedTextLines = _recognizer.GetRecognizedTextLines(recognizedResults)
             .Select(pair => new ImageOcrLine
             {
+                Script = script,
                 ImageId = pair.Key.ImageId,
                 FrameIndex = pair.Key.FrameIndex,
                 TextLines = pair.Value

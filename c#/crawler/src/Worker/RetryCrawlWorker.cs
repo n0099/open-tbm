@@ -4,7 +4,7 @@ public class RetryCrawlWorker(
     ILogger<RetryCrawlWorker> logger,
     IIndex<CrawlerLocks.Type, CrawlerLocks> registeredLocksKeyByType,
     CrawlPost crawlPost,
-    Func<Owned<CrawlerDbContext.NewDefault>> dbContextDefaultFactory,
+    Func<Owned<CrawlerDbContext.New>> dbContextFactory,
     Func<Owned<ThreadLateCrawlFacade.New>> threadLateCrawlFacadeFactory,
     Func<Owned<ThreadCrawlFacade.New>> threadCrawlFacadeFactory,
     Func<Owned<ReplyCrawlFacade.New>> replyCrawlFacadeFactory,
@@ -85,7 +85,7 @@ public class RetryCrawlWorker(
     {
         string? GetForumName()
         {
-            using var dbFactory = dbContextDefaultFactory();
+            using var dbFactory = dbContextFactory();
             return (
                 from f in dbFactory.Value().Forums.AsNoTracking()
                 where f.Fid == fid

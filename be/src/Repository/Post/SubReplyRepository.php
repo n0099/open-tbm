@@ -4,23 +4,15 @@ namespace App\Repository\Post;
 
 use App\DTO\PostKey\SubReply as SubReplyKey;
 use App\Entity\Post\SubReply;
-use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
-use Symfony\Component\DependencyInjection\Attribute\Exclude;
 
 /** @extends PostRepository<SubReply> */
-#[Exclude]
 class SubReplyRepository extends PostRepository
 {
-    public function __construct(ManagerRegistry $registry, EntityManagerInterface $entityManager, int $fid)
+    public function __construct(ManagerRegistry $registry)
     {
-        parent::__construct($registry, $entityManager, SubReply::class, $fid);
-    }
-
-    protected function getTableNameSuffix(): string
-    {
-        return 'subReply';
+        parent::__construct($registry, SubReply::class);
     }
 
     public function selectPostKeyDTO(string $orderByField): QueryBuilder
@@ -29,15 +21,15 @@ class SubReplyRepository extends PostRepository
             ->select('new ' . SubReplyKey::class . "(t.tid, t.pid, t.spid, '$orderByField', t.$orderByField)");
     }
 
-    public function getPosts(array|\ArrayAccess $postsId): array
+    public function getPosts(int $fid, array|\ArrayAccess $postsId): array
     {
-        $dql = 'SELECT t FROM App\Entity\Post\SubReply t WHERE t.spid IN (:spid)';
-        return $this->getQueryResultWithSingleParam($dql, 'spid', $postsId);
+        $dql = 'SELECT t FROM App\Entity\Post\SubReply t WHERE t.fid = :fid AND t.spid IN (:spid)';
+        return $this->getQueryResultWithParams($dql, ['fid' => $fid, 'spid' => $postsId]);
     }
 
-    public function isPostExists(int $postId): bool
+    public function isPostExists(int $fid, int $postId): bool
     {
-        $dql = 'SELECT 1 FROM App\Entity\Post\SubReply t WHERE t.spid = :spid';
-        return $this->isEntityExists($dql, 'spid', $postId);
+        $dql = 'SELECT 1 FROM App\Entity\Post\SubReply t WHERE t.fid = :fid AND t.spid = :spid';
+        return $this->isEntityExists($dql, ['fid' => $fid, 'spid' => $postId]);
     }
 }

@@ -3,7 +3,7 @@ using System.Runtime.CompilerServices;
 namespace tbm.Crawler.Worker;
 
 public class MainCrawlWorker(
-    Func<Owned<CrawlerDbContext.NewDefault>> dbContextDefaultFactory,
+    Func<Owned<CrawlerDbContext.New>> dbContextFactory,
     CrawlPost crawlPost)
     : CyclicCrawlWorker
 {
@@ -17,7 +17,7 @@ public class MainCrawlWorker(
     private async IAsyncEnumerable<FidAndName> ForumGenerator
         ([EnumeratorCancellation] CancellationToken stoppingToken = default)
     {
-        await using var dbFactory = dbContextDefaultFactory();
+        await using var dbFactory = dbContextFactory();
         var forums = (
             from f in dbFactory.Value().Forums.AsNoTracking()
             where f.IsCrawling

@@ -7,7 +7,7 @@ public class ImageBatchProducingWorker(
 
     // ReSharper disable once SuggestBaseTypeForParameterInConstructor
     Channel<List<ImageWithBytes>> channel,
-    Func<Owned<ImagePipelineDbContext.NewDefault>> dbContextDefaultFactory)
+    Func<Owned<ImagePipelineDbContext.New>> dbContextFactory)
     : ErrorableWorker(shouldExitOnException: true)
 {
     private readonly IConfigurationSection _config = config.GetSection("ImageBatchProducer");
@@ -50,7 +50,7 @@ public class ImageBatchProducingWorker(
         ImageId lastImageIdInPreviousBatch = 0;
         if (StartFromLatestSuccessful)
         {
-            using var dbFactory = dbContextDefaultFactory();
+            using var dbFactory = dbContextFactory();
             lastImageIdInPreviousBatch = (
                 from i in dbFactory.Value().ImageMetadata.AsNoTracking()
                 orderby i.ImageId descending
@@ -63,7 +63,7 @@ public class ImageBatchProducingWorker(
         while (true)
         {
             // dispose the scope of Owned<DbContext> after yield to prevent long-life idle connection
-            using var dbFactory = dbContextDefaultFactory();
+            using var dbFactory = dbContextFactory();
             var db = dbFactory.Value();
             var interlaceBatches = (
                     from i in db.ImageInReplies.AsNoTracking()

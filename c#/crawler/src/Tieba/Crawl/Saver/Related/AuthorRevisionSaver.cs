@@ -3,13 +3,14 @@ namespace tbm.Crawler.Tieba.Crawl.Saver.Related;
 public class AuthorRevisionSaver(
     ILogger<AuthorRevisionSaver> logger,
     SaverLocks<AuthorRevisionSaver.UniqueAuthorRevision>.New saverLocksFactory,
+    Fid fid,
     PostType triggeredByPostType)
 {
     private static readonly HashSet<UniqueAuthorRevision> GlobalLockedAuthorExpGrades = [];
     private readonly Lazy<SaverLocks<UniqueAuthorRevision>> _authorExpGradeSaverLocks =
         new(() => saverLocksFactory(GlobalLockedAuthorExpGrades));
 
-    public delegate AuthorRevisionSaver New(PostType triggeredByPostType);
+    public delegate AuthorRevisionSaver New(Fid fid, PostType triggeredByPostType);
 
     public Action SaveAuthorExpGrade(CrawlerDbContext db, IReadOnlyCollection<User.Parsed> users) =>
         Save(db, users,
@@ -28,7 +29,7 @@ public class AuthorRevisionSaver(
             t => new()
             {
                 DiscoveredAt = t.DiscoveredAt,
-                Fid = db.Fid,
+                Fid = fid,
                 Uid = t.Uid,
                 TriggeredBy = triggeredByPostType,
                 AuthorExpGrade = t.Value
@@ -57,7 +58,8 @@ public class AuthorRevisionSaver(
         SharedHelper.GetNowTimestamp(out var now);
         var usersId = uniqueEntities.Select(uidSelector);
         var existingRevisionOfExistingUsers = dbSet.AsNoTracking()
-            .Where(e => e.Fid == db.Fid && usersId.Contains(e.Uid))
+            .Where(e => e.Fid == fid)
+            .Where(e => usersId.Contains(e.Uid))
             .Select(latestRevisionProjectionFactory)
             .AsCte() // https://stackoverflow.com/questions/49854322/usage-of-for-update-in-window-function-postgres#comment86726589_49854322
             .Where(e => e.Rank == 1)
@@ -72,8 +74,8 @@ public class AuthorRevisionSaver(
 
             // filter out revisions with the same DiscoveredAt to prevent duplicate keys
             // when some fields get updated more than once in a second
-            .Where(t => t.Existing.DiscoveredAt != t.NewInEntity.DiscoveredAt
-                        && isValueChangedPredicate(t.Existing.Value, t.NewInEntity.Value))
+            .Where(t => t.Existing.DiscoveredAt != t.NewInEntity.DiscoveredAt)
+            .Where(t => isValueChangedPredicate(t.Existing.Value, t.NewInEntity.Value))
             .Select(t => (t.Uid, t.NewInEntity.Value, t.NewInEntity.DiscoveredAt));
         var newRevisionOfNewUsers = uniqueEntities
             .ExceptBy(existingRevisionOfExistingUsers.Select(t => t.Uid), uidSelector)

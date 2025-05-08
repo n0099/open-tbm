@@ -1,14 +1,12 @@
-using Microsoft.EntityFrameworkCore.Infrastructure;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Infrastructure;
 using static tbm.ImagePipeline.Db.ImageMetadata;
 
 namespace tbm.ImagePipeline.Db;
 
-public class ImagePipelineDbContext(ILogger<ImagePipelineDbContext> logger, Fid fid = 0, string script = "")
-    : TbmDbContext<ImagePipelineDbContext.ModelCacheKeyFactory>(logger)
+public class ImagePipelineDbContext(ILogger<ImagePipelineDbContext> logger)
+    : TbmDbContext(logger)
 {
-    public delegate ImagePipelineDbContext NewDefault();
-    public delegate ImagePipelineDbContext New(Fid fid, string script);
+    public delegate ImagePipelineDbContext New();
 
     public DbSet<ForumScript> ForumScripts => Set<ForumScript>();
     public DbSet<ImageOcrBox> ImageOcrBoxes => Set<ImageOcrBox>();
@@ -17,8 +15,6 @@ public class ImagePipelineDbContext(ILogger<ImagePipelineDbContext> logger, Fid 
     public DbSet<ImageHash> ImageHashes => Set<ImageHash>();
     public DbSet<ImageMetadata> ImageMetadata => Set<ImageMetadata>();
     public DbSet<ImageFailed> ImageFailed => Set<ImageFailed>();
-    private Fid Fid { get; } = fid;
-    private string Script { get; } = script;
 
     protected override void OnConfiguringNpgsql(NpgsqlDbContextOptionsBuilder builder) => builder.UseNetTopologySuite();
 
@@ -26,10 +22,9 @@ public class ImagePipelineDbContext(ILogger<ImagePipelineDbContext> logger, Fid 
     protected override void OnModelCreating(ModelBuilder b)
     {
         base.OnModelCreating(b);
-        OnModelCreatingWithFid(b, Fid);
         b.Entity<ImageHash>().ToTable("tbmi_hash").HasKey(e => new {e.ImageId, e.FrameIndex});
-        b.Entity<ImageOcrLine>().ToTable($"tbmi_ocr_line_{Script}_f{Fid}").HasKey(e => new {e.ImageId, e.FrameIndex});
-        b.Entity<ImageOcrBox>().ToTable($"tbmi_ocr_box_{Script}").HasKey(e =>
+        b.Entity<ImageOcrLine>().ToTable("tbmi_ocr_line").HasKey(e => new {e.ImageId, e.FrameIndex});
+        b.Entity<ImageOcrBox>().ToTable("tbmi_ocr_box").HasKey(e =>
             new {e.ImageId, e.FrameIndex, e.CenterPointX, e.CenterPointY, e.Width, e.Height, e.RotationDegrees, e.Recognizer});
         b.Entity<ImageQrCode>().ToTable("tbmi_qrCode").HasKey(e =>
             new {e.ImageId, e.FrameIndex, e.Point1X, e.Point1Y, e.Point2X, e.Point2Y, e.Point3X, e.Point3Y, e.Point4X, e.Point4Y});
@@ -59,14 +54,5 @@ public class ImagePipelineDbContext(ILogger<ImagePipelineDbContext> logger, Fid 
         SplitImageMetadata(e => e.PngMetadata, "png");
         SplitImageMetadata(e => e.GifMetadata, "gif");
         SplitImageMetadata(e => e.BmpMetadata, "bmp");
-    }
-
-    public class ModelCacheKeyFactory : IModelCacheKeyFactory
-    { // https://stackoverflow.com/questions/51864015/entity-framework-map-model-class-to-table-at-run-time/51899590#51899590
-        // https://docs.microsoft.com/en-us/ef/core/modeling/dynamic-model
-        public object Create(DbContext context, bool designTime) =>
-            context is ImagePipelineDbContext dbContext
-                ? (context.GetType(), dbContext.Fid, dbContext.Script, designTime)
-                : context.GetType();
     }
 }

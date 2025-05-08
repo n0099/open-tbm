@@ -12,8 +12,7 @@ public class ImageBatchConsumingWorker(
 
     // ReSharper disable once SuggestBaseTypeForParameterInConstructor
     Channel<List<ImageWithBytes>> channel,
-    Func<Owned<ImagePipelineDbContext.New>> dbContextFactory,
-    Func<Owned<ImagePipelineDbContext.NewDefault>> dbContextDefaultFactory)
+    Func<Owned<ImagePipelineDbContext.New>> dbContextFactory)
     : ErrorableWorker(shouldExitOnException: true, shouldExitOnFinish: true)
 {
     protected override async Task DoWork(CancellationToken stoppingToken)
@@ -46,7 +45,7 @@ public class ImageBatchConsumingWorker(
         List<ImageWithBytes> imagesWithBytes,
         CancellationToken stoppingToken = default)
     {
-        await using var dbFactory = dbContextDefaultFactory();
+        await using var dbFactory = dbContextFactory();
         var db = dbFactory.Value();
         await using var transaction = await db.Database.BeginTransactionAsync
             (IsolationLevel.ReadCommitted, stoppingToken);
@@ -155,7 +154,7 @@ public class ImageBatchConsumingWorker(
             stoppingToken.ThrowIfCancellationRequested();
             var frameBytes = new Rgb24[frame.Width * frame.Height];
             frame.CopyPixelDataTo(frameBytes);
-            using var frameImage = Image.LoadPixelData<Rgb24>(frameBytes, frame.Width, frame.Height);
+            using var frameImage = Image.LoadPixelData(frameBytes, frame.Width, frame.Height);
             using var stream = new MemoryStream();
             frameImage.SaveAsPng(stream);
             ObjectDisposedException.ThrowIf(!stream.TryGetBuffer(out var buffer), stream);
@@ -210,7 +209,7 @@ public class ImageBatchConsumingWorker(
             IEnumerable<ImageKeyWithMatrix> GetImagesInCurrentFid()
             { // dispose the scope of Owned<DbContext> after return to prevent long-life idle connection
                 using var dbFactory = dbContextFactory();
-                var db = dbFactory.Value(fid, "");
+                var db = dbFactory.Value();
                 db.Database.SetDbConnection(parentConnection);
 #pragma warning disable IDISP004 // Don't ignore created IDisposable
                 _ = db.Database.UseTransaction(parentTransaction);
@@ -219,6 +218,7 @@ public class ImageBatchConsumingWorker(
                 // try to know which fid owns current image batch
                 return imageKeysWithMatrix.IntersectBy(
                     from replyContentImage in db.ReplyContentImages.AsNoTracking()
+                    where replyContentImage.Fid == fid
                     where imageKeysWithMatrix
                         .Select(imageKeyWithMatrix => imageKeyWithMatrix.ImageId)
                         .Contains(replyContentImage.ImageId)
@@ -231,7 +231,7 @@ public class ImageBatchConsumingWorker(
             foreach (var script in scriptsGroupByFid)
             {
                 await using var dbFactory = dbContextFactory();
-                var db = dbFactory.Value(fid, script);
+                var db = dbFactory.Value();
 
                 // https://learn.microsoft.com/en-us/ef/core/saving/transactions#share-connection-and-transaction
                 db.Database.SetDbConnection(parentConnection);

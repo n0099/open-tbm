@@ -4,23 +4,15 @@ namespace App\Repository\Post;
 
 use App\DTO\PostKey\Reply as ReplyKey;
 use App\Entity\Post\Reply;
-use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
-use Symfony\Component\DependencyInjection\Attribute\Exclude;
 
 /** @extends PostRepository<Reply> */
-#[Exclude]
 class ReplyRepository extends PostRepository
 {
-    public function __construct(ManagerRegistry $registry, EntityManagerInterface $entityManager, int $fid)
+    public function __construct(ManagerRegistry $registry)
     {
-        parent::__construct($registry, $entityManager, Reply::class, $fid);
-    }
-
-    protected function getTableNameSuffix(): string
-    {
-        return 'reply';
+        parent::__construct($registry, Reply::class);
     }
 
     public function selectPostKeyDTO(string $orderByField): QueryBuilder
@@ -29,15 +21,15 @@ class ReplyRepository extends PostRepository
             ->select('new ' . ReplyKey::class . "(t.tid, t.pid, '$orderByField', t.$orderByField)");
     }
 
-    public function getPosts(array|\ArrayAccess $postsId): array
+    public function getPosts(int $fid, array|\ArrayAccess $postsId): array
     {
-        $dql = 'SELECT t FROM App\Entity\Post\Reply t WHERE t.pid IN (:pid)';
-        return $this->getQueryResultWithSingleParam($dql, 'pid', $postsId);
+        $dql = 'SELECT t FROM App\Entity\Post\Reply t WHERE t.fid = :fid AND t.pid IN (:pid)';
+        return $this->getQueryResultWithParams($dql, ['fid' => $fid, 'pid' => $postsId]);
     }
 
-    public function isPostExists(int $postId): bool
+    public function isPostExists(int $fid, int $postId): bool
     {
-        $dql = 'SELECT 1 FROM App\Entity\Post\Reply t WHERE t.pid = :pid';
-        return $this->isEntityExists($dql, 'pid', $postId);
+        $dql = 'SELECT 1 FROM App\Entity\Post\Reply t WHERE t.fid = :fid AND t.pid = :pid';
+        return $this->isEntityExists($dql, ['fid' => $fid, 'pid' => $postId]);
     }
 }

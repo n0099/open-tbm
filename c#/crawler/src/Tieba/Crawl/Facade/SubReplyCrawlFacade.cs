@@ -26,10 +26,11 @@ public class SubReplyCrawlFacade(
         CrawlRequestFlag flag,
         IReadOnlyDictionary<PostId, SubReplyPost.Parsed> parsedPosts)
     {
-        foreach (var sr in parsedPosts.Values)
+        foreach (var subReply in parsedPosts.Values)
         {
-            sr.Tid = tid;
-            sr.Pid = pid;
+            subReply.Fid = Fid;
+            subReply.Tid = tid;
+            subReply.Pid = pid;
         }
         UserParser.ResetUsersIcon();
     }

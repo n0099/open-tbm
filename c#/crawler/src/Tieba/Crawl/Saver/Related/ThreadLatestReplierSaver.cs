@@ -62,8 +62,8 @@ public class ThreadLatestReplierSaver(
         // within the timespan of crawling threads and crawling its (sub)replies
         // so the one later crawled is not the original latest replier of thread
         var matchedUsers = users
-            .Where(u => u.Name == threadLatestReplier.Name
-                        && u.DisplayName == threadLatestReplier.DisplayName)
+            .Where(u => u.Name == threadLatestReplier.Name)
+            .Where(u => u.DisplayName == threadLatestReplier.DisplayName)
             .DistinctBy(u => u.Uid).ToList();
 
         // ReSharper disable once ConvertIfStatementToSwitchStatement

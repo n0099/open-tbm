@@ -27,7 +27,7 @@ public sealed class ReplyContentImageSaver(ILogger<ReplyContentImageSaver> logge
         }
     }
 
-    public Action Save(CrawlerDbContext db, IEnumerable<ReplyPost.Parsed> replies)
+    public Action Save(CrawlerDbContext db, Fid fid, IEnumerable<ReplyPost.Parsed> replies)
     {
         var replyContentImages = (
                 from r in replies
@@ -37,6 +37,7 @@ public sealed class ReplyContentImageSaver(ILogger<ReplyContentImageSaver> logge
                     ReplyParser.ValidateContentImageFilenameRegex().IsMatch(c.OriginSrc)
                 select new ReplyContentImage
                 {
+                    Fid = fid,
                     Pid = r.Pid,
                     ImageInReply = new()
                     {
@@ -104,6 +105,7 @@ public sealed class ReplyContentImageSaver(ILogger<ReplyContentImageSaver> logge
                 select (existingOrNew, replyContentImage))
             .ForEach(t => t.replyContentImage.ImageInReply = t.existingOrNew);
         var existingReplyContentImages = db.ReplyContentImages.AsNoTracking()
+            .Where(e => e.Fid == fid)
             .FilterByItems(replyContentImages, (existing, newOrExisting) =>
                 existing.Pid == newOrExisting.Pid
                 && existing.ImageInReply.UrlFilename == newOrExisting.ImageInReply.UrlFilename)

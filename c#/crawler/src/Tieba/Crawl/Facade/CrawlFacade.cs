@@ -8,7 +8,7 @@ public abstract class CrawlFacade<TPostEntity, TParsedPost, TResponse, TPostProt
     CrawlerLocks.LockId lockId,
     CrawlerLocks locks,
     IPostParser<TParsedPost, TPostProtoBuf> postParser,
-    Func<ConcurrentDictionary<PostId, TParsedPost>, IPostSaver<TPostEntity, TParsedPost>> postSaverFactory,
+    Func<Fid, ConcurrentDictionary<PostId, TParsedPost>, IPostSaver<TPostEntity, TParsedPost>> postSaverFactory,
     Func<ConcurrentDictionary<Uid, User.Parsed>, UserParser> userParserFactory,
     Func<ConcurrentDictionary<Uid, User.Parsed>, UserSaver> userSaverFactory)
     : ICrawlFacade<TPostEntity, TParsedPost>
@@ -45,15 +45,15 @@ public abstract class CrawlFacade<TPostEntity, TParsedPost, TResponse, TPostProt
         var retryTimes = 0;
         while (true)
         {
-            using var db = DbContextFactory(Fid); // dispose after each loop when retrying
+            using var db = DbContextFactory(); // dispose after each loop when retrying
             using var transaction = db.Database.BeginTransaction(IsolationLevel.ReadCommitted);
 
-            var postSaver = postSaverFactory(Posts);
+            var postSaver = postSaverFactory(Fid, Posts);
             var userSaver = userSaverFactory(_users);
             try
             {
                 var savedPosts = Posts.IsEmpty ? null : postSaver.Save(db);
-                userSaver.Save(db,
+                userSaver.Save(db, Fid,
                     postSaver.CurrentPostType,
                     postSaver.UserFieldUpdateIgnorance,
                     postSaver.UserFieldRevisionIgnorance);

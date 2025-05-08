@@ -3,58 +3,30 @@
 namespace App\Repository\Post;
 
 use App\Helper;
-use App\Repository\Post\Content\ReplyContentRepository;
-use App\Repository\Post\Content\SubReplyContentRepository;
-use Doctrine\ORM\EntityManagerInterface;
-use Doctrine\Persistence\ManagerRegistry;
 
 readonly class PostRepositoryFactory
 {
     public function __construct(
-        private ManagerRegistry $registry,
-        private EntityManagerInterface $entityManager,
+        private ThreadRepository $threadRepository,
+        private ReplyRepository $replyRepository,
+        private SubReplyRepository $subReplyRepository,
     ) {}
 
-    public function newThread(int $fid): ThreadRepository
-    {
-        return new ThreadRepository($this->registry, $this->entityManager, $fid, $this);
-    }
-
-    public function newReply(int $fid): ReplyRepository
-    {
-        return new ReplyRepository($this->registry, $this->entityManager, $fid);
-    }
-
-    public function newReplyContent(int $fid): ReplyContentRepository
-    {
-        return new ReplyContentRepository($this->registry, $this->entityManager, $fid);
-    }
-
-    public function newSubReply(int $fid): SubReplyRepository
-    {
-        return new SubReplyRepository($this->registry, $this->entityManager, $fid);
-    }
-
-    public function newSubReplyContent(int $fid): SubReplyContentRepository
-    {
-        return new SubReplyContentRepository($this->registry, $this->entityManager, $fid);
-    }
-
     /** @return array{thread: ThreadRepository, reply: ReplyRepository, subReply: SubReplyRepository} */
-    public function newForumPosts(int $fid): array
+    public function newForumPosts(): array
     {
         return array_combine(
             Helper::POST_TYPES,
-            [$this->newThread($fid), $this->newReply($fid), $this->newSubReply($fid)],
+            [$this->threadRepository, $this->replyRepository, $this->subReplyRepository],
         );
     }
 
-    public function new(int $fid, string $postType): PostRepository
+    public function new(string $postType): PostRepository
     {
         return match ($postType) {
-            'thread' => $this->newThread($fid),
-            'reply' => $this->newReply($fid),
-            'subReply' => $this->newSubReply($fid),
+            'thread' => $this->threadRepository,
+            'reply' => $this->replyRepository,
+            'subReply' => $this->subReplyRepository,
         };
     }
 }

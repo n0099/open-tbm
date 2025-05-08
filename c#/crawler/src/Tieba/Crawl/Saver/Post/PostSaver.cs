@@ -2,6 +2,7 @@ namespace tbm.Crawler.Tieba.Crawl.Saver.Post;
 
 public abstract class PostSaver<TPostEntity, TParsedPost, TBaseRevision, TPostId>(
     ILogger<PostSaver<TPostEntity, TParsedPost, TBaseRevision, TPostId>> logger,
+    Fid fid,
     ConcurrentDictionary<PostId, TParsedPost> posts,
     PostType currentPostType)
     : SaverWithRevision<TBaseRevision, TPostId>(logger), IPostSaver<TPostEntity, TParsedPost>
@@ -12,6 +13,7 @@ public abstract class PostSaver<TPostEntity, TParsedPost, TBaseRevision, TPostId
 {
     public PostType CurrentPostType { get; } = currentPostType;
     protected ConcurrentDictionary<PostId, TParsedPost> Posts { get; } = posts;
+    protected Fid Fid { get; } = fid;
 
     protected Action PostSaveHandlers { get; set; } = () => { };
     public void OnPostSave() => PostSaveHandlers();

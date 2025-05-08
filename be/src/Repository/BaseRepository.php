@@ -7,14 +7,12 @@ namespace App\Repository;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\AbstractQuery;
 use Doctrine\ORM\Query;
-use Symfony\Component\DependencyInjection\Attribute\Exclude;
 
 /**
  * @template T
  * @extends ServiceEntityRepository<T>
  */
-#[Exclude]
-class BaseRepository extends ServiceEntityRepository
+abstract class BaseRepository extends ServiceEntityRepository
 {
     protected function createQuery(string $dql): Query
     {
@@ -37,9 +35,14 @@ class BaseRepository extends ServiceEntityRepository
         return $this->createQueryWithSingleParam($dql, $paramName, $paramValue)->getResult();
     }
 
-    protected function isEntityExists(string $dql, string $paramName, int|array|\ArrayAccess $paramValue): bool
+    protected function getQueryResultWithParams(string $dql, array|\ArrayAccess $parameters): array
     {
-        return $this->createQueryWithSingleParam($dql, $paramName, $paramValue)
+        return $this->createQuery($dql)->setParameters($parameters)->getResult();
+    }
+
+    protected function isEntityExists(string $dql, array|\ArrayAccess $parameters): bool
+    {
+        return $this->createQuery($dql)->setParameters($parameters)
             ->getOneOrNullResult(AbstractQuery::HYDRATE_SINGLE_SCALAR) === 1;
     }
 }

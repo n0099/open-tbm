@@ -31,10 +31,13 @@ readonly class SearchQuery extends BaseQuery
         /** @var array<string, array> $cachedUserQueryResult key by param name */
         $cachedUserQueryResult = [];
         /** @var Collection<string, QueryBuilder> $queries key by post type */
-        $queries = collect($this->postRepositoryFactory->newForumPosts($fid))
+        $queries = collect($this->postRepositoryFactory->newForumPosts())
             ->only($params->getUniqueParamValue('postTypes'))
-            ->map(function (PostRepository $repository) use ($params, &$cachedUserQueryResult): QueryBuilder {
-                $postQuery = $repository->selectPostKeyDTO($this->orderByField);
+            ->map(function (PostRepository $repository) use ($fid, $params, &$cachedUserQueryResult): QueryBuilder {
+                $postQuery = $repository
+                    ->selectPostKeyDTO($this->orderByField)
+                    ->where('t.fid = :fid')
+                    ->setParameter('fid', $fid);
                 foreach ($params->omit() as $paramIndex => $param) { // omit nothing to get all params
                     // even when $cachedUserQueryResult[$param->name] is null
                     // it will still pass as a reference to the array item
