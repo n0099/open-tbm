@@ -259,7 +259,7 @@ public class ImageBatchConsumingWorker(
             IReadOnlyCollection<ImageKeyWithMatrix> imagesInCurrentFid)
         {
             await using var consumerFactory = ocrConsumerFactory();
-            var ocrConsumer = consumerFactory.Value(fid, script);
+            var ocrConsumer = consumerFactory.Value(script);
             await ocrConsumer.InitializePaddleOcr(stoppingToken);
 
             var stopwatch = new Stopwatch();
