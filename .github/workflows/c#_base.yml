@@ -41,10 +41,10 @@ jobs:
 
       - uses: muno92/resharper_inspectcode@v1
         with:
-          version: 2024.*
+          version: 2025.*
           minimumReportSeverity: info
           minimumSeverity: warning
-          solutionPath: c#/tbm.sln
+          solutionPath: c#/tbm.slnx
           cachesHome: ${{ github.workspace }}/.resharper
 
       # https://github.com/actions/runner/issues/1478
