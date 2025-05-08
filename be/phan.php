@@ -272,7 +272,7 @@ return [
     // directories/files, unanalyzable files, or files that
     // can't be removed for whatever reason.
     // (e.g. `'@Test\.php$@'`, or `'@vendor/.*/(tests|Tests)/@'`)
-    'exclude_file_regex' => '@^vendor/.*/(tests?|Tests?)/@',
+    'exclude_file_regex' => /** @lang RegExp */'@^vendor/.*/(tests?|Tests?)/@',
 
     // A list of files that will be excluded from parsing and analysis
     // and will not be read at all.

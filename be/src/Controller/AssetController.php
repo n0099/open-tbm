@@ -22,9 +22,9 @@ class AssetController extends AbstractController
     {
         return new Response(
             content: preg_replace_callback_array([
-                '#/npm/(?<filename>\w+)@(\d+\.?){3}/\+esm#' =>
+                /** @lang RegExp */'#/npm/(?<filename>\w+)@(\d+\.?){3}/\+esm#' =>
                     fn(array $m) => $this->assets->getUrl("assets/{$m['filename']}.js"),
-                '@^//# sourceMappingURL=.+$@m' =>
+                /** @lang RegExp */'@^//# sourceMappingURL=.+$@m' =>
                     static fn() => '',
             ], $this->filesystem->readFile(
                 $this->getParameter('kernel.project_dir') . "/public/react-json-view/$filename",

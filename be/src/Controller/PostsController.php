@@ -52,7 +52,7 @@ class PostsController extends AbstractController
             'cursor' => new Assert\Optional(new Assert\Regex(
                 // https://stackoverflow.com/questions/475074/regex-to-parse-or-validate-base64-data
                 // (,|$)|,){5,6} means allow at most 5~6 parts of base64 segment or empty string to exist
-                '/^(([A-Za-z0-9-_]{4})*([A-Za-z0-9-_]{2,3})(,|$)|,){5,6}$/',
+            /** @lang RegExp */'/^(([A-Za-z0-9-_]{4})*([A-Za-z0-9-_]{2,3})(,|$)|,){5,6}$/',
             )),
             'query' => new Assert\Required(new Assert\Json()),
         ]));
