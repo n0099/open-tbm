@@ -36,6 +36,9 @@ doctrine:
         query_cache_driver:
             type: service
             id: cache.adapter.null
+        dql:
+            string_functions:
+                greatest: DoctrineExtensions\Query\Mysql\Greatest
 
 services:
     cache.adapter.null:
