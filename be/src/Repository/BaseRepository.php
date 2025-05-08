@@ -19,30 +19,18 @@ abstract class BaseRepository extends ServiceEntityRepository
         return $this->getEntityManager()->createQuery($dql);
     }
 
-    protected function createQueryWithSingleParam(
-        string $dql,
-        string $paramName,
-        int|array|\ArrayAccess $paramValue,
-    ): Query {
-        return $this->createQuery($dql)->setParameter($paramName, $paramValue);
-    }
-
-    protected function getQueryResultWithSingleParam(
-        string $dql,
-        string $paramName,
-        int|array|\ArrayAccess $paramValue,
-    ): array {
-        return $this->createQueryWithSingleParam($dql, $paramName, $paramValue)->getResult();
+    protected function createQueryWithParams(string $dql, array|\ArrayAccess $parameters): Query {
+        return $this->createQuery($dql)->setParameters($parameters);
     }
 
     protected function getQueryResultWithParams(string $dql, array|\ArrayAccess $parameters): array
     {
-        return $this->createQuery($dql)->setParameters($parameters)->getResult();
+        return $this->createQueryWithParams($dql, $parameters)->getResult();
     }
 
     protected function isEntityExists(string $dql, array|\ArrayAccess $parameters): bool
     {
-        return $this->createQuery($dql)->setParameters($parameters)
+        return $this->createQueryWithParams($dql, $parameters)
             ->getOneOrNullResult(AbstractQuery::HYDRATE_SINGLE_SCALAR) === 1;
     }
 }

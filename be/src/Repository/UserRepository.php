@@ -16,6 +16,6 @@ class UserRepository extends BaseRepository
     public function getUsers(array|\ArrayAccess $usersId): array
     {
         $dql = 'SELECT t FROM App\Entity\User t WHERE t.uid IN (:usersId)';
-        return $this->getQueryResultWithSingleParam($dql, 'usersId', $usersId);
+        return $this->getQueryResultWithParams($dql, ['usersId' => $usersId]);
     }
 }

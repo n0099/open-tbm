@@ -17,16 +17,16 @@ class LatestReplierRepository extends BaseRepository
     public function getLatestRepliersWithoutNameWhenHasUid(array|\ArrayAccess $latestRepliersId): Collection
     {
         // removeSelect('t.name', 't.displayName')
-        return collect($this->getQueryResultWithSingleParam(<<<'DQL'
+        return collect($this->getQueryResultWithParams(<<<'DQL'
                 SELECT t.id, t.uid, t.createdAt, t.updatedAt
                 FROM App\Entity\LatestReplier t
                 WHERE t.id IN (:ids) AND t.uid IS NOT NULL
-                DQL, 'ids', $latestRepliersId))
+                DQL, ['ids' => $latestRepliersId]))
             ->concat(
-                $this->getQueryResultWithSingleParam(<<<'DQL'
+                $this->getQueryResultWithParams(<<<'DQL'
                 SELECT t FROM App\Entity\LatestReplier t
                 WHERE t.id IN (:ids) AND t.uid IS NULL
-                DQL, 'ids', $latestRepliersId),
+                DQL, ['ids' => $latestRepliersId]),
             );
     }
 }

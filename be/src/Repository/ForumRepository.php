@@ -34,7 +34,7 @@ class ForumRepository extends BaseRepository
     public function getForum(int $fid): array
     {
         $dql = 'SELECT t.fid, t.name FROM App\Entity\Forum t WHERE t.fid = :fid';
-        return $this->createQueryWithSingleParam($dql, 'fid', $fid)
+        return $this->createQueryWithParams($dql, ['fid' => $fid])
             ->setMaxResults(1)->getSingleResult();
     }
 }
