@@ -18,19 +18,13 @@ class ThreadRepository extends PostRepository
     public function selectPostKeyDTO(string $orderByField): QueryBuilder
     {
         return $this->createQueryBuilder('t')
-            ->select('new ' . ThreadKey::class . "(t.tid, '$orderByField', t.$orderByField)");
+            ->select('new ' . ThreadKey::class . "(t.fid, t.tid, '$orderByField', t.$orderByField)");
     }
 
     public function getPosts(int $fid, array|\ArrayAccess $postsId): array
     {
         $dql = 'SELECT t FROM App\Entity\Post\Thread t WHERE t.fid = :fid AND t.tid IN (:tid)';
         return $this->getQueryResultWithParams($dql, ['fid' => $fid, 'tid' => $postsId]);
-    }
-
-    public function isPostExists(int $fid, int $postId): bool
-    {
-        $dql = 'SELECT 1 FROM App\Entity\Post\Thread t WHERE t.fid = fid AND t.tid = :tid';
-        return $this->isEntityExists($dql, ['fid' => $fid, 'tid' => $postId]);
     }
 
     public function getThreadsIdByChunks(int $fid, int $chunkSize): array
