@@ -48,7 +48,6 @@ readonly class QueryResult
 
     /** @param Collection<Helper::POST_TYPE, ?QueryBuilder> $queries */
     public function setResult(
-        int $fid,
         Collection $queries,
         ?string $cursorParamValue,
         string $orderByField,
@@ -57,7 +56,6 @@ readonly class QueryResult
     ): void {
         $this->stopwatch->start('setResult');
 
-        $this->fid = $fid;
         $cursorsKeyByPostType = null;
         if ($cursorParamValue !== null) {
             $cursorsKeyByPostType = $this->cursorCodec->decodeCursor($cursorParamValue, $orderByField);
@@ -101,6 +99,9 @@ readonly class QueryResult
         $this->threads = $postsKeyByTypePluralName['threads'] ?? collect();
         $this->replies = $postsKeyByTypePluralName['replies'] ?? collect();
         $this->subReplies = $postsKeyByTypePluralName['subReplies'] ?? collect();
+        $this->fid = $this->threads->first()->fid
+            ?? $this->replies->first()->fid
+            ?? $this->subReplies->first()->fid;
         $this->currentCursor = $cursorParamValue ?? '';
         $this->nextCursor = $resultsAndHasMorePages->pluck('hasMorePages')
             ->filter()->isNotEmpty() // filter() remove falsy

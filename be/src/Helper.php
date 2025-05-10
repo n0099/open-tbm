@@ -75,9 +75,6 @@ class Helper
             40403 => '吧帖量统计查询结果为空',
             40406 => '指定查询的贴吧不存在',
         ],
-        500 => [
-            50001 => '数据库中存在多个贴吧表存储了该 ID 的帖子',
-        ],
     ];
 
     public static function abortAPI(int $errorCode): never

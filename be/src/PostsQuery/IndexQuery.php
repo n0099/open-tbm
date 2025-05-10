@@ -47,45 +47,14 @@ readonly class IndexQuery extends BaseQuery
             }
         }
 
-        /**
-         * @param int $fid
-         * @return Collection<string, PostRepository> key by post type
-         */
-        $getQueryBuilders = fn(int $fid): Collection =>
-            collect($this->postRepositoryFactory->newForumPosts())
-                ->only($postTypes)
-                ->transform(fn(PostRepository $repository) => $repository
-                    ->selectPostKeyDTO($this->orderByField)
-                    ->where('t.fid = :fid')
-                    ->setParameter('fid', $fid));
-        $getFidByPostIDParam = function (string $postIDName, int $postID): int {
-            $postExistencesKeyByFid = collect($this->forumRepository->getOrderedForumsId())
-                ->mapWithKeys(fn(int $fid) => [$fid => $this->postRepositoryFactory
-                    ->new(Helper::POST_ID_TO_TYPE[$postIDName])
-                    ->isPostExists($fid, $postID)])
-                ->filter(fn(bool $isExists) => $isExists);
-            Helper::abortAPIIf(50001, $postExistencesKeyByFid->count() > 1);
-            Helper::abortAPIIf(40401, $postExistencesKeyByFid->count() === 0);
-            return $postExistencesKeyByFid->keys()[0];
-        };
+        /** @var Collection<string, QueryBuilder> $queries key by post type */
+        $queries = collect($this->postRepositoryFactory->newForumPosts())
+            ->only($postTypes)
+            ->transform(fn(PostRepository $repository) => $repository
+                ->selectPostKeyDTO($this->orderByField));
 
-        if (\array_key_exists('fid', $flatParams)) {
-            /** @var int $fid */ $fid = $flatParams['fid'];
-            if ($this->forumRepository->isForumExists($fid)) {
-                /** @var Collection<string, QueryBuilder> $queries key by post type */
-                $queries = $getQueryBuilders($fid);
-            } elseif ($hasPostIDParam) { // query by post ID and fid, but the provided fid is invalid
-                $fid = $getFidByPostIDParam($postIDParamName, $postIDParamValue);
-                $queries = $getQueryBuilders($fid);
-            } else {
-                Helper::abortAPI(40406);
-            }
-        } elseif ($hasPostIDParam) { // query by post ID only
-            $fid = $getFidByPostIDParam($postIDParamName, $postIDParamValue);
-            $queries = $getQueryBuilders($fid);
-        } else {
-            Helper::abortAPI(40001);
-        }
+        Helper::abortAPIIf(40406, array_key_exists('fid', $flatParams)
+            && !$this->forumRepository->isForumExists($flatParams['fid']));
 
         if ($hasPostIDParam) {
             $queries = $queries
@@ -97,12 +66,8 @@ readonly class IndexQuery extends BaseQuery
                     $qb->where("t.$postIDParamName = :postIDParamValue")
                         ->setParameter('postIDParamValue', $postIDParamValue));
         }
-        if (array_diff($postTypes, Helper::POST_TYPES) !== []) {
-            $queries = $queries->only($postTypes);
-        }
 
         $this->queryResult->setResult(
-            $fid,
             $queries,
             $cursor,
             $this->orderByField,

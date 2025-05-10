@@ -52,7 +52,7 @@ readonly class SearchQuery extends BaseQuery
                 return $postQuery;
             });
 
-        $this->queryResult->setResult($fid, $queries, $cursor, $this->orderByField, $this->orderByDesc);
+        $this->queryResult->setResult($queries, $cursor, $this->orderByField, $this->orderByDesc);
     }
 
     /**
