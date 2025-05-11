@@ -2,17 +2,20 @@
 
 namespace App\PostsQuery;
 
+use App\Helper;
+use App\Repository\ForumRepository;
 use App\Repository\Post\PostRepository;
 use App\Repository\Post\PostRepositoryFactory;
 use App\Repository\UserRepository;
 use Doctrine\ORM\QueryBuilder;
 use Illuminate\Support\Collection;
 
-readonly class SearchQuery extends BaseQuery
+readonly class Query extends BaseQuery
 {
     public function __construct(
         QueryResult $queryResult,
         PostsTree $postsTree,
+        private ForumRepository $forumRepository,
         private PostRepositoryFactory $postRepositoryFactory,
         private UserRepository $userRepository,
     ) {
@@ -23,6 +26,7 @@ readonly class SearchQuery extends BaseQuery
     {
         /** @var int $fid */
         $fid = $params->getUniqueParamValue('fid');
+        Helper::abortAPIIfNot(40406, $this->forumRepository->isForumExists($fid));
 
         $orderByParam = $params->pick('orderBy')[0];
         $this->setOrderByField($orderByParam->value === 'default' ? 'postedAt' : $orderByParam->value)

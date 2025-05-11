@@ -8,10 +8,8 @@ use App\DTO\User\User;
 use App\Entity\Post\Post;
 use App\Entity\Post\Thread;
 use App\Helper;
-use App\PostsQuery\BaseQuery;
-use App\PostsQuery\IndexQuery;
 use App\PostsQuery\ParamsValidator;
-use App\PostsQuery\SearchQuery;
+use App\PostsQuery\Query;
 use App\Repository\ForumRepository;
 use App\Repository\LatestReplierRepository;
 use App\Repository\Revision\AuthorExpGradeRepository;
@@ -19,9 +17,7 @@ use App\Repository\Revision\ForumModeratorRepository;
 use App\Repository\UserRepository;
 use App\Validator\Validator;
 use Illuminate\Support\Collection;
-use Psr\Container\ContainerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\DependencyInjection\Attribute\AutowireLocator;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Stopwatch\Stopwatch;
@@ -37,12 +33,8 @@ class PostsController extends AbstractController
         private readonly LatestReplierRepository $latestReplierRepository,
         private readonly ForumModeratorRepository $forumModeratorRepository,
         private readonly AuthorExpGradeRepository $authorExpGradeRepository,
-        #[AutowireLocator([
-            ParamsValidator::class,
-            IndexQuery::class,
-            SearchQuery::class,
-        ])]
-        private readonly ContainerInterface $locator,
+        private readonly ParamsValidator $paramsValidator,
+        private readonly Query $query,
     ) {}
 
     #[Route('/api/posts')]
@@ -56,8 +48,9 @@ class PostsController extends AbstractController
             )),
             'query' => new Assert\Required(new Assert\Json()),
         ]));
-        $validator = $this->locator->get(ParamsValidator::class);
-        $params = $validator->setParams(\Safe\json_decode($request->query->get('query'), true))->getParams();
+        $params = $this->paramsValidator
+            ->setParams(\Safe\json_decode($request->query->get('query'), true))
+            ->getParams();
 
         $postIDParams = $params->pick(...Helper::POST_ID);
         $isQueryByPostID =
@@ -67,29 +60,24 @@ class PostsController extends AbstractController
             && \count($postIDParams) === 1
             // is all post ID params doesn't own any sub param
             && array_filter($postIDParams, static fn($p) => $p->getAllSub() !== []) === [];
-        $isFidParamNull = $params->getUniqueParamValue('fid') === null;
         // is the fid param exists and there's no other params except unique params
-        $isQueryByFid = !$isFidParamNull && \count($params->omit(...ParamsValidator::UNIQUE_PARAMS_NAME)) === 0;
-        $isIndexQuery = $isQueryByPostID || $isQueryByFid;
-        $isSearchQuery = !$isIndexQuery;
-        Helper::abortAPIIf(40002, $isSearchQuery && $isFidParamNull);
-
-        $validator->addDefaultParamsThenValidate(shouldSkip40003: $isIndexQuery);
+        $isIndexQuery = $isQueryByPostID
+            || (!($params->getUniqueParamValue('fid') === null)
+                && \count($params->omit(...ParamsValidator::UNIQUE_PARAMS_NAME)) === 0);
+        $this->paramsValidator->addDefaultParamsThenValidate(shouldSkip40003: $isIndexQuery);
 
         $this->stopwatch->start('$queryClass->query()');
-        /** @var BaseQuery $query */
-        $query = $this->locator->get($isIndexQuery ? IndexQuery::class : SearchQuery::class);
-        $query->query($params, $request->query->get('cursor'));
+        $this->query->query($params, $request->query->get('cursor'));
         $this->stopwatch->stop('$queryClass->query()');
         $this->stopwatch->start('fillWithParentPost');
-        $matchQueryPostCounts = $query->postsTree->fillWithParentPost($query->queryResult);
+        $matchQueryPostCounts = $this->query->postsTree->fillWithParentPost($this->query->queryResult);
         $this->stopwatch->stop('fillWithParentPost');
 
         $this->stopwatch->start('queryUsers');
         $latestRepliers = $this->latestReplierRepository->getLatestRepliersWithoutNameWhenHasUid(
-            $query->postsTree->threads->map(fn(Thread $thread) => $thread->getLatestReplierId()),
+            $this->query->postsTree->threads->map(fn(Thread $thread) => $thread->getLatestReplierId()),
         );
-        $uids = collect([$query->postsTree->threads, $query->postsTree->replies, $query->postsTree->subReplies])
+        $uids = collect([$this->query->postsTree->threads, $this->query->postsTree->replies, $this->query->postsTree->subReplies])
             ->flatMap(static fn(Collection $posts) => $posts->map(fn(Post $post) => $post->getAuthorUid()))
             ->concat($latestRepliers->pluck('uid')->filter()) // filter() will remove NULLs
             ->unique();
@@ -98,7 +86,7 @@ class PostsController extends AbstractController
         $this->stopwatch->stop('queryUsers');
 
         $this->stopwatch->start('queryUserRelated');
-        $fid = $query->queryResult->fid;
+        $fid = $this->query->queryResult->fid;
         $authorExpGrades = collect($this->authorExpGradeRepository->getLatestOfUsers($fid, $uids))
             ->keyBy(fn(AuthorExpGrade $authorExpGrade) => $authorExpGrade->uid);
         $users->each(fn(User $user) => $user->setCurrentAuthorExpGrade($authorExpGrades[$user->getUid()]));
@@ -112,15 +100,15 @@ class PostsController extends AbstractController
         return [
             'type' => $isIndexQuery ? 'index' : 'search',
             'pages' => [
-                'currentCursor' => $query->queryResult->currentCursor,
-                'nextCursor' => $query->queryResult->nextCursor,
+                'currentCursor' => $this->query->queryResult->currentCursor,
+                'nextCursor' => $this->query->queryResult->nextCursor,
                 ...$matchQueryPostCounts,
             ],
             'forum' => $this->forumRepository->getForum($fid),
-            'threads' => $query->postsTree->reOrderNestedPosts(
-                $query->postsTree->nestPostsWithParent(),
-                $query->orderByField,
-                $query->orderByDesc,
+            'threads' => $this->query->postsTree->reOrderNestedPosts(
+                $this->query->postsTree->nestPostsWithParent(),
+                $this->query->orderByField,
+                $this->query->orderByDesc,
             ),
             'users' => $users,
             'latestRepliers' => $latestRepliers,

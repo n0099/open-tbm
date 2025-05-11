@@ -85,7 +85,7 @@ readonly class QueryResult
             );
             $qb->andWhere($qb->expr()->orX(...$comparisons));
             $cursors->mapWithKeys(fn($fieldValue, string $fieldName) =>
-            $qb->setParameter("cursor_$fieldName", $fieldValue)); // prevent overwriting existing param
+                $qb->setParameter("cursor_$fieldName", $fieldValue)); // prevent overwriting existing param
         });
 
         $resultsAndHasMorePages = $queries->map(fn(QueryBuilder $query) =>
