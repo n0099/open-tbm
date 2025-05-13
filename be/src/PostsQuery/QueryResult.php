@@ -52,7 +52,7 @@ readonly class QueryResult
         ?string $cursorParamValue,
         string $orderByField,
         bool $orderByDesc,
-        ?string $queryByPostIDParamName = null,
+        Collection $queryByPostIDParamsName,
     ): void {
         $this->stopwatch->start('setResult');
 
@@ -73,10 +73,10 @@ readonly class QueryResult
                 // https://slack.engineering/evolving-api-pagination-at-slack/
                 ->addOrderBy('t.' . Helper::POST_TYPE_TO_ID[$postType]);
 
-            $cursors = $cursorsKeyByPostType?->get($postType);
-            if ($cursors === null) {
+            if ($cursorsKeyByPostType === null) {
                 return;
             }
+            $cursors = $cursorsKeyByPostType->get($postType);
             $cursors = collect($cursors);
             $comparisons = $cursors->keys()->map(
                 fn(string $fieldName): Comparison => $orderByDesc
@@ -105,11 +105,9 @@ readonly class QueryResult
         $this->currentCursor = $cursorParamValue ?? '';
         $this->nextCursor = $resultsAndHasMorePages->pluck('hasMorePages')
             ->filter()->isNotEmpty() // filter() remove falsy
-            ? $this->cursorCodec->encodeNextCursor(
-                $queryByPostIDParamName === null
-                    ? $postsKeyByTypePluralName
-                    : $postsKeyByTypePluralName->except([Helper::POST_ID_TO_TYPE_PLURAL[$queryByPostIDParamName]]),
-            )
+            ? $this->cursorCodec->encodeNextCursor($postsKeyByTypePluralName->except(
+                $queryByPostIDParamsName->map(static fn(string $postID) => Helper::POST_ID_TO_TYPE_PLURAL[$postID])
+            ))
             : null;
 
         $this->stopwatch->stop('setResult');

@@ -58,7 +58,15 @@ readonly class Query extends BaseQuery
                 return $postQuery;
             });
 
-        $this->queryResult->setResult($queries, $cursor, $this->getOrderByField(), $this->isOrderByDesc());
+        $queryByPostIDParamsName = collect(array_count_values(
+            collect($params->pick(...Helper::POST_ID))
+                ->filter(static fn(QueryParam $p) => $p->getSub('range') === '=')
+                ->map(static fn(QueryParam $p) => $p->name)
+                ->toArray()
+        ))
+            ->filter(static fn(int $counts) => $counts === 1)
+            ->keys();
+        $this->queryResult->setResult($queries, $cursor, $this->getOrderByField(), $this->isOrderByDesc(), $queryByPostIDParamsName);
     }
 
     /**
