@@ -4,9 +4,9 @@ namespace App\PostsQuery;
 
 abstract readonly class BaseQuery
 {
-    public string $orderByField;
+    private string $orderByField;
 
-    public bool $orderByDesc;
+    private bool $orderByDesc;
 
     public function __construct(
         public QueryResult $queryResult,
@@ -15,10 +15,20 @@ abstract readonly class BaseQuery
 
     abstract public function query(QueryParams $params, ?string $cursor): void;
 
+    public function getOrderByField(): string
+    {
+        return $this->orderByField;
+    }
+
     protected function setOrderByField(string $value): self
     {
         $this->orderByField = $value;
         return $this;
+    }
+
+    public function isOrderByDesc(): bool
+    {
+        return $this->orderByDesc;
     }
 
     protected function setOrderByDesc(bool $value): self

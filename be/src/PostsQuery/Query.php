@@ -39,7 +39,7 @@ readonly class Query extends BaseQuery
             ->only($params->getUniqueParamValue('postTypes'))
             ->map(function (PostRepository $repository) use ($fid, $params, &$cachedUserQueryResult): QueryBuilder {
                 $postQuery = $repository
-                    ->selectPostKeyDTO($this->orderByField)
+                    ->selectPostKeyDTO($this->getOrderByField())
                     ->where('t.fid = :fid')
                     ->setParameter('fid', $fid);
                 foreach ($params->omit() as $paramIndex => $param) { // omit nothing to get all params
@@ -56,7 +56,7 @@ readonly class Query extends BaseQuery
                 return $postQuery;
             });
 
-        $this->queryResult->setResult($queries, $cursor, $this->orderByField, $this->orderByDesc);
+        $this->queryResult->setResult($queries, $cursor, $this->getOrderByField(), $this->isOrderByDesc());
     }
 
     /**

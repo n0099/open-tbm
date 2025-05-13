@@ -61,10 +61,9 @@ class PostsController extends AbstractController
             // is all post ID params doesn't own any sub param
             && array_filter($postIDParams, static fn($p) => $p->getAllSub() !== []) === [];
         // is the fid param exists and there's no other params except unique params
-        $isIndexQuery = $isQueryByPostID
+        $this->paramsValidator->addDefaultParamsThenValidate(shouldSkip40003: $isQueryByPostID
             || (!($params->getUniqueParamValue('fid') === null)
-                && \count($params->omit(...ParamsValidator::UNIQUE_PARAMS_NAME)) === 0);
-        $this->paramsValidator->addDefaultParamsThenValidate(shouldSkip40003: $isIndexQuery);
+                && \count($params->omit(...ParamsValidator::UNIQUE_PARAMS_NAME)) === 0));
 
         $this->stopwatch->start('$queryClass->query()');
         $this->query->query($params, $request->query->get('cursor'));
@@ -98,7 +97,6 @@ class PostsController extends AbstractController
         $this->stopwatch->stop('queryUserRelated');
 
         return [
-            'type' => $isIndexQuery ? 'index' : 'search',
             'pages' => [
                 'currentCursor' => $this->query->queryResult->currentCursor,
                 'nextCursor' => $this->query->queryResult->nextCursor,
@@ -107,8 +105,8 @@ class PostsController extends AbstractController
             'forum' => $this->forumRepository->getForum($fid),
             'threads' => $this->query->postsTree->reOrderNestedPosts(
                 $this->query->postsTree->nestPostsWithParent(),
-                $this->query->orderByField,
-                $this->query->orderByDesc,
+                $this->query->getOrderByField(),
+                $this->query->isOrderByDesc(),
             ),
             'users' => $users,
             'latestRepliers' => $latestRepliers,
