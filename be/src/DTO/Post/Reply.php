@@ -4,6 +4,7 @@ namespace App\DTO\Post;
 
 use App\Entity\Post\Reply as ReplyEntity;
 use Illuminate\Support\Collection;
+use Symfony\Component\Serializer\Attribute\Ignore;
 
 class Reply extends ReplyEntity implements SortablePost
 {
@@ -34,5 +35,11 @@ class Reply extends ReplyEntity implements SortablePost
         $dto->geolocation = $entity->geolocation;
         $dto->signatureId = $entity->signatureId;
         return $dto;
+    }
+
+    #[Ignore]
+    public function getFid(): int
+    {
+        return $this->fid;
     }
 }

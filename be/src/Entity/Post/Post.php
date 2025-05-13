@@ -8,7 +8,7 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\MappedSuperclass]
 abstract class Post extends TimestampedEntity
 {
-    #[ORM\Column] private int $fid;
+    #[ORM\Column] protected int $fid;
     protected int $tid;
     #[ORM\Column] protected int $authorUid;
     #[ORM\Column] protected int $postedAt;

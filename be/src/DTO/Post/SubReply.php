@@ -20,6 +20,12 @@ class SubReply extends SubReplyEntity implements SortablePost
     }
 
     #[Ignore]
+    public function getFid(): int
+    {
+        return $this->fid;
+    }
+
+    #[Ignore]
     public function getIsMatchQuery(): bool
     {
         return true;
