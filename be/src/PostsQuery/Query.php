@@ -44,7 +44,7 @@ readonly class Query extends BaseQuery
                 if ($fid !== null) {
                     $postQuery = $postQuery->where('t.fid = :fid')->setParameter('fid', $fid);
                 }
-                foreach ($params->omit() as $paramIndex => $param) { // omit nothing to get all params
+                foreach ($params->getAll() as $paramIndex => $param) {
                     // even when $cachedUserQueryResult[$param->name] is null
                     // it will still pass as a reference to the array item
                     // that is null at this point, but will be later updated by ref

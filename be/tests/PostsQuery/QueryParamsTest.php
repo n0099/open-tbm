@@ -18,8 +18,10 @@ class QueryParamsTest extends TestCase
         $sut = new QueryParams($rawParams);
         $params = array_map(static fn(array $p) => new QueryParam($p), $rawParams);
         self::assertEquals(count($params), $sut->count());
-        self::assertEquals($params, $sut->pick('mainParam'));
         self::assertEquals([], $sut->pick());
+        self::assertEquals($params, $sut->omit());
+        self::assertEquals($params, $sut->getAll());
+        self::assertEquals($params, $sut->pick('mainParam'));
         self::assertEquals([], $sut->omit('mainParam'));
         self::assertEquals($params[0]->value, $sut->getUniqueParamValue('mainParam'));
         $sut->setUniqueParamValue('mainParam', $randomValue);

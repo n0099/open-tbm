@@ -3,6 +3,7 @@
 namespace App\PostsQuery;
 
 use App\Helper;
+use Illuminate\Support\Arr;
 
 class QueryParams
 {
@@ -46,6 +47,15 @@ class QueryParams
         ));
     }
 
+    /**
+     * @return QueryParam[]
+     * @psalm-return list<QueryParam>
+     */
+    public function getAll(): array
+    {
+        return $this->params;
+    }
+
     public function getUniqueParamValue(string $name): mixed
     {
         return $this->pick($name)[0]->value ?? null;
@@ -70,12 +80,15 @@ class QueryParams
             'postTypes' => ['value' => Helper::POST_TYPES],
             'orderBy' => ['value' => 'default', 'subParam' => ['direction' => 'ASC']],
         ];
-        foreach ($uniqueParamsDefaultValue as $name => $value) {
+        foreach ($uniqueParamsDefaultValue as $name => $default) {
             // add unique params with default value when it's not presented in $this->params
-            $paramFilledWithDefaults = new QueryParam([
-                $name => $this->getUniqueParamValue($name) ?? $value['value'],
-                ...($this->pick($name)[0]->subParam ?? $value['subParam'] ?? []),
-            ]);
+            $value = $this->getUniqueParamValue($name) ?? $default['value'];
+            $subParams = array_merge(
+                $default['subParam'] ?? [],
+                Arr::first($this->pick($name))?->getAllSub() ?? []
+            );
+            $paramFilledWithDefaults = new QueryParam([$name => $value, ...$subParams]);
+
             $paramsIndex = $this->getParamsIndexByName($name);
             if ($paramsIndex === []) {
                 $this->params[] = $paramFilledWithDefaults;

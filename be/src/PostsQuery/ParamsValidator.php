@@ -10,7 +10,7 @@ use Symfony\Component\Validator\Constraints as Assert;
 
 class ParamsValidator
 {
-    public const array UNIQUE_PARAMS_NAME = ['fid', 'postTypes', 'orderBy'];
+    public const array UNIQUE_PARAMS_NAME = ['postTypes', 'orderBy'];
 
     private QueryParams $params;
 

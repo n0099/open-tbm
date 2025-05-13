@@ -12,13 +12,12 @@ class QueryParam
 
     public function __construct(array $param)
     {
-        $this->name = (string) array_keys($param)[0];
+        $this->name = (string) array_key_first($param);
         if (is_numeric($this->name)) {
             throw new \InvalidArgumentException();
         }
         $this->value = $param[$this->name];
-        array_shift($param);
-        $this->subParams = $param;
+        $this->subParams = array_slice($param, 1);
     }
 
     public function getAllSub(): array
