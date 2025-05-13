@@ -38,6 +38,7 @@ trait Post
     public static function fromEntity(\App\Entity\Post\Post $entity): self
     {
         $dto = self::fromTimestampedEntity($entity);
+        $dto->tid = $entity->tid;
         $dto->authorUid = $entity->authorUid;
         $dto->postedAt = $entity->postedAt;
         $dto->lastSeenAt = $entity->lastSeenAt;

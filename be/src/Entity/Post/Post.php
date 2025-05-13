@@ -9,6 +9,7 @@ use Doctrine\ORM\Mapping as ORM;
 abstract class Post extends TimestampedEntity
 {
     #[ORM\Column] private int $fid;
+    protected int $tid;
     #[ORM\Column] protected int $authorUid;
     #[ORM\Column] protected int $postedAt;
     #[ORM\Column] protected ?int $lastSeenAt;
@@ -23,6 +24,17 @@ abstract class Post extends TimestampedEntity
     public function setFid(int $fid): self
     {
         $this->fid = $fid;
+        return $this;
+    }
+
+    public function getTid(): int
+    {
+        return $this->tid;
+    }
+
+    public function setTid(int $value): self
+    {
+        $this->tid = $value;
         return $this;
     }
 

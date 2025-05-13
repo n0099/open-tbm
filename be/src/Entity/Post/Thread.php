@@ -29,17 +29,6 @@ class Thread extends Post
     #[ORM\Column] protected $geolocation;
     #[ORM\Column] protected ?string $authorPhoneType;
 
-    public function getTid(): int
-    {
-        return $this->tid;
-    }
-
-    public function setTid(int $value): self
-    {
-        $this->tid = $value;
-        return $this;
-    }
-
     public function getThreadType(): int
     {
         return $this->threadType;

@@ -13,17 +13,6 @@ class SubReply extends Post
     #[ORM\Column(type: 'bigint')] protected int $pid;
     #[ORM\Column(type: 'bigint'), ORM\Id] protected int $spid;
 
-    public function getTid(): int
-    {
-        return $this->tid;
-    }
-
-    public function setTid(int $value): self
-    {
-        $this->tid = $value;
-        return $this;
-    }
-
     public function getPid(): int
     {
         return $this->pid;

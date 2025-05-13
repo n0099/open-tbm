@@ -20,17 +20,6 @@ class Reply extends Post
     #[ORM\Column] protected $geolocation;
     #[ORM\Column] protected ?int $signatureId;
 
-    public function getTid(): int
-    {
-        return $this->tid;
-    }
-
-    public function setTid(int $value): self
-    {
-        $this->tid = $value;
-        return $this;
-    }
-
     public function getPid(): int
     {
         return $this->pid;
