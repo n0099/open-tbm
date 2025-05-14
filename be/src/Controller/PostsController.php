@@ -7,7 +7,6 @@ use App\DTO\User\ForumModerator;
 use App\DTO\User\User;
 use App\Entity\Post\Post;
 use App\Entity\Post\Thread;
-use App\Helper;
 use App\PostsQuery\ParamsValidator;
 use App\PostsQuery\Query;
 use App\Repository\ForumRepository;
@@ -48,26 +47,16 @@ class PostsController extends AbstractController
             )),
             'query' => new Assert\Required(new Assert\Json()),
         ]));
+
         $params = $this->paramsValidator
             ->setParams(\Safe\json_decode($request->query->get('query'), true))
             ->getParams();
-
-        $postIDParams = $params->pick(...Helper::POST_ID);
-        $isQueryByPostID =
-            // is there no other params except unique params and post ID params
-            \count($params->omit(...ParamsValidator::UNIQUE_PARAMS_NAME, ...Helper::POST_ID)) === 0
-            // is there only one post ID param
-            && \count($postIDParams) === 1
-            // is all post ID params doesn't own any sub param
-            && array_filter($postIDParams, static fn($p) => $p->getAllSub() !== []) === [];
-        // is the fid param exists and there's no other params except unique params
-        $this->paramsValidator->addDefaultParamsThenValidate(shouldSkip40003: $isQueryByPostID
-            || (!($params->getUniqueParamValue('fid') === null)
-                && \count($params->omit(...ParamsValidator::UNIQUE_PARAMS_NAME)) === 0));
+        $this->paramsValidator->addDefaultParamsThenValidate();
 
         $this->stopwatch->start('$queryClass->query()');
         $this->query->query($params, $request->query->get('cursor'));
         $this->stopwatch->stop('$queryClass->query()');
+
         $this->stopwatch->start('fillWithParentPost');
         $matchQueryPostCounts = $this->query->postsTree->fillWithParentPost($this->query->queryResult);
         $this->stopwatch->stop('fillWithParentPost');

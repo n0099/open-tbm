@@ -31,18 +31,24 @@ class ParamsValidator
         return $this;
     }
 
-    public function addDefaultParamsThenValidate(bool $shouldSkip40003): void
+    public function addDefaultParamsThenValidate(): void
     {
         $this->params->addDefaultValueOnParams();
         $this->params->addDefaultValueOnUniqueParams();
-        // sort here to prevent further sort while validating
-        $sortedPostTypes = collect($this->params->getUniqueParamValue('postTypes'))->sort()->values()->all();
-        $this->params->setUniqueParamValue('postTypes', $sortedPostTypes);
-        $currentPostTypes = (array) $this->params->getUniqueParamValue('postTypes');
-        if (!$shouldSkip40003) {
-            $this->validate40003($currentPostTypes);
-        }
-        $this->validate40004($currentPostTypes);
+        $newPostTypes = $this->setRequiredPostTypesByParams();
+        Helper::abortAPIIf(40003, $newPostTypes === []);
+        $this->params->setUniqueParamValue('postTypes', $newPostTypes);
+        $this->validate40004($newPostTypes);
+    }
+
+    public function setRequiredPostTypesByParams(): array
+    {
+        $currentPostTypes = $this->params->getUniqueParamValue('postTypes');
+        $requiredPostTypes = array_intersect(Helper::POST_TYPES, ...array_values(Arr::only(
+            self::REQUIRED_POST_TYPES_KEY_BY_PARAM_NAME,
+            array_map(static fn(QueryParam $p) => $p->name, $this->params->getAll())
+        )));
+        return collect($currentPostTypes)->intersect($requiredPostTypes)->sort()->values()->toArray();
     }
 
     private function validateParamValue(array $param): void
@@ -97,47 +103,30 @@ class ParamsValidator
 
     private static function isRequiredPostTypes(array $current, array $required): bool
     {
-        /** @var 'SUB' | 'All' $coverage */
-        /** @var array $postTypes */
-        [$coverage, $postTypes] = $required;
-        $postTypes = Arr::sort($postTypes);
-        return match ($coverage) {
-            'SUB' => array_diff($current, $postTypes) === [],
-            'ALL' => $current === $postTypes,
-            default => throw new \Exception(),
-        };
+        return array_diff($required, $current) === [];
     }
 
     public const array REQUIRED_POST_TYPES_KEY_BY_PARAM_NAME = [
-        'pid' => ['SUB', ['reply', 'subReply']],
-        'spid' => ['ALL', ['subReply']],
-        'latestReplyPostedAt' => ['ALL', ['thread']],
-        'threadTitle' => ['ALL', ['thread']],
-        'postContent' => ['SUB', ['reply', 'subReply']],
-        'threadViewCount' => ['ALL', ['thread']],
-        'threadShareCount' => ['ALL', ['thread']],
-        'threadReplyCount' => ['ALL', ['thread']],
-        'replySubReplyCount' => ['ALL', ['reply']],
-        'threadProperties' => ['ALL', ['thread']],
-        'authorExpGrade' => ['SUB', ['reply', 'subReply']],
-        'latestReplierUid' => ['ALL', ['thread']],
-        'latestReplierName' => ['ALL', ['thread']],
-        'latestReplierDisplayName' => ['ALL', ['thread']],
-        'latestReplierGender' => ['ALL', ['thread']],
+        'pid' => ['reply', 'subReply'],
+        'spid' => ['subReply'],
+        'latestReplyPostedAt' => ['thread'],
+        'threadTitle' => ['thread'],
+        'postContent' => ['reply', 'subReply'],
+        'threadViewCount' => ['thread'],
+        'threadShareCount' => ['thread'],
+        'threadReplyCount' => ['thread'],
+        'replySubReplyCount' => ['reply'],
+        'threadProperties' => ['thread'],
+        'authorExpGrade' => ['reply', 'subReply'],
+        'latestReplierUid' => ['thread'],
+        'latestReplierName' => ['thread'],
+        'latestReplierDisplayName' => ['thread'],
+        'latestReplierGender' => ['thread'],
     ];
 
-    private function validate40003(array $currentPostTypes): void
-    {
-        foreach (self::REQUIRED_POST_TYPES_KEY_BY_PARAM_NAME as $paramName => $requiredPostTypes) {
-            if ($this->params->pick($paramName) !== []) {
-                Helper::abortAPIIfNot(40003, self::isRequiredPostTypes($currentPostTypes, $requiredPostTypes));
-            }
-        }
-    }
-
     public const array REQUIRED_POST_TYPES_KEY_BY_ORDER_BY_VALUE = [
-        'pid' => ['SUB', ['reply', 'subReply']],
-        'spid' => ['SUB', ['subReply']],
+        'pid' => ['reply', 'subReply'],
+        'spid' => ['subReply'],
     ];
 
     private function validate40004(array $currentPostTypes): void
