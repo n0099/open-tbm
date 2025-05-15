@@ -24,7 +24,7 @@ class CursorCodec
             ->mapWithKeys(static fn(Collection $posts, string $type) => [
                 Helper::POST_TYPE_PLURAL_TO_SINGULAR[$type] => $posts->last(), // null when no posts
             ]) // [singularPostTypeName => lastPostInResult]
-            ->filter() // remove post types that have no posts
+            ->filter(static fn(?BasePostKey $post) => $post !== null)
             ->map(fn(BasePostKey $post) => [$post->postId, $post->orderByFieldValue])
             ->map(static fn(array $cursors) => collect($cursors)
                 ->map(static function (int|string $cursor): string {
@@ -65,7 +65,7 @@ class CursorCodec
             ->join(',');
     }
 
-    /** @psalm-return Collection<'reply'|'subReply'|'thread', array> */
+    /** @psalm-return Collection<'reply'|'subReply'|'thread', Collection> */
     public function decodeCursor(string $encodedCursors, string $orderByField): Collection
     {
         return collect(Helper::POST_TYPES)
@@ -107,7 +107,6 @@ class CursorCodec
             ])
             // filter out cursors with all fields value being null, '' or 0 with their encoded cursor ',,'
             ->reject(static fn(Collection $cursors) =>
-                $cursors->every(static fn(int|string|null $cursor) => empty($cursor)))
-            ->map(static fn(Collection $cursors) => $cursors->all());
+                $cursors->every(static fn(int|string|null $cursor) => empty($cursor)));
     }
 }

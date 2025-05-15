@@ -56,10 +56,10 @@ readonly class QueryResult
     ): void {
         $this->stopwatch->start('setResult');
 
-        $cursorsKeyByPostType = null;
+        $cursorsKeyByPostType = collect();
         if ($cursorParamValue !== null) {
             $cursorsKeyByPostType = $this->cursorCodec->decodeCursor($cursorParamValue, $orderByField);
-            // remove queries for post types with encoded cursor ',,'
+            // remove query for post type with an empty encoded cursor ',,'
             $queries = $queries->intersectByKeys($cursorsKeyByPostType);
         }
 
@@ -73,11 +73,10 @@ readonly class QueryResult
                 // https://slack.engineering/evolving-api-pagination-at-slack/
                 ->addOrderBy('t.' . Helper::POST_TYPE_TO_ID[$postType]);
 
-            if ($cursorsKeyByPostType === null) {
+            $cursors = $cursorsKeyByPostType->get($postType, collect());
+            if ($cursors->isEmpty()) {
                 return;
             }
-            $cursors = $cursorsKeyByPostType->get($postType);
-            $cursors = collect($cursors);
             $comparisons = $cursors->keys()->map(
                 fn(string $fieldName): Comparison => $orderByDesc
                     ? $qb->expr()->lt("t.$fieldName", ":cursor_$fieldName")
@@ -104,7 +103,7 @@ readonly class QueryResult
             ?? $this->subReplies->first()->fid;
         $this->currentCursor = $cursorParamValue ?? '';
         $this->nextCursor = $resultsAndHasMorePages->pluck('hasMorePages')
-            ->filter()->isNotEmpty() // filter() remove falsy
+            ->contains(static fn(bool $hasMorePages) => $hasMorePages)
             ? $this->cursorCodec->encodeNextCursor($postsKeyByTypePluralName->except(
                 $queryByPostIDParamsName->map(static fn(string $postID) => Helper::POST_ID_TO_TYPE_PLURAL[$postID])
             ))

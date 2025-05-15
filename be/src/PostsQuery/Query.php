@@ -84,7 +84,7 @@ readonly class Query extends BaseQuery
         $sub = $param->getAllSub();
         $sub['not'] ??= false;
         $not = $sub['not'] ? 'NOT' : '';
-        $notBoolStr = $sub['not'] ? 'true' : 'false';
+        $notReverse = $sub['not'] ? '' : 'NOT';
 
         $fieldNameOfNumericParams = [
             'threadViewCount' => 'viewCount',
@@ -145,15 +145,15 @@ readonly class Query extends BaseQuery
             // dateTimeRange
             'postedAt', 'latestReplyPostedAt' => $whereBetween($name),
             // array
-            'threadProperties' => static function () use ($not, $notBoolStr, $value, $query) {
+            'threadProperties' => (static function () use ($notReverse, $value, $query) {
                 foreach ($value as $threadProperty) {
                     match ($threadProperty) {
-                        'good' => $query->andWhere("t.isGood = $notBoolStr"),
-                        'sticky' => $query->andWhere("t.stickyType IS $not NULL"),
+                        'good' => $query->andWhere("t.isGood IS $notReverse NULL"),
+                        'sticky' => $query->andWhere("t.stickyType IS $notReverse NULL"),
                     };
                 }
                 return $query;
-            },
+            })(),
             'authorName', 'latestReplierName', 'authorDisplayName', 'latestReplierDisplayName' =>
                 $query->andWhere("t.{$userTypeOfUserParams}Uid $not IN (:$sqlParamName)")
                     ->setParameter(

@@ -66,8 +66,10 @@ class PostsController extends AbstractController
             $this->query->postsTree->threads->map(fn(Thread $thread) => $thread->getLatestReplierId()),
         );
         $uids = collect([$this->query->postsTree->threads, $this->query->postsTree->replies, $this->query->postsTree->subReplies])
-            ->flatMap(static fn(Collection $posts) => $posts->map(fn(Post $post) => $post->getAuthorUid()))
-            ->concat($latestRepliers->pluck('uid')->filter()) // filter() will remove NULLs
+            ->flatMap(static fn(Collection $posts) =>
+                $posts->map(fn(Post $post) => $post->getAuthorUid()))
+            ->concat($latestRepliers->pluck('uid')
+                ->filter(static fn(?int $uid) => $uid !== null))
             ->unique();
         $users = collect($this->userRepository->getUsers($uids))
             ->map(fn(\App\Entity\User $entity) => User::fromEntity($entity));
