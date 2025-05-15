@@ -36,7 +36,7 @@ readonly class QueryResult
     ) {}
 
     /** @return array{result: Collection, hasMorePages: bool} */
-    public static function hasMorePages(QueryBuilder $query, int $limit): array
+    public static function getQueryResult(QueryBuilder $query, int $limit): array
     {
         $results = collect($query->setMaxResults($limit + 1)->getQuery()->getResult());
         if ($results->count() === $limit + 1) {
@@ -89,16 +89,16 @@ readonly class QueryResult
         });
 
         $resultsAndHasMorePages = $queries->map(fn(QueryBuilder $query) =>
-            self::hasMorePages($query, $this->perPageItems));
+            self::getQueryResult($query, $this->perPageItems));
         /** @var PostsKeyByTypePluralName $postsKeyByTypePluralName */
         $postsKeyByTypePluralName = $resultsAndHasMorePages
             ->mapWithKeys(fn(array $resultAndHasMorePages, string $postType) =>
                 [Helper::POST_TYPE_TO_PLURAL[$postType] => $resultAndHasMorePages['result']]);
         Helper::abortAPIIf(40401, $postsKeyByTypePluralName->every(static fn(Collection $i) => $i->isEmpty()));
 
-        $this->threads = $postsKeyByTypePluralName['threads'] ?? collect();
-        $this->replies = $postsKeyByTypePluralName['replies'] ?? collect();
-        $this->subReplies = $postsKeyByTypePluralName['subReplies'] ?? collect();
+        $this->threads = $postsKeyByTypePluralName->get('threads', collect());
+        $this->replies = $postsKeyByTypePluralName->get('replies', collect());
+        $this->subReplies = $postsKeyByTypePluralName->get('subReplies', collect());
         $this->fid = $this->threads->first()->fid
             ?? $this->replies->first()->fid
             ?? $this->subReplies->first()->fid;

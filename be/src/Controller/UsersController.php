@@ -51,7 +51,7 @@ class UsersController extends AbstractController
             )[1]->orderBy('t.uid', 'DESC');
 
         ['result' => $result, 'hasMorePages' => $hasMorePages] =
-            QueryResult::hasMorePages($queries, $this->perPageItems);
+            QueryResult::getQueryResult($queries, $this->perPageItems);
         $resultCount = count($result);
         Helper::abortAPIIf(40402, $resultCount === 0);
 

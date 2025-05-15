@@ -63,7 +63,7 @@ readonly class Query extends BaseQuery
                 ->filter(static fn(QueryParam $p) => $p->getSub('range') === '=')
                 ->map(static fn(QueryParam $p) => $p->name)
                 ->toArray()
-        ))
+        )) // we need the next cursor for post type that has multiple param
             ->filter(static fn(int $counts) => $counts === 1)
             ->keys();
         $this->queryResult->setResult($queries, $cursor, $this->getOrderByField(), $this->isOrderByDesc(), $queryByPostIDParamsName);
