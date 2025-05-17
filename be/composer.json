@@ -20,6 +20,7 @@
         "symfony/dotenv": "^7.2.0",
         "symfony/flex": "^2.5.0",
         "symfony/framework-bundle": "^7.2.5",
+        "symfony/monolog-bundle": "^3.10",
         "symfony/property-access": "^7.2.3",
         "symfony/runtime": "^7.2.3",
         "symfony/serializer": "^7.2.5",
