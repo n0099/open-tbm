@@ -6,9 +6,12 @@ use App\DTO\PostKey\Reply as ReplyKey;
 use App\DTO\PostKey\SubReply as SubReplyKey;
 use App\DTO\PostKey\Thread as ThreadKey;
 use App\Helper;
+use Doctrine\DBAL\ParameterType;
 use Doctrine\ORM\Query\Expr\Comparison;
+use Doctrine\ORM\Query\Parameter;
 use Doctrine\ORM\QueryBuilder;
 use Illuminate\Support\Collection;
+use Symfony\Component\DependencyInjection\ParameterBag\ContainerBagInterface;
 use Symfony\Component\Stopwatch\Stopwatch;
 
 /** @psalm-import-type PostsKeyByTypePluralName from CursorCodec */
@@ -29,21 +32,49 @@ readonly class QueryResult
 
     public ?string $nextCursor;
 
+    public Collection $queries;
+
     public function __construct(
         private Stopwatch $stopwatch,
         private CursorCodec $cursorCodec,
+        private ContainerBagInterface $containerBag,
         private int $perPageItems = 50,
     ) {}
 
     /** @return array{result: Collection, hasMorePages: bool} */
-    public static function getQueryResult(QueryBuilder $query, int $limit): array
+    public function getQueryResult(QueryBuilder $queryBuilder, int $limit): array
     {
-        $results = collect($query->setMaxResults($limit + 1)->getQuery()->getResult());
+        $query = $queryBuilder->setMaxResults($limit + 1)->getQuery();
+
+        $entityManager = $query->getEntityManager();
+        $connection = $entityManager->getConnection();
+        $parameters = collect($query->getParameters())->mapWithKeys(static fn(Parameter $p) => [
+            ':' . $p->getName() => match($p->getType()) {
+                ParameterType::STRING => $connection->getDatabasePlatform()->quoteStringLiteral($p->getValue()),
+                default => $p->getValue(),
+            }
+        ]);
+        $rawSQL = $entityManager->createQuery(strtr($query->getDQL(), $parameters->toArray()))->getSQL();
+        $explainJSON = \Safe\json_decode($connection->executeQuery(
+            'EXPLAIN (COSTS, VERBOSE, BUFFERS, FORMAT JSON) ' . $rawSQL
+        )->fetchOne(), true);
+        $plansCost = array_sum(array_map(static fn(array $plan) => $plan['Plan']['Total Cost'], $explainJSON));
+        $planCostLimit = $this->containerBag->get('app.query_plan_cost_limit');
+        if (!($planCostLimit === null || $planCostLimit === '' || (int)$planCostLimit === 0)) {
+            Helper::abortAPIIf(40006, $plansCost > $planCostLimit);
+        }
+
+        $results = collect($query->getResult());
         if ($results->count() === $limit + 1) {
             $results->pop();
             $hasMorePages = true;
         }
-        return ['result' => $results, 'hasMorePages' => $hasMorePages ?? false];
+        return [
+            'result' => $results,
+            'hasMorePages' => $hasMorePages ?? false,
+            'query' => $rawSQL,
+            'queryPlan' => $explainJSON
+        ];
     }
 
     /** @param Collection<Helper::POST_TYPE, ?QueryBuilder> $queries */
@@ -91,8 +122,8 @@ readonly class QueryResult
             self::getQueryResult($query, $this->perPageItems));
         /** @var PostsKeyByTypePluralName $postsKeyByTypePluralName */
         $postsKeyByTypePluralName = $resultsAndHasMorePages
-            ->mapWithKeys(fn(array $resultAndHasMorePages, string $postType) =>
-                [Helper::POST_TYPE_TO_PLURAL[$postType] => $resultAndHasMorePages['result']]);
+            ->mapWithKeys(fn(array $tuple, string $postType) =>
+                [Helper::POST_TYPE_TO_PLURAL[$postType] => $tuple['result']]);
         Helper::abortAPIIf(40401, $postsKeyByTypePluralName->every(static fn(Collection $i) => $i->isEmpty()));
 
         $this->threads = $postsKeyByTypePluralName->get('threads', collect());
@@ -108,6 +139,9 @@ readonly class QueryResult
                 $queryByPostIDParamsName->map(static fn(string $postID) => Helper::POST_ID_TO_TYPE_PLURAL[$postID])
             ))
             : null;
+        $this->queries = $resultsAndHasMorePages->mapWithKeys(fn(array $tuple, string $postType) =>
+            [$postType => ['query' => $tuple['query'], 'plan' => $tuple['queryPlan']]]
+        );
 
         $this->stopwatch->stop('setResult');
     }

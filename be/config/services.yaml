@@ -5,6 +5,7 @@
 # https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
 parameters:
     app.base_url.fe: '%env(APP_BASE_URL_FE)%'
+    app.query_plan_cost_limit: '%env(APP_QUERY_PLAN_COST_LIMIT)%'
 
 services:
     # default configuration for services in *this* file

@@ -19,6 +19,7 @@ class UsersController extends AbstractController
     public function __construct(
         private readonly Validator $validator,
         private readonly UserRepository $userRepository,
+        private readonly QueryResult $queryResult,
     ) {}
 
     #[Route('/api/users')]
@@ -51,7 +52,7 @@ class UsersController extends AbstractController
             )[1]->orderBy('t.uid', 'DESC');
 
         ['result' => $result, 'hasMorePages' => $hasMorePages] =
-            QueryResult::getQueryResult($queries, $this->perPageItems);
+            $this->queryResult->getQueryResult($queries, $this->perPageItems);
         $resultCount = count($result);
         Helper::abortAPIIf(40402, $resultCount === 0);
 

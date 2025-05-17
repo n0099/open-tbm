@@ -101,6 +101,7 @@ class PostsController extends AbstractController
             ),
             'users' => $users,
             'latestRepliers' => $latestRepliers,
+            'queries' => $this->query->queryResult->queries,
         ];
     }
 }
