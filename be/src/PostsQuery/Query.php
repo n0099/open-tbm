@@ -30,34 +30,6 @@ readonly class Query extends BaseQuery
             Helper::abortAPIIfNot(40406, $this->forumRepository->isForumExists($fid));
         }
 
-        $orderByParam = $params->pick('orderBy')[0];
-        $this->setOrderByField($orderByParam->value === 'default' ? 'postedAt' : $orderByParam->value)
-            ->setOrderByDesc($orderByParam->value === 'default' || $orderByParam->getSub('direction') === 'DESC');
-
-        /** @var array<string, array> $cachedUserQueryResult key by param name */
-        $cachedUserQueryResult = [];
-        /** @var Collection<string, QueryBuilder> $queries key by post type */
-        $queries = collect($this->postRepositoryFactory->newForumPosts())
-            ->only($params->getUniqueParamValue('postTypes'))
-            ->map(function (PostRepository $repository) use ($fid, $params, &$cachedUserQueryResult): QueryBuilder {
-                $postQuery = $repository->selectPostKeyDTO($this->getOrderByField());
-                if ($fid !== null) {
-                    $postQuery = $postQuery->where('t.fid = :fid')->setParameter('fid', $fid);
-                }
-                foreach ($params->getAll() as $paramIndex => $param) {
-                    // even when $cachedUserQueryResult[$param->name] is null
-                    // it will still pass as a reference to the array item
-                    // that is null at this point, but will be later updated by ref
-                    $postQuery = self::applyQueryParamsOnQuery(
-                        $postQuery,
-                        $param,
-                        $paramIndex,
-                        $cachedUserQueryResult[$param->name],
-                    );
-                }
-                return $postQuery;
-            });
-
         $queryByPostIDParamsName = collect(array_count_values(
             collect($params->pick(...Helper::POST_ID))
                 ->filter(static fn(QueryParam $p) => $p->getSub('range') === '=')
@@ -66,7 +38,46 @@ readonly class Query extends BaseQuery
         )) // we need the next cursor for post type that has multiple param
             ->filter(static fn(int $counts) => $counts === 1)
             ->keys();
-        $this->queryResult->setResult($queries, $cursor, $this->getOrderByField(), $this->isOrderByDesc(), $queryByPostIDParamsName);
+
+        $orderByParam = $params->pick('orderBy')[0];
+        $this->setOrderByField($orderByParam->value === 'default' ? 'postedAt' : $orderByParam->value)
+            ->setOrderByDesc(!($orderByParam->value === 'default' && $queryByPostIDParamsName->isEmpty())
+                && $orderByParam->getSub('direction') === 'DESC');
+
+        $this->queryResult->setResult(
+            $this->buildQueries($params, $fid),
+            $cursor,
+            $this->getOrderByField(),
+            $this->isOrderByDesc(),
+            $queryByPostIDParamsName
+        );
+    }
+
+    /** @return Collection<string, QueryBuilder> key by post type */
+    private function buildQueries(QueryParams $params, ?int $fid): Collection
+    {
+        /** @var array<string, array> $cachedUserQueryResult key by param name */
+        $cachedUserQueryResult = [];
+        return collect($this->postRepositoryFactory->newForumPosts())
+            ->only($params->getUniqueParamValue('postTypes'))
+            ->map(function (PostRepository $repository) use ($fid, $params, &$cachedUserQueryResult): QueryBuilder {
+                $query = $repository->selectPostKeyDTO($this->getOrderByField());
+                if ($fid !== null) {
+                    $query = $query->where('t.fid = :fid')->setParameter('fid', $fid);
+                }
+                foreach ($params->getAll() as $paramIndex => $param) {
+                    // even when $cachedUserQueryResult[$param->name] is null
+                    // it will still pass as a reference to the array item
+                    // that is null at this point, but will be later updated by ref
+                    $query = self::applyQueryParamsOnQuery(
+                        $query,
+                        $param,
+                        $paramIndex,
+                        $cachedUserQueryResult[$param->name],
+                    );
+                }
+                return $query;
+            });
     }
 
     /**
