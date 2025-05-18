@@ -3,6 +3,8 @@
 namespace App\Repository\Post;
 
 use App\DTO\PostKey\Thread as ThreadKey;
+use App\Entity\Post\Reply;
+use App\Entity\Post\SubReply;
 use App\Entity\Post\Thread;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
@@ -36,7 +38,7 @@ class ThreadRepository extends PostRepository
         $tableName = $entityManager->getClassMetadata(Thread::class)->getTableName();
         $statement = $entityManager->getConnection()->prepare(<<<"SQL"
             SELECT tid FROM (
-                SELECT fid, tid, ROW_NUMBER() OVER (ORDER BY tid) rn FROM $tableName
+                SELECT fid, tid, ROW_NUMBER() OVER (PARTITION BY fid ORDER BY tid) rn FROM $tableName
             ) t WHERE fid = :fid AND rn % :chunkSize = 0
             SQL);
         $statement->bindValue('fid', $fid);
@@ -46,15 +48,37 @@ class ThreadRepository extends PostRepository
 
     public function getThreadsIdWithMaxPostedAtAfter(int $fid, int $after, int $limit): array
     {
-        $dql = 'SELECT t.tid,
-                    GREATEST(MAX(t.postedAt), MAX(r.postedAt), MAX(sr.postedAt)) maxPostedAt
-                FROM App\Entity\Post\Thread t
-                    LEFT JOIN App\Entity\Post\Reply r WITH r.tid = t.tid
-                    LEFT JOIN App\Entity\Post\SubReply sr WITH sr.tid = t.tid
-                WHERE t.fid = :fid AND t.tid > :after
-                GROUP BY t.tid
-                ORDER BY t.tid';
-        return $this->createQueryWithParams($dql, ['fid' => $fid, 'after' => $after])
-            ->setMaxResults($limit)->getResult();
+        $entityManager = $this->getEntityManager();
+        $threadTable = $entityManager->getClassMetadata(Thread::class)->getTableName();
+        $replyTable = $entityManager->getClassMetadata(Reply::class)->getTableName();
+        $subReplyTable = $entityManager->getClassMetadata(SubReply::class)->getTableName();
+        $statement = $entityManager->getConnection()->prepare(<<<"SQL"
+            SELECT t.tid, GREATEST(
+                t."postedAt",
+                r."maxPostedAt",
+                sr."maxPostedAt"
+            ) "maxPostedAt"
+            FROM $threadTable t
+            LEFT JOIN LATERAL (
+                SELECT tid, max("postedAt") "maxPostedAt"
+                FROM $replyTable
+                WHERE tid = t.tid
+                GROUP BY tid
+            ) r ON r.tid = t.tid
+            LEFT JOIN LATERAL (
+                SELECT sr.tid, max(sr."postedAt") "maxPostedAt"
+                FROM $subReplyTable sr
+                WHERE sr.tid = t.tid
+                GROUP BY sr.tid
+            ) sr ON sr.tid = t.tid
+            WHERE t.fid = :fid
+              AND t.tid > :after
+            ORDER BY t.tid
+            LIMIT :limit;
+            SQL);
+        $statement->bindValue('fid', $fid);
+        $statement->bindValue('after', $after);
+        $statement->bindValue('limit', $limit);
+        return $statement->executeQuery()->fetchAllAssociative();
     }
 }
