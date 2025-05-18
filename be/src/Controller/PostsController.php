@@ -79,7 +79,7 @@ class PostsController extends AbstractController
         $fid = $this->query->queryResult->fid;
         $authorExpGrades = collect($this->authorExpGradeRepository->getLatestOfUsers($fid, $uids))
             ->keyBy(fn(AuthorExpGrade $authorExpGrade) => $authorExpGrade->uid);
-        $users->each(fn(User $user) => $user->setCurrentAuthorExpGrade($authorExpGrades[$user->getUid()]));
+        $users->each(fn(User $user) => $user->setCurrentAuthorExpGrade($authorExpGrades[$user->getUid()] ?? null));
 
         $forumModerators = collect($this->forumModeratorRepository
                 ->getLatestOfUsers($fid, $users->map(fn(User $user) => $user->getPortrait())))

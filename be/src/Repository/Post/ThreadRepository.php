@@ -49,8 +49,8 @@ class ThreadRepository extends PostRepository
         $dql = 'SELECT t.tid,
                     GREATEST(MAX(t.postedAt), MAX(r.postedAt), MAX(sr.postedAt)) maxPostedAt
                 FROM App\Entity\Post\Thread t
-                    JOIN App\Entity\Post\Reply r WITH r.tid = t.tid
-                    JOIN App\Entity\Post\SubReply sr WITH sr.tid = t.tid
+                    LEFT JOIN App\Entity\Post\Reply r WITH r.tid = t.tid
+                    LEFT JOIN App\Entity\Post\SubReply sr WITH sr.tid = t.tid
                 WHERE t.fid = :fid AND t.tid > :after
                 GROUP BY t.tid
                 ORDER BY t.tid';
