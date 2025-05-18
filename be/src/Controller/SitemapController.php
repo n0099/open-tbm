@@ -49,12 +49,12 @@ class SitemapController extends AbstractController
     {
         $cursor = $request->query->get('cursor') ?? '0';
         $validator->validate($cursor, new Assert\Type('digit'));
-        Helper::abortAPIIfNot(40406, $this->forumRepository->isForumExists($fid));
 
         return $this->cache->get(
             "/sitemaps/forums/$fid/threads?cursor=$cursor",
             function (ItemInterface $item) use ($fid, $cursor) {
                 $item->expiresAfter(new \DateInterval('P1D'));
+                Helper::abortAPIIfNot(40406, $this->forumRepository->isForumExists($fid));
                 return $this->renderXml(
                     'sitemaps/threads.xml.twig',
                     [

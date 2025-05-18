@@ -134,9 +134,9 @@ readonly class PostsTree
             ->values(); // reset keys
         $getOrderByProp = 'get' . ucfirst($orderByField);
         return $sortBySortingKey($nestedPosts->map(
-            function (Thread $thread) use ($getOrderByProp, $orderByField, $orderByDesc, $sortBySortingKey): Thread {
+            function (Thread $thread) use ($getOrderByProp, $orderByDesc, $sortBySortingKey): Thread {
                 $thread->setReplies($sortBySortingKey($thread->getReplies()->map(
-                    function (Reply $reply) use ($getOrderByProp, $orderByField, $orderByDesc): Reply {
+                    function (Reply $reply) use ($getOrderByProp, $orderByDesc): Reply {
                         $reply->setSubReplies($reply->getSubReplies()->sortBy(
                             fn(SubReply $subReplies) => $subReplies->{$getOrderByProp}(),
                             descending: $orderByDesc,
