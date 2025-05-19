@@ -16,7 +16,8 @@ use Symfony\Contracts\Cache\ItemInterface;
 
 class SitemapController extends AbstractController
 {
-    public static int $maxUrls = 50000;
+    private static int $maxUrls = 50000;
+    private static int $cacheAgeSeconds = 86400;
 
     public function __construct(
         private readonly CacheInterface $cache,
@@ -30,16 +31,12 @@ class SitemapController extends AbstractController
         return $this->cache->get(
             '/sitemaps/forums',
             function (ItemInterface $item) {
-                $item->expiresAfter(new \DateInterval('P1D'));
-                $threadsIdKeyByFid = collect($this->forumRepository->getOrderedForumsId())
-                    ->mapWithKeys(fn(int $fid) => [
-                        $fid => $this->threadRepository->getThreadsIdByChunks($fid, self::$maxUrls),
-                    ])
-                    ->toArray();
+                $item->expiresAfter(self::$cacheAgeSeconds);
                 return $this->renderXml(
                     'sitemaps/forums.xml.twig',
-                    ['threads_id_key_by_fid' => $threadsIdKeyByFid],
-                );
+                    ['threads_id_key_by_fid' => collect($this->threadRepository->getThreadsIdByChunks(self::$maxUrls))
+                        ->mapToGroups(static fn(array $i) => [$i['fid'] => $i['tid']])],
+                )->setMaxAge(self::$cacheAgeSeconds)->setPublic();
             },
         );
     }
@@ -53,7 +50,7 @@ class SitemapController extends AbstractController
         return $this->cache->get(
             "/sitemaps/forums/$fid/threads?cursor=$cursor",
             function (ItemInterface $item) use ($fid, $cursor) {
-                $item->expiresAfter(new \DateInterval('P1D'));
+                $item->expiresAfter(self::$cacheAgeSeconds);
                 Helper::abortAPIIfNot(40406, $this->forumRepository->isForumExists($fid));
                 return $this->renderXml(
                     'sitemaps/threads.xml.twig',
@@ -61,7 +58,7 @@ class SitemapController extends AbstractController
                         'threads' => $this->threadRepository->getThreadsIdWithMaxPostedAtAfter($fid, $cursor, self::$maxUrls),
                         'base_url_fe' => $this->getParameter('app.base_url.fe'),
                     ],
-                );
+                )->setMaxAge(self::$cacheAgeSeconds)->setPublic();
             },
         );
     }

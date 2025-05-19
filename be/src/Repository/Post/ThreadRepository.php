@@ -29,7 +29,7 @@ class ThreadRepository extends PostRepository
         return $this->getQueryResultWithParams($dql, ['fid' => $fid, 'tid' => $postsId]);
     }
 
-    public function getThreadsIdByChunks(int $fid, int $chunkSize): array
+    public function getThreadsIdByChunks(int $chunkSize): array
     {
         // https://github.com/doctrine/orm/issues/3542
         // https://github.com/doctrine/dbal/issues/5018#issuecomment-2395177479
@@ -37,13 +37,12 @@ class ThreadRepository extends PostRepository
         $entityManager = $this->getEntityManager();
         $tableName = $entityManager->getClassMetadata(Thread::class)->getTableName();
         $statement = $entityManager->getConnection()->prepare(<<<"SQL"
-            SELECT tid FROM (
+            SELECT fid, tid FROM (
                 SELECT fid, tid, ROW_NUMBER() OVER (PARTITION BY fid ORDER BY tid) rn FROM $tableName
-            ) t WHERE fid = :fid AND rn % :chunkSize = 0
+            ) t WHERE rn % :chunkSize = 0
             SQL);
-        $statement->bindValue('fid', $fid);
         $statement->bindValue('chunkSize', $chunkSize);
-        return $statement->executeQuery()->fetchFirstColumn();
+        return $statement->executeQuery()->fetchAllAssociative();
     }
 
     public function getThreadsIdWithMaxPostedAtAfter(int $fid, int $after, int $limit): array

@@ -19,12 +19,6 @@ class ForumRepository extends BaseRepository
         return $this->createQuery($dql)->getResult();
     }
 
-    public function getOrderedForumsId(): array
-    {
-        $dql = 'SELECT t.fid FROM App\Entity\Forum t ORDER BY t.fid';
-        return $this->createQuery($dql)->getSingleColumnResult();
-    }
-
     public function isForumExists(int $fid): bool
     {
         $dql = 'SELECT 1 FROM App\Entity\Forum t WHERE t.fid = :fid';
