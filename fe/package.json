@@ -30,6 +30,7 @@
         "luxon": "^3.6.1",
         "noty": "^3.2.0-beta-deprecated",
         "nuxt": "3.16.0",
+        "pev2": "^1.15.0",
         "pinia": "^3.0.2",
         "scroll-into-view-if-needed": "^3.1.0",
         "tippy.js": "^6.3.7",
