@@ -1,6 +1,6 @@
 <template>
-<template v-if="data !== undefined">
-    <div class="d-inline-flex justify-content-center w-100">
+<div v-if="data !== undefined" class="query-plan-visualizer">
+    <div class="d-inline-flex justify-content-center w-100 border-bottom">
         <span class="align-self-center">查询计划：</span>
         <AMenu v-model:selectedKeys="selectedPostType" mode="horizontal" class="justify-content-center w-25">
             <AMenuItem key="thread">主题帖</AMenuItem>
@@ -17,17 +17,17 @@
         </select>
     </div>
     <template v-if="selectedPostType !== undefined">
+        <DefinePlan v-slot="{ query }">
+            <Plan
+                v-if="query !== undefined" :planQuery="query.query"
+                :planSource="JSON.stringify(query.plan, null, 4)" />
+        </DefinePlan>
         <ReusePlan
             :key="`${selectedPage}/${selectedPostType[0]}`" :query="data.pages
                 .find(page => page.pages.currentCursor === selectedPage)
                 ?.queries[selectedPostType[0]]" />
     </template>
-</template>
-<DefinePlan v-slot="{ query }">
-    <Plan
-        v-if="query !== undefined" :planQuery="query.query"
-        :planSource="JSON.stringify(query.plan, null, 4)" />
-</DefinePlan>
+</div>
 </template>
 
 <script setup lang="ts">
@@ -50,8 +50,13 @@ select {
     width: 30rem;
 }
 
+.query-plan-visualizer {
+    contain: content;
+}
+
 .plan-container {
     width: 100%;
     height: 30vh;
+    resize: block;
 }
 </style>
