@@ -1,5 +1,7 @@
 <template>
-<div class="d-flex flex-column" id="app-wrapper">
+<div
+    :class="{ 'is-hydrating-or-ssr': useHydrationStore().isHydratingOrSSR }"
+    class="d-flex flex-column" id="app-wrapper">
     <header>
         <GlobalNavBar />
         <MinimumResolutionWarning />
