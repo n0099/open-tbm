@@ -24,3 +24,8 @@ address {
         max-width: 100% !important;
     }
 }
+
+.is-hydrating-or-ssr ul.ant-menu-horizontal {
+    display: flex;
+    list-style-position: inside;
+}

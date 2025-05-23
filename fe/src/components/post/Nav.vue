@@ -57,7 +57,7 @@ const { viewportTopmostPost } = storeToRefs(useViewportTopmostPostStore());
 const hydrationStore = useHydrationStore();
 const { data } = useApiPosts(computed(() => queryParam));
 const expandedPages = ref<string[]>([]);
-const selectedThreads = ref<string[]>([]);
+const selectedThreads = ref<[string]>();
 const threadMenuItemRefs = ref<ComponentPublicInstance[]>([]);
 
 useNoScript(`<style>

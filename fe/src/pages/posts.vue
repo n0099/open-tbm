@@ -2,6 +2,9 @@
 <div>
     <aside class="container">
         <LazyPostQueryForm :isLoading="isFetching" :queryFormDeps="queryFormDeps" />
+    </aside>
+    <LazyPostQueryPlanVisualizer v-if="data !== undefined" :data="data" class="border-bottom" />
+    <aside class="container">
         <AMenu v-if="!_.isEmpty(data?.pages)" v-model:selectedKeys="selectedRenderTypes" mode="horizontal">
             <AMenuItem key="list">列表视图</AMenuItem>
             <AMenuItem key="table">表格视图</AMenuItem>
