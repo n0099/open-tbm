@@ -29,7 +29,7 @@
         "lodash": "^4.17.21",
         "luxon": "^3.6.1",
         "noty": "^3.2.0-beta-deprecated",
-        "nuxt": "3.17.4",
+        "nuxt": "^3.17.4",
         "pev2": "^1.15.0",
         "pinia": "^3.0.2",
         "scroll-into-view-if-needed": "^3.1.0",
