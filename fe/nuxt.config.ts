@@ -27,7 +27,8 @@ export default defineNuxtConfig({
                     retry: false
                 }
             }
-        }
+        },
+        vueQueryPluginOptions: { enableDevtoolsV6Plugin: true }
     },
     site: {
         name: `open-tbm${

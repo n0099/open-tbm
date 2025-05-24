@@ -8,7 +8,7 @@
             )" />
         <!-- eslint-disable-next-line vue/no-v-html -->
         <pre v-if="'stack' in error" v-html="error.stack" />
-        <pre v-if="'toJSON' in error">{{ JSON.stringify(error.toJSON()) }}</pre>
+        <pre v-if="'toJSON' in error">{{ JSON.stringify(error.toJSON(), null, 4) }}</pre>
     </div>
 </NuxtLayout>
 </template>
