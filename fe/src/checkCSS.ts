@@ -32,6 +32,16 @@ checkcss.onClassnameDetected = className =>
 
         // vue <Transition>
         'v-enter-',
-        'v-leave-'
+        'v-leave-',
+
+        // pev2
+        'stat-label',
+        'diagram',
+        'plan',
+        'header',
+        'hljs-',
+        'stats',
+        'thead-light',
+        'font-weight-normal'
     ].some(i => className.startsWith(i));
 checkcss.scan().watch();

@@ -58,5 +58,5 @@ when@prod:
             deprecation:
                 type: rotating_file
                 channels: [deprecation]
-                path: "%kernel.logs_dir%/%kernel.environment%.log"
+                path: "%kernel.logs_dir%/%kernel.environment%.deprecation.log"
                 max_files: 10
