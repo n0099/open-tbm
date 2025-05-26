@@ -2,6 +2,7 @@ import type { PublicRuntimeConfig } from 'nuxt/schema';
 import type { Enabled, InfiniteData, Query, UseInfiniteQueryOptions, UseQueryOptions } from '@tanstack/vue-query';
 import { QueryObserver } from '@tanstack/vue-query';
 import { FetchError } from 'ofetch';
+import { serializeError } from 'serialize-error';
 import _ from 'lodash';
 
 export class ApiResponseError extends Error {
@@ -41,9 +42,13 @@ export const queryFunction = async <TResponse>
                 signal
             }
         ) as TResponse;
-    } catch (e: unknown) {
+    } catch (e_: unknown) {
+        let e = e_;
         if (e instanceof FetchError && isApiError(e.data))
-            throw new ApiResponseError(e.data.errorCode, e.data.errorInfo, e);
+            e = new ApiResponseError(e.data.errorCode, e.data.errorInfo, e);
+        if (e instanceof Error)
+            // eslint-disable-next-line @typescript-eslint/only-throw-error
+            throw serializeError(e);
         throw e;
     } finally {
         if (import.meta.client) {
