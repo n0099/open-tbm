@@ -2,18 +2,29 @@ import type { PublicRuntimeConfig } from 'nuxt/schema';
 import type { Enabled, InfiniteData, Query, UseInfiniteQueryOptions, UseQueryOptions } from '@tanstack/vue-query';
 import { QueryObserver } from '@tanstack/vue-query';
 import { FetchError } from 'ofetch';
-import { serializeError } from 'serialize-error';
+import { addKnownErrorConstructor } from 'serialize-error';
 import _ from 'lodash';
 
 export class ApiResponseError extends Error {
     public constructor(
-        public readonly errorCode: number,
-        public readonly errorInfo: Record<string, unknown[]> | string,
+        public readonly errorCode?: number,
+        public readonly errorInfo?: Record<string, unknown[]> | string,
         public readonly fetchError?: FetchError
     ) {
         super(JSON.stringify({ fetchError, errorCode, errorInfo }));
     }
 }
+
+[FetchError, ApiResponseError].forEach(error => {
+    type BaseErrorConstructor = Parameters<typeof addKnownErrorConstructor>[0];
+    try {
+        addKnownErrorConstructor(error as BaseErrorConstructor);
+
+    // https://github.com/sindresorhus/serialize-error/blob/4d0f3b27d618739c3a3868fd5b4d619b4ea03ad8/error-constructors.js#L31C19-L31C70
+    // eslint-disable-next-line no-empty
+    } catch {}
+});
+
 // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
 export const isApiError = (response: ApiError | unknown): response is ApiError => _.isObject(response)
     && 'errorCode' in response && _.isNumber(response.errorCode)
@@ -42,13 +53,9 @@ export const queryFunction = async <TResponse>
                 signal
             }
         ) as TResponse;
-    } catch (e_: unknown) {
-        let e = e_;
+    } catch (e: unknown) {
         if (e instanceof FetchError && isApiError(e.data))
-            e = new ApiResponseError(e.data.errorCode, e.data.errorInfo, e);
-        if (e instanceof Error)
-            // eslint-disable-next-line @typescript-eslint/only-throw-error
-            throw serializeError(e);
+            throw new ApiResponseError(e.data.errorCode, e.data.errorInfo, e);
         throw e;
     } finally {
         if (import.meta.client) {
