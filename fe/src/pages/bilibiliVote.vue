@@ -62,28 +62,33 @@
         :class="{ 'loading-huaji': isChartLoading.allVoteCountGroupByTime }"
         class="echarts" id="allVoteCountGroupByTime" />
     <hr />
-    <LazyATable
-        v-if="isMounted" rowKey="candidateIndex"
-        :columns="candidatesDetailColumns" :dataSource="candidatesDetailData"
-        :pagination="{ pageSize: 1056, pageSizeOptions: ['20', '50', '100', '300', '1056'] }">
-        <template #bodyCell="{ column: { dataIndex: column }, value: name }">
-            <template v-if="column === 'candidateName'">
-                <NuxtLink :to="toUserProfileUrl({ name })" noPrefetch>{{ name }}</NuxtLink>
-            </template>
+    <Suspense :timeout="0">
+        <template #fallback>
+            <div class="loading-table loading-huaji" />
         </template>
-    </LazyATable>
-    <table v-else class="table">
-        <thead>
-            <tr>
-                <th v-for="k in candidatesDetailColumns" :key="k.dataIndex" scope="col">{{ k.title }}</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr v-for="i in candidatesDetailData" :key="i.candidateIndex">
-                <td v-for="k in candidatesDetailColumns" :key="k.dataIndex">{{ i[k.dataIndex] }}</td>
-            </tr>
-        </tbody>
-    </table>
+        <LazyATable
+            v-if="!useHydrationStore().isHydratingOrSSR" rowKey="candidateIndex"
+            :columns="candidatesDetailColumns" :dataSource="candidatesDetailData" size="small"
+            :pagination="{ pageSize: 1056, pageSizeOptions: ['20', '50', '100', '300', '1056'] }">
+            <template #bodyCell="{ column: { dataIndex: column }, value: name }">
+                <template v-if="column === 'candidateName'">
+                    <NuxtLink :to="toUserProfileUrl({ name })" noPrefetch>{{ name }}</NuxtLink>
+                </template>
+            </template>
+        </LazyATable>
+        <table v-else class="table">
+            <thead>
+                <tr>
+                    <th v-for="k in candidatesDetailColumns" :key="k.dataIndex" scope="col">{{ k.title }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr v-for="i in candidatesDetailData" :key="i.candidateIndex">
+                    <td v-for="k in candidatesDetailColumns" :key="k.dataIndex">{{ i[k.dataIndex] }}</td>
+                </tr>
+            </tbody>
+        </table>
+    </Suspense>
 </div>
 </template>
 
@@ -105,8 +110,6 @@ import type { TimelineChangePayload } from 'echarts/types/src/component/timeline
 import type { OptionDataItem } from 'echarts/types/src/util/types.d.ts';
 
 echarts.use([BarChart, CanvasRenderer, DataZoomComponent, DatasetComponent, GraphicComponent, GridComponent, LabelLayout, LegendComponent, MarkLineComponent, LineChart, PieChart, TimelineComponent, TitleComponent, ToolboxComponent, TooltipComponent]);
-const isMounted = ref(false);
-onMounted(() => { isMounted.value = true });
 
 interface CandidateVoteCount { officialValidCount: number | null, validCount: number, invalidCount: number }
 type CandidatesDetailData = Array<CandidateVoteCount & { candidateIndex: number, candidateName: string }>;
@@ -749,6 +752,10 @@ onMounted(() => {
 </script>
 
 <style scoped>
+.loading-table {
+    height: 2552rem;
+    background-attachment: fixed;
+}
 .echarts {
     margin-block-start: .5rem;
 }

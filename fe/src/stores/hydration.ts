@@ -10,10 +10,10 @@ export const useHydrationStore = defineStore('hydration', () => {
         isHydratingState.value ||= true;
 
         if (!isHydrationHooked.value) {
-            isHydrationHooked.value = true;
             nuxt.hooks.hookOnce('app:suspense:resolve', () => {
                 isHydratingState.value = false;
             });
+            isHydrationHooked.value = true;
         }
 
         return isHydratingState.value;
