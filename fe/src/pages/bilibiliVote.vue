@@ -116,7 +116,7 @@ type CandidatesDetailData = Array<CandidateVoteCount & { candidateIndex: number,
 const candidatesDetailColumns: Array<{
     title: string,
     dataIndex: keyof CandidatesDetailData[number],
-    sorter: (a: CandidatesDetailData[0], b: CandidatesDetailData[0]) => number,
+    sorter: (a: CandidatesDetailData[number], b: CandidatesDetailData[number]) => number,
     defaultSortOrder?: 'descend' | 'ascend'
 }> = [{
     title: '#',
@@ -166,10 +166,10 @@ const echartsInstances: Record<ChartName, echarts.ECharts | null> = {
 let top10CandidatesTimelineVotes: Record<'invalid' | 'valid', Top10CandidatesTimeline> = { valid: [], invalid: [] };
 type Top10CandidatesTimelineDataset = Array<CandidateVoteCount & { voteFor: string }>;
 interface VoteCountSeriesLabelFormatterParams {
-    data: OptionDataItem | Top10CandidatesTimelineDataset[0],
+    data: OptionDataItem | Top10CandidatesTimelineDataset[number],
     name: string
 }
-const isCandidatesDetailData = (p: unknown): p is Top10CandidatesTimelineDataset[0] => _.isObject(p)
+const isCandidatesDetailData = (p: unknown): p is Top10CandidatesTimelineDataset[number] => _.isObject(p)
     && 'officialValidCount' in p && (_.isNumber(p.officialValidCount) || p.officialValidCount === null)
     && 'validCount' in p && _.isNumber(p.validCount)
     && 'invalidCount' in p && _.isNumber(p.invalidCount)

@@ -133,14 +133,15 @@ const useQueryForm = <
             .map(paramWithSub => {
                 const parsedParam: NamelessUnknownParam & { name: string } = { name: '', subParam: {} };
                 paramWithSub.split(';').forEach((paramNameAndValue, paramIndex) => { // split multiple params
-                    const paramPair: [string, unknown] = [
-                        paramNameAndValue.slice(0, Math.max(0, paramNameAndValue.indexOf(':'))),
-                        unescapeParamValue(paramNameAndValue.slice(Math.max(0, paramNameAndValue.indexOf(':') + 1)))
-                    ]; // split kv pair by first colon, using substr to prevent split array type param value
+                    // split kv pair by first colon, using substr to prevent split array type param value
+                    const colonOffset = Math.max(0, paramNameAndValue.indexOf(':'));
+                    const paramName = paramNameAndValue.slice(0, colonOffset);
+                    const paramValue: unknown = unescapeParamValue(paramNameAndValue.slice(colonOffset + 1));
                     if (paramIndex === 0) { // main param
-                        [parsedParam.name, parsedParam.value] = paramPair;
+                        parsedParam.name = paramName;
+                        parsedParam.value = paramValue;
                     } else { // sub params
-                        parsedParam.subParam = { ...parsedParam.subParam, [paramPair[0]]: paramPair[1] };
+                        parsedParam.subParam = { ...parsedParam.subParam, [paramName]: paramValue };
                     }
                 });
 
