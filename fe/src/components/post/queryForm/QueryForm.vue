@@ -154,7 +154,7 @@
                     <option :selected="p.value === 'NULL'" value="NULL">吧友</option>
                     <option
                         v-for="[moderatorType, moderatorTypeDescription] in Object.entries(knownModeratorTypes)
-                            .flatMap(i => [i[0], i[1]])"
+                            .flatMap(([key, value]) => [key, value])"
                         :key="moderatorType" :value="moderatorType" :selected="moderatorType === p.value">
                         {{ moderatorTypeDescription }}
                     </option>

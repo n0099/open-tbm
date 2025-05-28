@@ -12,10 +12,10 @@
     </button>
     <template v-if="user.currentForumModerator !== null && user.currentForumModerator.moderatorTypes !== ''">
         <button
-            v-for="moderator in Object.values(moderators)"
-            :key="moderator[0]" type="button"
-            :class="`badge btn btn-${moderator[1]}`">
-            {{ moderator[0] }}
+            v-for="[moderator, bootstrapColor] in Object.values(moderators)"
+            :key="moderator" type="button"
+            :class="`badge btn btn-${bootstrapColor}`">
+            {{ moderator }}
         </button>
         <button v-if="_.isEmpty(moderators)" type="button" class="badge btn btn-info">
             {{ user.currentForumModerator.moderatorTypes }}

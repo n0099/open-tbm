@@ -43,7 +43,8 @@ watchEffect(() => {
     timeRange.value = [unix(startTime), unix(endTime)];
 });
 watchEffect(() => {
-    emit('update:startTime', timeRange.value[0].unix());
-    emit('update:endTime', timeRange.value[1].unix());
+    const [start, end] = timeRange.value;
+    emit('update:startTime', start.unix());
+    emit('update:endTime', end.unix());
 });
 </script>

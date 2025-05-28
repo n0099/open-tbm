@@ -70,8 +70,10 @@ export const guessReplyContainIntrinsicBlockSize = (replyElements: HTMLElement[]
         CJK: [1, /([\u3000-\u303F]|[\uFF01-\uFF60]|[\uFFE0-\uFFE6]|\p{Script=Hani}|\p{Script=Hang}|\p{Script=Hira}|\p{Script=Kana})+/gu]
     };
     const calcColumnWidth = (source: string, column: number, regex: RegExp) =>
-        _.sumBy([...source.matchAll(regex)]
-            .map(matches => matches[0]), 'length') * convertRemToPixels(column);
+        _.sumBy(
+            [...source.matchAll(regex)].map(([firstMatch]) => firstMatch),
+            'length'
+        ) * convertRemToPixels(column);
 
     type StringArrayTree = Array<string | StringArrayTree>;
     const elementTreeTextContentLines = (el: ChildNode): StringArrayTree =>

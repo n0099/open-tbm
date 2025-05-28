@@ -124,9 +124,9 @@ const parseRouteThenFetch = async (newRoute: RouteLocationNormalizedLoaded) => {
 /** and allowing reconstruct partial route to pass it as a param of {@link compareRouteIsNewQuery()} */
 /** ignoring string {@link route.name} or {@link route.path} since switching root level route */
 // will unmounted the component of current page route and unwatch this watcher
-watchDeep(() => [route.query, route.params], async (_discard, oldQueryAndParams) => {
+watchDeep(() => [route.query, route.params], async (_discard, [oldQuery, oldParams]) => {
     const to = route;
-    const from = { query: oldQueryAndParams[0], params: oldQueryAndParams[1] } as RouteLocationNormalizedLoaded;
+    const from = { query: oldQuery, params: oldParams } as RouteLocationNormalizedLoaded;
     const isTriggeredByQueryForm = useTriggerRouteUpdateStore()
         .isTriggeredBy('<PostQueryForm>@submit', _.merge(to, { force: true }));
     const isNewQuery = compareRouteIsNewQuery(to, from);
