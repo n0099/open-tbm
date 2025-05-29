@@ -12,7 +12,7 @@ export default defineNuxtConfig({
         '@pinia/nuxt',
         '@vueuse/nuxt',
         '@ant-design-vue/nuxt',
-        '@hebilicious/vue-query-nuxt',
+        '@n0099/vue-query-nuxt',
         '@vesp/nuxt-fontawesome',
         '@nuxtjs/seo'
     ],
@@ -24,7 +24,8 @@ export default defineNuxtConfig({
                 queries: {
                     refetchOnWindowFocus: false,
                     staleTime: Number.MAX_SAFE_INTEGER, // https://stackoverflow.com/questions/1423081/json-left-out-infinity-and-nan-json-status-in-ecmascript
-                    retry: false
+                    retry: false,
+                    retryOnMount: false // https://github.com/TanStack/query/discussions/4956#discussioncomment-4950241
                 }
             }
         },
