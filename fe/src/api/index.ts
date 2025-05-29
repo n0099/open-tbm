@@ -157,4 +157,5 @@ const useApiWithCursor = <
 };
 export const useApiForums = useApi<ApiForums>('forums');
 export const useApiUsers = useApi<ApiUsers>('users');
-export const useApiPosts = useApiWithCursor<ApiPosts>('posts');
+export const apiPostsEndpoint = 'posts';
+export const useApiPosts = useApiWithCursor<ApiPosts>(apiPostsEndpoint);

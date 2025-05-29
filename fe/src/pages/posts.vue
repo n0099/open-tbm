@@ -35,6 +35,7 @@
 
 <script setup lang="ts">
 import type { RouteLocationNormalizedLoaded } from 'vue-router';
+import type { dehydrate } from '@tanstack/vue-query';
 import _ from 'lodash';
 
 export type PostRenderer = 'list' | 'table';
@@ -100,9 +101,13 @@ if (import.meta.server) {
 
 const parseRouteThenFetch = async (newRoute: RouteLocationNormalizedLoaded) => {
     const setQueryParam = (newQueryParam?: ApiPosts['queryParam']) => {
-        // prevent fetch with queryParam that's empty or parsed from invalid route
-        shouldFetch.value = newQueryParam !== undefined;
         queryParam.value = newQueryParam;
+        const hydratedVueQuery = useState('vue-query-nuxt').value as ReturnType<typeof dehydrate> | undefined;
+        const postQuery = hydratedVueQuery?.queries.find(query => _.isEqual(query.queryKey, [apiPostsEndpoint, newQueryParam]));
+
+        // prevent fetch with queryParam that's empty or parsed from invalid route or hydrated query is errored
+        if (postQuery === undefined || postQuery.state.status !== 'error')
+            shouldFetch.value = newQueryParam !== undefined;
     };
     const flattenParams = await parseRouteToGetFlattenParams(newRoute);
     if (flattenParams === false) {
