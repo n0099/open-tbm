@@ -1184,9 +1184,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@n0099/vue-query-nuxt@npm:^0.4.7":
-  version: 0.4.7
-  resolution: "@n0099/vue-query-nuxt@npm:0.4.7"
+"@n0099/vue-query-nuxt@npm:^0.4.8":
+  version: 0.4.8
+  resolution: "@n0099/vue-query-nuxt@npm:0.4.8"
   dependencies:
     "@nuxt/kit": "npm:^3.11.2"
     defu: "npm:^6.1.4"
@@ -1196,7 +1196,7 @@ __metadata:
   peerDependencies:
     "@tanstack/vue-query": ^5.31.0
     nuxt: ^3.11.2
-  checksum: 10c0/137b697e239a52c2dd3cbed77ec57357fa52354b0e1a02c38d99480d9f018672a89ad5bea15494fa823bec2adf9a317eb239173ef03925c1868f041afb05089c
+  checksum: 10c0/ee7539af0ad6a2189349090ff0c59926c65b536450b86f9f1512d6acd9926998b7cf3d843bd2fc0d100b516d60bdf5f0a92381eea8ee9974633e325c11050531
   languageName: node
   linkType: hard
 
@@ -10764,7 +10764,7 @@ __metadata:
     "@fortawesome/free-brands-svg-icons": "npm:^6.7.2"
     "@fortawesome/free-regular-svg-icons": "npm:^6.7.2"
     "@fortawesome/free-solid-svg-icons": "npm:^6.7.2"
-    "@n0099/vue-query-nuxt": "npm:^0.4.7"
+    "@n0099/vue-query-nuxt": "npm:^0.4.8"
     "@nuxt/eslint": "npm:^1.4.1"
     "@nuxtjs/seo": "npm:^3.0.3"
     "@pinia/nuxt": "npm:^0.11.0"
