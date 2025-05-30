@@ -38,7 +38,8 @@ jobs:
 
       - uses: xt0rted/stylelint-problem-matcher@v1
       - run: yarn run stylelint --cache --custom-formatter stylelint-actions-formatters '**/*.vue'
-      - run: yarn run stylelint --cache --custom-formatter stylelint-actions-formatters '**/*.css'
+      - if: always()
+        run: yarn run stylelint --cache --custom-formatter stylelint-actions-formatters '**/*.css'
 
       - uses: actions/cache/save@v4
         if: always() && steps.cache-restore.outputs.cache-hit != 'true'
