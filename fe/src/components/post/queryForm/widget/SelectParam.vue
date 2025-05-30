@@ -5,8 +5,8 @@
     <option :disabled="currentParam !== 'add'" :hidden="currentParam !== 'add'" value="add">New...</option>
     <optgroup v-for="(group, groupName) in paramsGroup" :key="groupName" :label="groupName">
         <option
-            v-for="(paramDescription, paramName) in group" :key="paramName"
-            :value="paramName" :selected="paramName === currentParam">
+            v-for="(paramDescription, paramName) in group"
+            :key="paramName" :value="paramName">
             {{ paramDescription }}
         </option>
     </optgroup>
