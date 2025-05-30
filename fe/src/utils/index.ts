@@ -23,16 +23,20 @@ export type Modify<T, R> = Omit<T, keyof R> & R;
 export type ObjValues<T> = T[keyof T];
 export type ToPromise<T> = T extends (...args: infer A) => infer R ? (...args: A) => Promise<R> : never;
 
+// https://stackoverflow.com/questions/41253310/typescript-retrieve-element-type-information-from-array-type/51399781#51399781
+export type ArrayElement<ArrayType extends readonly unknown[]> =
+    ArrayType extends ReadonlyArray<infer ElementType> ? ElementType : never;
+
 export type Post = Reply | SubReply | Thread;
 export const postType = ['thread', 'reply', 'subReply'] as const;
-export type PostType = typeof postType[number];
+export type PostType = ArrayElement<typeof postType>;
 export const postTypeText = ['主题帖', '回复帖', '楼中楼'] as const;
-export type PostTypeText = typeof postTypeText[number];
+export type PostTypeText = ArrayElement<typeof postTypeText>;
 export type PostTypeTextOf<T> = T extends Thread ? '主题帖'
     : T extends Reply ? '回复帖'
         : T extends SubReply ? '楼中楼' : never;
 export const postID = ['tid', 'pid', 'spid'] as const;
-export type PostIDStr = typeof postID[number];
+export type PostIDStr = ArrayElement<typeof postID>;
 export type PostIDOf<T> = T extends Thread ? 'tid' : T extends Reply ? 'pid' : T extends SubReply ? 'spid' : never;
 export type Fid = UInt;
 export type Tid = UInt;
@@ -70,7 +74,7 @@ export const setDateTimeZoneAndLocale = (timezone?: string | Zone, zoneOptions?:
 // eslint-disable-next-line compat/compat
 export const refDeepClone = <T>(value: T) => structuredClone(toRaw(value));
 export const keysWithSameValue = <const TKeys extends string[], const TValue>(keys: TKeys, value: TValue) =>
-    _.zipObject(keys, keys.map(() => value)) as Record<TKeys[number], TValue> as DeepWritable<Record<TKeys[number], TValue>>;
+    _.zipObject(keys, keys.map(() => value)) as Record<ArrayElement<TKeys>, TValue> as DeepWritable<Record<ArrayElement<TKeys>, TValue>>;
 
 export const responseWithError = (error: ApiErrorClass | null) => {
     const event = useRequestEvent();

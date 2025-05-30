@@ -7,7 +7,7 @@
 </template>
 
 <script setup lang="ts">
-const modelValue = defineModel<typeof numericParamSubParamRangeValues[number]>({ default: '=' });
+const modelValue = defineModel<ArrayElement<typeof numericParamSubParamRangeValues>>({ default: '=' });
 </script>
 
 <style scoped>

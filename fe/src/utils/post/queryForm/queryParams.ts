@@ -56,13 +56,13 @@ export const paramsNameKeyByType = {
 export const numericParamSubParamRangeValues = ['<', '=', '>', 'BETWEEN', 'IN'] as const;
 export interface NamelessParamNumeric {
     value: string,
-    subParam: { range: typeof numericParamSubParamRangeValues[number] }
+    subParam: { range: ArrayElement<typeof numericParamSubParamRangeValues> }
 }
 export const textParamSubParamMatchByValues = ['explicit', 'implicit', 'regex'] as const;
 export interface NamelessParamText {
     value: string,
     subParam: {
-        matchBy: typeof textParamSubParamMatchByValues[number],
+        matchBy: ArrayElement<typeof textParamSubParamMatchByValues>,
         spaceSplit: boolean
     }
 }
@@ -76,12 +76,12 @@ interface NamelessParamsOther {
 export type AddNameToParam<Name, NamelessParam> = NamelessParam & { name: Name, value: unknown, subParam: ObjEmpty };
 export type KnownParams = { [P in 'authorGender' | 'latestReplierGender']: AddNameToParam<P, NamelessParamGender> }
 & { [P in keyof NamelessParamsOther]: AddNameToParam<P, NamelessParamsOther[P]> }
-& { [P in typeof paramsNameKeyByType.dateTime[number]]: AddNameToParam<P, NamelessParamDateTime> }
-& { [P in typeof paramsNameKeyByType.numeric[number]]: AddNameToParam<P, NamelessParamNumeric> }
-& { [P in typeof paramsNameKeyByType.text[number]]: AddNameToParam<P, NamelessParamText> };
-export type KnownDateTimeParams = KnownParams[typeof paramsNameKeyByType.dateTime[number]];
-export type KnownNumericParams = KnownParams[typeof paramsNameKeyByType.numeric[number]];
-export type KnownTextParams = KnownParams[typeof paramsNameKeyByType.text[number]];
+& { [P in ArrayElement<typeof paramsNameKeyByType.dateTime>]: AddNameToParam<P, NamelessParamDateTime> }
+& { [P in ArrayElement<typeof paramsNameKeyByType.numeric>]: AddNameToParam<P, NamelessParamNumeric> }
+& { [P in ArrayElement<typeof paramsNameKeyByType.text>]: AddNameToParam<P, NamelessParamText> };
+export type KnownDateTimeParams = KnownParams[ArrayElement<typeof paramsNameKeyByType.dateTime>];
+export type KnownNumericParams = KnownParams[ArrayElement<typeof paramsNameKeyByType.numeric>];
+export type KnownTextParams = KnownParams[ArrayElement<typeof paramsNameKeyByType.text>];
 export interface KnownUniqueParams extends Record<string, UnknownParam> {
     fid: { name: 'fid', value: Fid, subParam: ObjEmpty },
     postTypes: { name: 'postTypes', value: PostType[], subParam: ObjEmpty },

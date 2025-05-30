@@ -31,7 +31,7 @@ const { firstThread, firstPostPage } = defineProps<{
     routePath: string,
     firstPostPage?: ApiPosts['response'],
     firstPostPageForum?: ApiPosts['response']['forum'],
-    firstThread?: ApiPosts['response']['threads'][number],
+    firstThread?: ArrayElement<ApiPosts['response']['threads']>,
     currentQueryType: UnwrapRef<QueryFormDeps['currentQueryType']>
 }>();
 const firstReplyContent = computed(() => firstThread?.replies[0]);
