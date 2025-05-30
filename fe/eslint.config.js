@@ -7,6 +7,8 @@ import eslintJs from '@eslint/js';
 import pluginStylistic from '@stylistic/eslint-plugin';
 import pluginTanstackQuery from '@tanstack/eslint-plugin-query';
 import * as typescriptESLintParser from '@typescript-eslint/parser';
+// eslint-disable-next-line import-x/no-unresolved
+import pluginCompat from 'eslint-plugin-compat';
 import { flatConfigs as pluginImportX } from 'eslint-plugin-import-x';
 import pluginPinia from 'eslint-plugin-pinia';
 import pluginUnicorn from 'eslint-plugin-unicorn';
@@ -552,6 +554,10 @@ export default withNuxt(defineConfigWithVueTs(
     ...pluginTanstackQuery.configs['flat/recommended'],
     pluginUnicorn.configs.recommended,
     pluginPinia.configs['all-flat'],
+    {
+        ...pluginCompat.configs['flat/recommended'],
+        settings: { lintAllEsApis: true },
+    },
     { languageOptions: { ecmaVersion: 'latest' } },
     { ignores: ['node_modules/', '.nuxt/', '.yarn/', '.pnp.*'] },
     { linterOptions: { reportUnusedDisableDirectives: 'error' } },

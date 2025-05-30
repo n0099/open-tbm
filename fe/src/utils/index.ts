@@ -1,3 +1,4 @@
+import 'core-js/actual/structured-clone';
 import { FetchError } from 'ofetch';
 import type { DateTime, Zone, ZoneOptions } from 'luxon';
 import _ from 'lodash';
@@ -66,6 +67,7 @@ export const setDateTimeZoneAndLocale = (timezone?: string | Zone, zoneOptions?:
         .setZone(timezone ?? 'Asia/Shanghai', zoneOptions).setLocale(locale ?? 'zh-cn');
 
 // https://stackoverflow.com/questions/71075490/how-to-make-a-structuredclone-of-a-proxy-object/77022014#77022014
+// eslint-disable-next-line compat/compat
 export const refDeepClone = <T>(value: T) => structuredClone(toRaw(value));
 export const keysWithSameValue = <const TKeys extends string[], const TValue>(keys: TKeys, value: TValue) =>
     _.zipObject(keys, keys.map(() => value)) as Record<TKeys[number], TValue> as DeepWritable<Record<TKeys[number], TValue>>;

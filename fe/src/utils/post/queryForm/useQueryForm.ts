@@ -1,3 +1,4 @@
+import 'core-js/actual/structured-clone';
 import _ from 'lodash';
 
 export interface UnknownParam { name: string, value: unknown, subParam: ObjUnknown & { not?: boolean } }
@@ -25,6 +26,7 @@ const useQueryForm = <
     const fillParamDefaultValue = <T extends Param | UniqueParam>
     (param: Partial<UnknownParam> & { name: string }, resetToDefault = false): T => {
         // prevent defaultsDeep mutate origin paramsDefaultValue
+        // eslint-disable-next-line compat/compat
         const defaultParam = structuredClone(deps.paramsDefaultValue[param.name]);
         if (defaultParam === undefined)
             throw new Error(`Param ${param.name} not found in paramsDefaultValue`);
@@ -53,6 +55,7 @@ const useQueryForm = <
         params.value.splice(paramIndex, 1);
     };
     const clearParamDefaultValue = <T extends UnknownParam>(param: UnknownParam): Partial<T | UnknownParam> | null => {
+        // eslint-disable-next-line compat/compat
         const defaultParam = structuredClone(deps.paramsDefaultValue[param.name]);
         if (defaultParam === undefined)
             throw new Error(`Param ${param.name} not found in paramsDefaultValue`);

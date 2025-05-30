@@ -93,6 +93,7 @@
 </template>
 
 <script setup lang="ts">
+import 'core-js/actual/structured-clone';
 import { faCalendarAlt, faClock } from '@fortawesome/free-solid-svg-icons';
 import { DateTime } from 'luxon';
 import _ from 'lodash';
@@ -604,6 +605,7 @@ const chartLoadder = {
         });
 
         // clone last timeline option then transform it to official votes count option
+        // eslint-disable-next-line compat/compat
         const originalTimelineOptions = structuredClone(options.at(-1));
         if (originalTimelineOptions === undefined || !_.isArray(originalTimelineOptions.series))
             return;
