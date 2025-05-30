@@ -198,7 +198,7 @@
 </template>
 
 <script setup lang="ts">
-import { inputTextMatchParamPlaceholder } from './widget/InputTextMatchParam.vue';
+import { inputTextMatchParamPlaceholder } from '@/components/post/queryForm/widget/InputTextMatchParam.vue';
 import { faFilter, faPlus, faSortAmountDown, faTimes } from '@fortawesome/free-solid-svg-icons';
 import _ from 'lodash';
 

@@ -32,8 +32,8 @@
 </template>
 
 <script setup lang="ts">
-import type ThreadLatestReplier from './ThreadLatestReplier.vue';
-import { expandLatestReplierToRoutes } from './ThreadLatestReplier.vue';
+import type ThreadLatestReplier from '@/components/post/badge/ThreadLatestReplier.vue';
+import { expandLatestReplierToRoutes } from '@/components/post/badge/ThreadLatestReplier.vue';
 import _ from 'lodash';
 
 const { thread } = defineProps<{ thread: Thread }>();
