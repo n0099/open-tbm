@@ -16,6 +16,8 @@
   "[vue]": {
     "editor.defaultFormatter": "Vue.volar"
   },
+  "css.validate": false,
+  "stylelint.validate": ["css", "vue"],
   // below are optional settings
   "vue.complete.casing.props": "autoCamel",
   "javascript.inlayHints.enumMemberValues.enabled": true,
