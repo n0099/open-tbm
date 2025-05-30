@@ -1,13 +1,12 @@
 import _ from 'lodash';
 
-// value of [0] will be either ALL: require exactly same post types, or SUB: requiring a subset of types
-export type RequiredPostTypes = Record<string, ['ALL' | 'SUB', PostType[]] | undefined>;
+export type RequiredPostTypes = Record<string, PostType[] | undefined>;
 export const requiredPostTypesKeyByParam: RequiredPostTypes = {
-    pid: ['SUB', ['reply', 'subReply']],
-    spid: ['ALL', ['subReply']],
-    postContent: ['SUB', ['reply', 'subReply']],
-    replySubReplyCount: ['ALL', ['reply']],
-    authorExpGrade: ['SUB', ['reply', 'subReply']],
+    pid: ['reply', 'subReply'],
+    spid: ['subReply'],
+    postContent: ['reply', 'subReply'],
+    replySubReplyCount: ['reply'],
+    authorExpGrade: ['reply', 'subReply'],
     ...keysWithSameValue([
         'latestReplyPostedAt',
         'threadTitle',
@@ -19,11 +18,11 @@ export const requiredPostTypesKeyByParam: RequiredPostTypes = {
         'latestReplierName',
         'latestReplierDisplayName',
         'latestReplierGender'
-    ], ['ALL', ['thread']])
+    ], ['thread'])
 };
 export const orderByRequiredPostTypes: RequiredPostTypes = {
-    pid: ['SUB', ['reply', 'subReply']],
-    spid: ['SUB', ['subReply']]
+    pid: ['reply', 'subReply'],
+    spid: ['subReply']
 };
 
 export const paramsNameKeyByType = {

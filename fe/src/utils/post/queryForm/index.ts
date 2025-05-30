@@ -104,17 +104,11 @@ export const getQueryFormDeps = () => {
             case 'fid':
         }
 
-        const isRequiredPostTypes = (current: PostType[], required?: RequiredPostTypes[string]): required is undefined => {
-            if (required === undefined)
-                return true; // not set means this param accepts any post types
-            required[1] = _.sortBy(required[1]);
-            if (required[0] === 'SUB' && _.isEmpty(_.difference(current, required[1])))
-                return true;
-
-            return required[0] === 'ALL' && _.isEqual(required[1], current);
+        const isRequiredPostTypes = (current: PostType[], required?: ObjValues<RequiredPostTypes>): required is undefined => {
+            return required === undefined // not set means this param accepts any post types
+                || _.isEmpty(_.difference(current, required[1]));
         };
-        const requiredPostTypesToString = (required: NonNullable<RequiredPostTypes[string]>) =>
-            required[1].join(required[0] === 'SUB' ? ' | ' : ' & ');
+        const requiredPostTypesToString = (required: NonNullable<ObjValues<RequiredPostTypes>>) => required.join(' | ');
         const postTypes = _.sortBy(uniqueParams.value.postTypes.value);
 
         // check params required post types, index query doesn't restrict on post types
