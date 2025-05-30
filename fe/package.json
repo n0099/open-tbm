@@ -68,10 +68,5 @@
         "vite-bundle-analyzer": "^0.21.0",
         "vue-tsc": "^2.2.10"
     },
-    "browserslist": [
-        "> 1% in CN",
-        "not ie 11",
-        "not dead"
-    ],
     "packageManager": "yarn@4.9.1"
 }
