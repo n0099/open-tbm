@@ -44,7 +44,8 @@ readonly class QueryResult
     /** @return array{result: Collection, hasMorePages: bool} */
     public function getQueryResult(QueryBuilder $queryBuilder, int $limit): array
     {
-        $query = $queryBuilder->setMaxResults($limit + 1)->getQuery();
+        $maxResults = $limit + 1;
+        $query = $queryBuilder->setMaxResults($maxResults)->getQuery();
 
         $entityManager = $query->getEntityManager();
         $connection = $entityManager->getConnection();
@@ -56,7 +57,7 @@ readonly class QueryResult
         ]);
         $rawSQL = $entityManager->createQuery(strtr($query->getDQL(), $parameters->toArray()))->getSQL();
         $explainJSON = \Safe\json_decode($connection->executeQuery(
-            'EXPLAIN (COSTS, VERBOSE, BUFFERS, FORMAT JSON) ' . $rawSQL
+            'EXPLAIN (COSTS, VERBOSE, BUFFERS, FORMAT JSON) ' . $rawSQL . " LIMIT $maxResults"
         )->fetchOne(), true);
         $plansCost = array_sum(array_map(static fn(array $plan) => $plan['Plan']['Total Cost'], $explainJSON));
         $planCostLimit = $this->containerBag->get('app.query_plan_cost_limit');
@@ -65,7 +66,7 @@ readonly class QueryResult
         }
 
         $results = collect($query->getResult());
-        if ($results->count() === $limit + 1) {
+        if ($results->count() === $maxResults) {
             $results->pop();
             $hasMorePages = true;
         }
@@ -118,10 +119,10 @@ readonly class QueryResult
                 $qb->setParameter("cursor_$fieldName", $fieldValue)); // prevent overwriting existing param
         });
 
-        $resultsAndHasMorePages = $queries->map(fn(QueryBuilder $query) =>
+        $results = $queries->map(fn(QueryBuilder $query) =>
             self::getQueryResult($query, $this->perPageItems));
         /** @var PostsKeyByTypePluralName $postsKeyByTypePluralName */
-        $postsKeyByTypePluralName = $resultsAndHasMorePages
+        $postsKeyByTypePluralName = $results
             ->mapWithKeys(fn(array $tuple, string $postType) =>
                 [Helper::POST_TYPE_TO_PLURAL[$postType] => $tuple['result']]);
         Helper::abortAPIIf(40401, $postsKeyByTypePluralName->every(static fn(Collection $i) => $i->isEmpty()));
@@ -133,13 +134,13 @@ readonly class QueryResult
             ?? $this->replies->first()->fid
             ?? $this->subReplies->first()->fid;
         $this->currentCursor = $cursorParamValue ?? '';
-        $this->nextCursor = $resultsAndHasMorePages->pluck('hasMorePages')
+        $this->nextCursor = $results->pluck('hasMorePages')
             ->contains(static fn(bool $hasMorePages) => $hasMorePages)
             ? $this->cursorCodec->encodeNextCursor($postsKeyByTypePluralName->except(
                 $queryByPostIDParamsName->map(static fn(string $postID) => Helper::POST_ID_TO_TYPE_PLURAL[$postID])
             ))
             : null;
-        $this->queries = $resultsAndHasMorePages->mapWithKeys(fn(array $tuple, string $postType) =>
+        $this->queries = $results->mapWithKeys(fn(array $tuple, string $postType) =>
             [$postType => ['query' => $tuple['query'], 'plan' => $tuple['queryPlan']]]
         );
 
