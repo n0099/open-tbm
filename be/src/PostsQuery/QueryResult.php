@@ -41,7 +41,7 @@ readonly class QueryResult
         private int $perPageItems = 50,
     ) {}
 
-    /** @return array{result: Collection, hasMorePages: bool} */
+    /** @return array{result: Collection, hasMorePages: bool, query: string, queryPlan: array} */
     public function getQueryResult(QueryBuilder $queryBuilder, int $limit): array
     {
         $maxResults = $limit + 1;
@@ -78,7 +78,7 @@ readonly class QueryResult
         ];
     }
 
-    /** @param Collection<Helper::POST_TYPE, ?QueryBuilder> $queries */
+    /** @param Collection<Helper::POST_TYPE, QueryBuilder> $queries */
     public function setResult(
         Collection $queries,
         ?string $cursorParamValue,
@@ -121,6 +121,8 @@ readonly class QueryResult
 
         $results = $queries->map(fn(QueryBuilder $query) =>
             self::getQueryResult($query, $this->perPageItems));
+        $results = $queries->map(fn(QueryBuilder $queryBuilder) =>
+            $this->getQueryResult($queryBuilder, $this->perPageItems));
         /** @var PostsKeyByTypePluralName $postsKeyByTypePluralName */
         $postsKeyByTypePluralName = $results
             ->mapWithKeys(fn(array $tuple, string $postType) =>
