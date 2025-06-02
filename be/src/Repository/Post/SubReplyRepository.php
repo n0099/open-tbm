@@ -2,7 +2,6 @@
 
 namespace App\Repository\Post;
 
-use App\DTO\PostKey\SubReply as SubReplyKey;
 use App\Entity\Post\SubReply;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
@@ -15,10 +14,10 @@ class SubReplyRepository extends PostRepository
         parent::__construct($registry, SubReply::class);
     }
 
-    public function selectPostKeyDTO(string $orderByField): QueryBuilder
+    public function selectUnionPostKey(): QueryBuilder
     {
         return $this->createQueryBuilder('t')
-            ->select('new ' . SubReplyKey::class . "(t.fid, t.tid, t.pid, t.spid, '$orderByField', t.$orderByField)");
+            ->select("'subReply' AS postType", 't.spid AS postId', 't.fid', 't.tid', 't.pid');
     }
 
     public function getPosts(int $fid, array|\ArrayAccess $postsId): array

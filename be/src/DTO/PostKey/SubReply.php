@@ -9,9 +9,8 @@ readonly class SubReply extends PostKeyWithParent
         public int $tid,
         int $parentPostId,
         int $postId,
-        string $orderByFieldName,
         mixed $orderByFieldValue,
     ) {
-        parent::__construct($fid, $parentPostId, $postId, $orderByFieldName, $orderByFieldValue);
+        parent::__construct($fid, $parentPostId, $postId, $orderByFieldValue);
     }
 }

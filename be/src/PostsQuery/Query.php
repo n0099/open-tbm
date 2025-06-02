@@ -62,7 +62,7 @@ readonly class Query extends BaseQuery
         return collect($this->postRepositoryFactory->newForumPosts())
             ->only($params->getUniqueParamValue('postTypes'))
             ->map(function (PostRepository $repository) use ($fid, $params, &$cachedUserQueryResult): QueryBuilder {
-                $query = $repository->selectPostKeyDTO($this->getOrderByField());
+                $query = $repository->selectUnionPostKey();
                 if ($fid !== null) {
                     $query = $query->where('t.fid = :fid')->setParameter('fid', $fid);
                 }

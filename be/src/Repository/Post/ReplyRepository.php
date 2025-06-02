@@ -2,7 +2,6 @@
 
 namespace App\Repository\Post;
 
-use App\DTO\PostKey\Reply as ReplyKey;
 use App\Entity\Post\Reply;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
@@ -15,10 +14,10 @@ class ReplyRepository extends PostRepository
         parent::__construct($registry, Reply::class);
     }
 
-    public function selectPostKeyDTO(string $orderByField): QueryBuilder
+    public function selectUnionPostKey(): QueryBuilder
     {
         return $this->createQueryBuilder('t')
-            ->select('new ' . ReplyKey::class . "(t.fid, t.tid, t.pid, '$orderByField', t.$orderByField)");
+            ->select("'reply' AS postType", 't.pid AS postId', 't.fid', 't.tid', 't.pid');
     }
 
     public function getPosts(int $fid, array|\ArrayAccess $postsId): array
