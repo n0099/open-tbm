@@ -69,16 +69,7 @@ readonly class QueryResult
         ];
     }
 
-    /** @psalm-type UnionPostKey = array{
-     *     postType: 'reply'|'subReply'|'thread',
-     *     postId: int,
-     *     fid: int,
-     *     tid: int,
-     *     pid: int,
-     *     orderByField: mixed
-     * }
-     * @param Collection<Helper::POST_TYPE, QueryBuilder> $queries
-     */
+    /** @param Collection<Helper::POST_TYPE, QueryBuilder> $queries */
     public function setResult(
         Collection $queries,
         ?string $cursorParamValue,
@@ -121,7 +112,46 @@ readonly class QueryResult
             $cursors->mapWithKeys(fn($fieldValue, string $fieldName) =>
                 $qb->setParameter("cursor_$fieldName", $fieldValue)); // prevent overwriting existing param
         });
+        [
+            'unionOfQueriesSQL' => $unionOfQueriesSQL,
+            'postsKeyByTypePluralName' => $postsKeyByTypePluralName,
+            'hasMorePages' => $hasMorePages,
+            'queryPlan' => $queryPlan
+        ] = $this->getUnionQueryResult($queries, $orderByDesc, $maxResults);
 
+        $this->threads = $postsKeyByTypePluralName->get('threads', collect());
+        $this->replies = $postsKeyByTypePluralName->get('replies', collect());
+        $this->subReplies = $postsKeyByTypePluralName->get('subReplies', collect());
+        $this->fid = $this->threads->first()->fid
+            ?? $this->replies->first()->fid
+            ?? $this->subReplies->first()->fid;
+        $this->currentCursor = $cursorParamValue ?? '';
+        $this->nextCursor = $hasMorePages
+            ? $this->cursorCodec->encodeNextCursor($postsKeyByTypePluralName->except(
+                $queryByPostIDParamsName->map(static fn(string $postID) => Helper::POST_ID_TO_TYPE_PLURAL[$postID])
+            ))
+            : null;
+        $this->query = ['query' => $unionOfQueriesSQL, 'plan' => $queryPlan];
+
+        $this->stopwatch->stop('setResult');
+    }
+
+    /**
+     * @psalm-type UnionPostKey = array{
+     *      postType: 'reply'|'subReply'|'thread',
+     *      postId: int,
+     *      fid: int,
+     *      tid: int,
+     *      pid: int,
+     *      orderByField: mixed
+     * }
+     * @param Collection<Helpecr::POST_TYPE, QueryBuilder> $queries
+     * @param bool $orderByDesc
+     * @param int $maxResults
+     * @return array{unionOfQueriesSQL: string, postsKeyByTypePluralName: PostsKeyByTypePluralName, hasMorePages: bool, queryPlan: array}
+     */
+    private function getUnionQueryResult(Collection $queries, bool $orderByDesc, int $maxResults): array
+    {
         /** @var DBALQueryBuilder $unionOfQueries */
         // https://stackoverflow.com/questions/36959801/doctrine-orm-querybuilder-or-dbal-querybuilder
         $unionOfQueries = $queries->reduce(function (?DBALQueryBuilder $dbalQueryBuilder, QueryBuilder $ormQueryBuilder) {
@@ -173,23 +203,15 @@ readonly class QueryResult
                             'reply' => new ReplyKey($fid, $tid, $postId, $orderByFieldValue),
                             'subReply' => new SubReplyKey($fid, $tid, $pid, $postId, $orderByFieldValue)
                         };
-                    })]);
+                    })
+                ]);
         Helper::abortAPIIf(40401, $postsKeyByTypePluralName->every(static fn(Collection $i) => $i->isEmpty()));
 
-        $this->threads = $postsKeyByTypePluralName->get('threads', collect());
-        $this->replies = $postsKeyByTypePluralName->get('replies', collect());
-        $this->subReplies = $postsKeyByTypePluralName->get('subReplies', collect());
-        $this->fid = $this->threads->first()->fid
-            ?? $this->replies->first()->fid
-            ?? $this->subReplies->first()->fid;
-        $this->currentCursor = $cursorParamValue ?? '';
-        $this->nextCursor = $hasMorePages
-            ? $this->cursorCodec->encodeNextCursor($postsKeyByTypePluralName->except(
-                $queryByPostIDParamsName->map(static fn(string $postID) => Helper::POST_ID_TO_TYPE_PLURAL[$postID])
-            ))
-            : null;
-        $this->query = ['query' => $unionOfQueriesSQL, 'plan' => $queryPlan];
-
-        $this->stopwatch->stop('setResult');
+        return [
+            'unionOfQueriesSQL' => $unionOfQueriesSQL,
+            'postsKeyByTypePluralName' => $postsKeyByTypePluralName,
+            'hasMorePages' => $hasMorePages,
+            'queryPlan' => $queryPlan
+        ];
     }
 }
