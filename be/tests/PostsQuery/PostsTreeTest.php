@@ -24,9 +24,9 @@ class PostsTreeTest extends KernelTestCase
     }
 
     #[DataProvider('provideReOrderNestedPostsData')]
-    public function testReOrderNestedPosts(Collection $input, bool $orderByDesc, Collection $expected): void
+    public function testReOrderNestedPosts(Collection $input, bool $isOrderByDesc, Collection $expected): void
     {
-        self::assertEquals($expected, $this->sut->reOrderNestedPosts($input, 'postedAt', $orderByDesc));
+        self::assertEquals($expected, $this->sut->reOrderNestedPosts($input, 'postedAt', $isOrderByDesc));
     }
 
     public static function provideReOrderNestedPostsData(): array
