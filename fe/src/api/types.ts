@@ -39,7 +39,7 @@ export type ApiPosts = Api<CursorPagination & {
     }>,
     users: User[],
     latestRepliers: LatestReplier[],
-    queries: Record<PostType, { query: string, plan: ObjUnknown[] }>
+    query: { query: string, plan: ObjUnknown[] }
 }, { query: JsonString }>;
 export type ApiForumThreadsID = Api<CursorPagination & {
     tid: Tid[]
