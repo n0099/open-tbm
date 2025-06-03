@@ -2,7 +2,6 @@
 
 namespace App\Repository\Post;
 
-use App\DTO\PostKey\Thread as ThreadKey;
 use App\Entity\Post\Reply;
 use App\Entity\Post\SubReply;
 use App\Entity\Post\Thread;
@@ -17,10 +16,10 @@ class ThreadRepository extends PostRepository
         parent::__construct($registry, Thread::class);
     }
 
-    public function selectPostKeyDTO(string $orderByField): QueryBuilder
+    public function selectUnionPostKey(): QueryBuilder
     {
         return $this->createQueryBuilder('t')
-            ->select('new ' . ThreadKey::class . "(t.fid, t.tid, '$orderByField', t.$orderByField)");
+            ->select("'thread' AS postType", 't.tid AS postId', 't.fid', 't.tid', '0 AS pid');
     }
 
     public function getPosts(int $fid, array|\ArrayAccess $postsId): array

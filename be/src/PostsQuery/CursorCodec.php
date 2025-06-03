@@ -14,7 +14,8 @@ use Illuminate\Support\Str;
  *     threads: Collection<Thread>,
  *     replies: Collection<Reply>,
  *     subReplies: Collection<SubReply>,
- * } */
+ * }
+ */
 class CursorCodec
 {
     /** @param PostsKeyByTypePluralName $postsKeyByTypePluralName */
