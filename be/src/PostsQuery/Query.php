@@ -41,7 +41,7 @@ readonly class Query extends BaseQuery
 
         $orderByParam = $params->pick('orderBy')[0];
         $this->setOrderByField($orderByParam->value === 'default' ? 'postedAt' : $orderByParam->value)
-            ->setOrderByDesc($orderByParam->value === 'default'
+            ->setIsOrderByDesc($orderByParam->value === 'default'
                 ? $queryByPostIDParamsName->isEmpty()
                 : $orderByParam->getSub('direction') === 'DESC');
 

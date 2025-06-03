@@ -58,13 +58,13 @@ readonly class QueryResult
             Helper::abortAPIIf(40006, $plansCost > $planCostLimit);
         }
 
-        $results = collect($query->getResult());
-        if ($results->count() === $maxResults) {
-            $results->pop();
+        $result = collect($query->getResult());
+        if ($result->count() === $maxResults) {
+            $result->pop();
             $hasMorePages = true;
         }
         return [
-            'result' => $results,
+            'result' => $result,
             'hasMorePages' => $hasMorePages ?? false,
             'queryPlan' => $explainJSON
         ];
@@ -75,7 +75,7 @@ readonly class QueryResult
         Collection $queries,
         ?string $cursorParamValue,
         string $orderByField,
-        bool $orderByDesc,
+        bool $isOrderByDesc,
         Collection $queryByPostIDParamsName,
     ): void {
         $this->stopwatch->start('setResult');
@@ -88,9 +88,9 @@ readonly class QueryResult
         }
         $maxResults = $this->perPageItems + 1;
 
-        $queries->each(function (QueryBuilder $qb, string $postType) use ($maxResults, $orderByDesc, $orderByField, $cursorsKeyByPostType) {
+        $queries->each(function (QueryBuilder $qb, string $postType) use ($maxResults, $isOrderByDesc, $orderByField, $cursorsKeyByPostType) {
             $qb->addSelect("t.$orderByField AS orderByField")
-                ->addOrderBy("t.$orderByField", $orderByDesc === true ? 'DESC' : 'ASC')
+                ->addOrderBy("t.$orderByField", $isOrderByDesc === true ? 'DESC' : 'ASC')
                 // cursor paginator requires values of orderBy column are unique
                 // if not it should fall back to other unique field (here is the post ID primary key)
                 // https://use-the-index-luke.com/no-offset
@@ -105,7 +105,7 @@ readonly class QueryResult
                 return;
             }
             $comparisons = $cursors->keys()->map(
-                fn(string $fieldName): Comparison => $orderByDesc
+                fn(string $fieldName): Comparison => $isOrderByDesc
                     ? $qb->expr()->lt("t.$fieldName", ":cursor_$fieldName")
                     : $qb->expr()->gt("t.$fieldName", ":cursor_$fieldName"),
             );
