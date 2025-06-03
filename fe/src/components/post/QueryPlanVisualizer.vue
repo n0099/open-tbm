@@ -13,7 +13,7 @@
             </select>
         </div>
         <DefinePlan v-slot="{ query }">
-            <Plan
+            <LazyPlan
                 v-if="query !== undefined" :planQuery="query.query"
                 :planSource="JSON.stringify(query.plan, null, 4)" class="pev2" />
         </DefinePlan>
@@ -28,12 +28,14 @@
 
 <script setup lang="ts">
 import type { InfiniteData } from '@tanstack/vue-query';
-import { Plan } from 'pev2';
-import 'pev2/dist/pev2.css';
 
 const { data } = defineProps<{ data: InfiniteData<ApiPosts['response']> }>();
 const selectedPage = ref<Cursor>();
 const [DefinePlan, ReusePlan] = createReusableTemplate<{ query?: ApiPosts['response']['query'] }>();
+const LazyPlan = defineAsyncComponent(async () => {
+    await import('pev2/dist/pev2.css');
+
+    return (await import('pev2')).Plan;
 });
 </script>
 
