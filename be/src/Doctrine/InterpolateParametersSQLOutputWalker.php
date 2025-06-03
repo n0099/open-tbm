@@ -8,10 +8,10 @@ use Doctrine\DBAL\Types\BooleanType;
 use Doctrine\DBAL\Types\Exception\ValueNotConvertible;
 use Doctrine\DBAL\Types\Type;
 use Doctrine\ORM\Query\AST;
-use Doctrine\ORM\Query\SqlWalker;
+use Doctrine\ORM\Query\SqlOutputWalker;
 
 /** @see https://stackoverflow.com/questions/2095394/doctrine-how-to-print-out-the-real-sql-not-just-the-prepared-statement/79647754#79647754 */
-class InterpolateParametersSQLOutputWalker extends SqlWalker
+class InterpolateParametersSQLOutputWalker extends SqlOutputWalker
 {
     /** {@inheritdoc} */
     public function walkInputParameter(AST\InputParameter $inputParam): string

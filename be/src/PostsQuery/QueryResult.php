@@ -46,8 +46,9 @@ readonly class QueryResult
     ) {}
 
     /** @return array{result: Collection, hasMorePages: bool, queryPlan: array} */
-    public function getQueryResult(AbstractQuery $query, int $maxResults): array
+    public function getQueryResult(AbstractQuery $query, int $limit): array
     {
+        $maxResults = $limit + 1;
         $explainJSON = \Safe\json_decode($query->getEntityManager()->getConnection()->executeQuery(
             'EXPLAIN (COSTS, VERBOSE, BUFFERS, FORMAT JSON) ' . $query->getSQL()
         )->fetchOne(), true);
