@@ -55,7 +55,7 @@ if (import.meta.client) {
 
 <style scoped>
 #app-wrapper {
-    min-height: 100vh;
+    min-height: 100dvh;
     pointer-events: v-bind(appPointerEvents);
 }
 
