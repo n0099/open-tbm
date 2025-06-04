@@ -14,6 +14,8 @@ use Doctrine\ORM\Query\Expr\Comparison;
 use Doctrine\ORM\Query\Parser;
 use Doctrine\ORM\Query\ResultSetMapping;
 use Doctrine\ORM\QueryBuilder;
+use Doctrine\SqlFormatter\NullHighlighter;
+use Doctrine\SqlFormatter\SqlFormatter;
 use Illuminate\Support\Collection;
 use Symfony\Component\DependencyInjection\ParameterBag\ContainerBagInterface;
 use Symfony\Component\Stopwatch\Stopwatch;
@@ -118,7 +120,7 @@ readonly class QueryResult
             'postsKeyByTypePluralName' => $postsKeyByTypePluralName,
             'hasMorePages' => $hasMorePages,
             'queryPlan' => $queryPlan
-        ] = $this->getUnionQueryResult($queries, $orderByDesc, $maxResults);
+        ] = $this->getUnionQueryResult($queries, $isOrderByDesc, $maxResults);
 
         $this->threads = $postsKeyByTypePluralName->get('threads', collect());
         $this->replies = $postsKeyByTypePluralName->get('replies', collect());
@@ -147,11 +149,11 @@ readonly class QueryResult
      *      orderByField: mixed
      * }
      * @param Collection<Helpecr::POST_TYPE, QueryBuilder> $queries
-     * @param bool $orderByDesc
+     * @param bool $isOrderByDesc
      * @param int $maxResults
      * @return array{unionOfQueriesSQL: string, postsKeyByTypePluralName: PostsKeyByTypePluralName, hasMorePages: bool, queryPlan: array}
      */
-    private function getUnionQueryResult(Collection $queries, bool $orderByDesc, int $maxResults): array
+    private function getUnionQueryResult(Collection $queries, bool $isOrderByDesc, int $maxResults): array
     {
         /** @var DBALQueryBuilder $unionOfQueries */
         // https://stackoverflow.com/questions/36959801/doctrine-orm-querybuilder-or-dbal-querybuilder
@@ -172,10 +174,10 @@ readonly class QueryResult
         $firstQueryFieldAliases = array_flip((new Parser($firstQuery->getQuery()))
             ->parse()->getResultSetMapping()->scalarMappings);
         $unionOfQueries = $unionOfQueries
-            ->addOrderBy($firstQueryFieldAliases['orderByField'], $orderByDesc === true ? 'DESC' : 'ASC')
+            ->addOrderBy($firstQueryFieldAliases['orderByField'], $isOrderByDesc === true ? 'DESC' : 'ASC')
             ->addOrderBy($firstQueryFieldAliases['postId'])
             ->setMaxResults($maxResults);
-        $unionOfQueriesSQL = $unionOfQueries->getSQL();
+        $unionOfQueriesSQL = (new SqlFormatter(new NullHighlighter()))->format($unionOfQueries->getSQL());
 
         $rsm = new ResultSetMapping();
         foreach ($firstQueryFieldAliases as $fieldName => $fieldAlias) {
