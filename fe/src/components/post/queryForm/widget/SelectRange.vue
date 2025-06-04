@@ -1,6 +1,8 @@
 <template>
 <select v-model="modelValue" class="form-select form-control flex-grow-0">
-    <option v-for="value in numericParamSubParamRangeValues" :key="value">
+    <option
+        v-for="value in numericParamSubParamRangeValues"
+        :key="value" :value="value">
         {{ value }}
     </option>
 </select>

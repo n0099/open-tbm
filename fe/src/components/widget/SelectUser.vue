@@ -3,8 +3,8 @@
     <div class="input-group">
         <select v-model="selectBy" class="select-user-by form-select">
             <option
-                v-for="[description, pssibleSelecteBy] in Object.entries(possibleSelectByDescription)"
-                :key="pssibleSelecteBy">
+                v-for="[selecteBy, description] in Object.entries(selectByDescription)"
+                :key="selecteBy" :value="selecteBy">
                 {{ description }}
             </option>
         </select>
@@ -59,7 +59,7 @@ const emit = defineEmits({
         && _.isObject(p.params) // todo: check p.params against props.paramsNameMap
 });
 const selectBy = ref<SelectUserBy>('');
-const possibleSelectByDescription: Record<SelectUserBy, string> = {
+const selectByDescription: Record<SelectUserBy, string> = {
     // eslint-disable-next-line @typescript-eslint/naming-convention
     '': '未选择',
     uid: '百度UID',

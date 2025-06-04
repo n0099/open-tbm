@@ -44,7 +44,7 @@ readonly class QueryResult
         private Stopwatch $stopwatch,
         private CursorCodec $cursorCodec,
         private ContainerBagInterface $containerBag,
-        private int $perPageItems = 50,
+        private int $perPageItems = 100,
     ) {}
 
     /** @return array{result: Collection, hasMorePages: bool, queryPlan: array} */
