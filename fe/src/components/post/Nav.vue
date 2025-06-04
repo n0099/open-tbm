@@ -196,15 +196,13 @@ watch(viewportTopmostPost, async (to, from) => {
         z-index: 1040;
     }
     .post-nav[aria-expanded=true] {
-        /* linear regression of vw,inline-size: 456,456 768,384(50%) https://www.wolframalpha.com/input?i=y%3D-0.2308x%2B561.2 */
-        inline-size: calc(-0.2308 * 100vw + 561.2px - v-bind(scrollBarWidth));
+        /* linear regression of {dvw,inline-size}: {{456,456},{768,384(50%)}} https://www.wolframalpha.com/input?i=linear+regression+%7B%7B456%2C456%7D%2C%7B768%2C384%7D%7D */
+        inline-size: calc(-0.2308 * 100dvw + 561.2px - v-bind(scrollBarWidth));
     }
     .post-nav[aria-expanded=true] + .post-nav-expand {
         /* merge .post-nav-expand into the scrollbar of .post-nav */
-        inset-inline-start: min(-0.2308 * 100vw + 561.2px - v-bind(scrollBarWidth) * 2, 100vw - v-bind(scrollBarWidth) * 2);
-    }
-    .post-nav[aria-expanded=true] + .post-nav-expand {
-        /* after merge narrow the block-size from 100vh to fit-content for interactive with the scrollbar */
+        inset-inline-start: min(-0.2308 * 100dvw + 561.2px - v-bind(scrollBarWidth) * 2, 100dvw - v-bind(scrollBarWidth) * 2);
+        /* after merge narrow the block-size from 100dvh to fit-content for interactive with the scrollbar */
         block-size: auto !important;
         /* https://stackoverflow.com/questions/28455100/how-to-center-div-vertically-inside-of-absolutely-positioned-parent-div/28456704#28456704 */
         inset-block-start: 50%;

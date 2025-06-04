@@ -12,7 +12,7 @@ use Doctrine\ORM\QueryBuilder;
  */
 abstract class PostRepository extends BaseRepository
 {
-    abstract public function selectPostKeyDTO(string $orderByField): QueryBuilder;
+    abstract public function selectUnionPostKey(): QueryBuilder;
 
     abstract public function getPosts(int $fid, array|\ArrayAccess $postsId): array;
 }

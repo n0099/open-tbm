@@ -1,12 +1,12 @@
-import allCandidatesVoteCount from './allCandidatesVoteCount.json' with { type: 'json' };
-import allVoteCountGroupByHour from './allVoteCountGroupByHour.json' with { type: 'json' };
-import allVoteCountGroupByMinute from './allVoteCountGroupByMinute.json' with { type: 'json' };
-import candidateNames from './candidateNames.json' with { type: 'json' };
-import top10CandidatesTimeline from './top10CandidatesTimeline.json' with { type: 'json' };
-import top50CandidatesOfficialValidVoteCount from './top50CandidatesOfficialValidVoteCount.json' with { type: 'json' };
-import top50CandidatesVoteCount from './top50CandidatesVoteCount.json' with { type: 'json' };
-import top5CandidatesVoteCountGroupByHour from './top5CandidatesVoteCountGroupByHour.json' with { type: 'json' };
-import top5CandidatesVoteCountGroupByMinute from './top5CandidatesVoteCountGroupByMinute.json' with { type: 'json' };
+import allCandidatesVoteCount from '@/api/bilibiliVote/allCandidatesVoteCount.json' with { type: 'json' };
+import allVoteCountGroupByHour from '@/api/bilibiliVote/allVoteCountGroupByHour.json' with { type: 'json' };
+import allVoteCountGroupByMinute from '@/api/bilibiliVote/allVoteCountGroupByMinute.json' with { type: 'json' };
+import candidateNames from '@/api/bilibiliVote/candidateNames.json' with { type: 'json' };
+import top10CandidatesTimeline from '@/api/bilibiliVote/top10CandidatesTimeline.json' with { type: 'json' };
+import top50CandidatesOfficialValidVoteCount from '@/api/bilibiliVote/top50CandidatesOfficialValidVoteCount.json' with { type: 'json' };
+import top50CandidatesVoteCount from '@/api/bilibiliVote/top50CandidatesVoteCount.json' with { type: 'json' };
+import top5CandidatesVoteCountGroupByHour from '@/api/bilibiliVote/top5CandidatesVoteCountGroupByHour.json' with { type: 'json' };
+import top5CandidatesVoteCountGroupByMinute from '@/api/bilibiliVote/top5CandidatesVoteCountGroupByMinute.json' with { type: 'json' };
 
 export const json = {
     allCandidatesVoteCount: allCandidatesVoteCount as AllCandidatesVoteCount,

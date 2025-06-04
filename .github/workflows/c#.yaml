@@ -1,14 +1,14 @@
 # https://stackoverflow.com/questions/75318609/matrix-strategy-over-entire-workflow-in-github-actions/75337311#75337311
-name: be
+name: c#
 on:
   push:
-    paths: [be/**]
+    paths: [c#/**]
 jobs:
   runs-on:
     strategy:
       matrix:
         runs-on: [ubuntu-latest, windows-latest, macos-latest]
       fail-fast: false
-    uses: ./.github/workflows/be_base.yml
+    uses: ./.github/workflows/c#_base.yaml
     with:
       runs-on: ${{ matrix.runs-on }}

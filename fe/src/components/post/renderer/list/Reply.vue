@@ -57,7 +57,7 @@ import 'assets/css/bootstrapCallout.css';
 import type { TemplateRefsList } from '@vueuse/core';
 import { faCommentDots } from '@fortawesome/free-solid-svg-icons';
 
-type ReplyWithGroupedSubReplies = ThreadWithGroupedSubReplies['replies'][number];
+type ReplyWithGroupedSubReplies = ArrayElement<ThreadWithGroupedSubReplies['replies']>;
 const { reply } = defineProps<{
     thread: ThreadWithGroupedSubReplies,
     previousReply?: ReplyWithGroupedSubReplies,

@@ -1,4 +1,3 @@
-import type { QueryFormDeps } from '@/utils/post/queryForm';
 import type { InfiniteData } from '@tanstack/vue-query';
 
 export const usePostsSEO = (

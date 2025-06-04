@@ -1,5 +1,5 @@
 export const selectUserBy = ['', 'uid', 'name', 'nameNULL', 'displayName', 'displayNameNULL'] as const;
-export type SelectUserBy = typeof selectUserBy[number];
+export type SelectUserBy = ArrayElement<typeof selectUserBy>;
 export type SelectUserParams = Partial<{
     uid: BaiduUserID,
     uidCompareBy: '<' | '=' | '>',

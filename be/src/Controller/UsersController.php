@@ -35,21 +35,22 @@ class UsersController extends AbstractController
         $this->validator->validate($queryParams, new Assert\Collection($paramConstraints, allowMissingFields: true));
 
         $queries = collect($queryParams)
-            ->reduce(
-                function (array $acc, $paramValue, string $paramName) use ($paramConstraints): array {
-                    /** @var array{int, QueryBuilder} $acc */
-                    [$paramIndex, $queryBuilder] = $acc;
+            ->reduceSpread( // https://stackoverflow.com/beta/discussions/78344321/a-simple-example-of-how-to-use-laravels-reducespread-method
+                function (int $paramIndex, QueryBuilder $queryBuilder, $paramValue, string $paramName) use ($paramConstraints): array {
                     if (!array_key_exists($paramName, $paramConstraints)) {
                         throw new \InvalidArgumentException();
                     }
-                    return [$paramIndex + 1, $paramValue === 'NULL'
+                    $queryBuilder = $paramValue === 'NULL'
                         && in_array($paramName, ['name', 'displayName', 'gender'], true)
                         ? $queryBuilder->andWhere("t.$paramName IS NULL")
                         : $queryBuilder->andWhere("t.$paramName = ?$paramIndex")
-                            ->setParameter($paramIndex, $paramValue)];
+                            ->setParameter($paramIndex, $paramValue);
+                    return [$paramIndex + 1, $queryBuilder];
                 },
-                [0, $this->userRepository->createQueryBuilder('t')],
-            )[1]->orderBy('t.uid', 'DESC');
+                0,
+                $this->userRepository->createQueryBuilder('t')
+            )[1]
+            ->orderBy('t.uid', 'DESC');
 
         ['result' => $result, 'hasMorePages' => $hasMorePages] =
             $this->queryResult->getQueryResult($queries, $this->perPageItems);

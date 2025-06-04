@@ -1,13 +1,8 @@
 <template>
-<div class="query-plan-visualizer">
+<div class="query-plan-visualizer d-flex flex-wrap">
     <ClientOnly>
         <div class="d-inline-flex justify-content-center w-100 border-bottom">
             <span class="align-self-center">查询计划：</span>
-            <AMenu v-model:selectedKeys="selectedPostTypes" mode="horizontal" class="justify-content-center w-25">
-                <AMenuItem key="thread">主题帖</AMenuItem>
-                <AMenuItem key="reply">回复帖</AMenuItem>
-                <AMenuItem key="subReply">楼中楼</AMenuItem>
-            </AMenu>
             <select v-model="selectedPage" class="form-select">
                 <option
                     v-for="page in data.pages"
@@ -18,33 +13,29 @@
             </select>
         </div>
         <DefinePlan v-slot="{ query }">
-            <Plan
+            <LazyPlan
                 v-if="query !== undefined" :planQuery="query.query"
                 :planSource="JSON.stringify(query.plan, null, 4)" class="pev2" />
         </DefinePlan>
         <ReusePlan
-            :key="`${selectedPage}/${selectedPostType}`"
-            v-if="!(selectedPostType === undefined || selectedPage === undefined)"
+            :key="selectedPage" v-if="selectedPage !== undefined"
             :query="data.pages
                 .find(page => page.pages.currentCursor === selectedPage)
-                ?.queries[selectedPostType]" />
+                ?.query" />
     </ClientOnly>
 </div>
 </template>
 
 <script setup lang="ts">
 import type { InfiniteData } from '@tanstack/vue-query';
-import { Plan } from 'pev2';
-import 'pev2/dist/pev2.css';
 
 const { data } = defineProps<{ data: InfiniteData<ApiPosts['response']> }>();
-const selectedPostTypes = ref<[PostType]>();
-const selectedPostType = computed(() => selectedPostTypes.value?.[0]);
 const selectedPage = ref<Cursor>();
-const [DefinePlan, ReusePlan] = createReusableTemplate<{ query?: ApiPosts['response']['queries'][PostType] }>();
+const [DefinePlan, ReusePlan] = createReusableTemplate<{ query?: ApiPosts['response']['query'] }>();
+const LazyPlan = defineAsyncComponent(async () => {
+    await import('pev2/dist/pev2.css');
 
-watchEffect(() => {
-    selectedPage.value = data.pages.at(-1)?.pages.currentCursor;
+    return (await import('pev2')).Plan;
 });
 </script>
 
@@ -58,7 +49,7 @@ select {
 }
 
 .pev2 {
-    height: 40vh;
+    height: 53rem;
     resize: block;
     contain: content;
 }

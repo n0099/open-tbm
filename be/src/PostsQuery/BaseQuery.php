@@ -6,7 +6,7 @@ abstract readonly class BaseQuery
 {
     private string $orderByField;
 
-    private bool $orderByDesc;
+    private bool $isOrderByDesc;
 
     public function __construct(
         public QueryResult $queryResult,
@@ -28,12 +28,12 @@ abstract readonly class BaseQuery
 
     public function isOrderByDesc(): bool
     {
-        return $this->orderByDesc;
+        return $this->isOrderByDesc;
     }
 
-    protected function setOrderByDesc(bool $value): self
+    protected function setIsOrderByDesc(bool $value): self
     {
-        $this->orderByDesc = $value;
+        $this->isOrderByDesc = $value;
         return $this;
     }
 }

@@ -31,7 +31,7 @@ export type ApiPosts = Api<CursorPagination & {
         notMatchQueryParentPostCount: Record<Exclude<PostType, 'subRely'>, UInt>
     },
     type: 'index' | 'search',
-    forum: Pick<ApiForums['response'][number], 'fid' | 'name'>,
+    forum: Pick<ArrayElement<ApiForums['response']>, 'fid' | 'name'>,
     threads: Array<Thread & {
         replies: Array<Reply & {
             subReplies: SubReply[]
@@ -39,7 +39,7 @@ export type ApiPosts = Api<CursorPagination & {
     }>,
     users: User[],
     latestRepliers: LatestReplier[],
-    queries: Record<PostType, { query: string, plan: ObjUnknown[] }>
+    query: { query: string, plan: ObjUnknown[] }
 }, { query: JsonString }>;
 export type ApiForumThreadsID = Api<CursorPagination & {
     tid: Tid[]

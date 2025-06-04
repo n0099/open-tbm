@@ -28,7 +28,7 @@ export const echarts4ColorTheme: ColorPaletteOptionMixin = {
 };
 
 export const timeGranularities = ['minute', 'hour', 'day', 'week', 'month', 'year'] as const;
-export type TimeGranularity = typeof timeGranularities[number];
+export type TimeGranularity = ArrayElement<typeof timeGranularities>;
 export type TimeGranularityStringMap = Partial<Record<TimeGranularity, string>>;
 export const timeGranularityAxisType: Record<TimeGranularity, 'category' | 'time'> = {
     ...keysWithSameValue(['minute', 'hour', 'day'], 'time'),

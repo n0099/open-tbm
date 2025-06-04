@@ -57,7 +57,7 @@ export default defineNuxtConfig({
     },
     vue: { propsDestructure: true },
     vite: {
-        plugins: [
+        plugins: [ // .nuxt/dist/(client|server)/vite-bundle-analyzer.html
             analyzer({ analyzerMode: 'static', fileName: 'vite-bundle-analyzer' })
         ],
         build: { target: 'esnext' },

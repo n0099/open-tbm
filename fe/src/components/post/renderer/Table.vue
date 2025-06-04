@@ -176,16 +176,16 @@ const subReplyColumns = ref<ColumnType[]>([
 }
 
 :deep(.renderer-table-reply .ant-table table) {
-    min-inline-size: calc(100vw - v-bind(scrollBarWidth) - 48px);
+    min-inline-size: calc(100dvw - v-bind(scrollBarWidth) - 48px);
 }
 :deep(.renderer-table-reply .ant-table tbody > tr > td) {
-    max-inline-size: calc(100vw - v-bind(scrollBarWidth) - 48px);
+    max-inline-size: calc(100dvw - v-bind(scrollBarWidth) - 48px);
 }
 :deep(.renderer-table-sub-reply .ant-table table) {
-    min-inline-size: calc(100vw - v-bind(scrollBarWidth) - 48px - 48px);
+    min-inline-size: calc(100dvw - v-bind(scrollBarWidth) - 48px - 48px);
 }
 :deep(.renderer-table-sub-reply .ant-table tbody > tr > td) {
-    max-inline-size: calc(100vw - v-bind(scrollBarWidth) - 48px - 48px);
+    max-inline-size: calc(100dvw - v-bind(scrollBarWidth) - 48px - 48px);
 }
 
 :deep(.renderer-table-reply thead > tr > th) {

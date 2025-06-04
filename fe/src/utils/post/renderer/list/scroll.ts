@@ -1,4 +1,5 @@
 import type { RouteLocationNormalized, RouterScrollBehavior } from 'vue-router';
+import 'requestidlecallback';
 import _ from 'lodash';
 
 export const postListItemScrollPosition = (route: RouteLocationNormalized)
@@ -49,6 +50,7 @@ export const scrollToPostListItemByRoute = (route: RouteLocationNormalized) => {
     const el = document.querySelector(scrollPosition.el);
     if (el === null)
         return;
+    // eslint-disable-next-line compat/compat
     requestIdleCallback(function retry(deadline) {
         if (deadline.timeRemaining() > 0)
             scrollToPostListItem(el);

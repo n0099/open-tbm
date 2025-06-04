@@ -23,6 +23,30 @@ jobs:
       - uses: ./.github/actions/fe
       - run: yarn run eslint .
 
+  stylelint:
+    runs-on: ${{ inputs.runs-on }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/fe
+
+      - id: cache-restore
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ github.workspace }}/fe/.stylelintcache
+          key: ${{ runner.os }}-fe-stylelintcache
+          restore-keys: ${{ runner.os }}-fe-stylelintcache-
+
+      - uses: xt0rted/stylelint-problem-matcher@v1
+      - run: yarn run stylelint --cache --custom-formatter stylelint-actions-formatters '**/*.vue'
+      - if: always()
+        run: yarn run stylelint --cache --custom-formatter stylelint-actions-formatters '**/*.css'
+
+      - uses: actions/cache/save@v4
+        if: always() && steps.cache-restore.outputs.cache-hit != 'true'
+        with:
+          path: ${{ github.workspace }}/fe/.stylelintcache
+          key: ${{ steps.cache-restore.outputs.cache-primary-key }}
+
   type-coverage:
     runs-on: ${{ inputs.runs-on }}
     steps:

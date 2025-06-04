@@ -4,15 +4,15 @@
         <select v-model="selectBy" class="select-user-by form-select">
             <option
                 v-for="[description, pssibleSelecteBy] in Object.entries(possibleSelectByDescription)"
-                :key="pssibleSelecteBy" :selected="pssibleSelecteBy === selectBy">
+                :key="pssibleSelecteBy">
                 {{ description }}
             </option>
         </select>
         <template v-if="selectBy === 'uid'">
             <select v-model="params.uidCompareBy" class="uid-compare-by form-select">
-                <option :selected="params.uidCompareBy === '<'">&lt;</option>
-                <option :selected="params.uidCompareBy === '='">=</option>
-                <option :selected="params.uidCompareBy === '>'">&gt;</option>
+                <option>&lt;</option>
+                <option>=</option>
+                <option>&gt;</option>
             </select>
             <input
                 v-model="params.uid" type="number" placeholder="4000000000"

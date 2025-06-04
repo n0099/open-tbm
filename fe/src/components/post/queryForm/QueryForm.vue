@@ -47,24 +47,24 @@
                     v-model="orderBy.value"
                     :class="{ 'is-invalid': isOrderByInvalid }"
                     class="form-select form-control" id="paramOrder">
-                    <option :selected="orderBy.value === 'default'" value="default">
+                    <option value="default">
                         默认（按帖索引查询按帖子ID正序，按吧索引/搜索查询按发帖时间倒序）
                     </option>
-                    <option :selected="orderBy.value === 'postedAt'" value="postedAt">发帖时间</option>
+                    <option value="postedAt">发帖时间</option>
                     <optgroup label="帖子ID">
-                        <option :selected="orderBy.value === 'tid'" value="tid">主题帖tid</option>
-                        <option :selected="orderBy.value === 'pid'" value="pid">回复帖pid</option>
-                        <option :selected="orderBy.value === 'spid'" value="spid">楼中楼spid</option>
+                        <option value="tid">主题帖tid</option>
+                        <option value="pid">回复帖pid</option>
+                        <option value="spid">楼中楼spid</option>
                     </optgroup>
                 </select>
                 <select
                     v-show="orderBy.value !== 'default'"
                     v-model="orderBy.subParam.direction"
                     class="form-select form-control" id="paramOrderBy">
-                    <option :selected="orderBy.subParam.direction === 'ASC'" value="ASC">
+                    <option value="ASC">
                         正序（从小到大，旧到新）
                     </option>
-                    <option :selected="orderBy.subParam.direction === 'DESC'" value="DESC">
+                    <option value="DESC">
                         倒序（从大到小，新到旧）
                     </option>
                 </select>
@@ -151,20 +151,20 @@
             </template>
             <template v-if="p.name === 'authorManagerType'">
                 <select v-model="p.value" class="form-control flex-grow-0 w-25">
-                    <option :selected="p.value === 'NULL'" value="NULL">吧友</option>
+                    <option value="NULL">吧友</option>
                     <option
                         v-for="[moderatorType, moderatorTypeDescription] in Object.entries(knownModeratorTypes)
                             .flatMap(([key, value]) => [key, value])"
-                        :key="moderatorType" :value="moderatorType" :selected="moderatorType === p.value">
+                        :key="moderatorType" :value="moderatorType">
                         {{ moderatorTypeDescription }}
                     </option>
                 </select>
             </template>
             <template v-if="p.name === 'authorGender' || p.name === 'latestReplierGender'">
                 <select v-model="p.value" class="form-control flex-grow-0 w-25">
-                    <option :selected="p.value === '0'" value="0">未设置（显示为男）</option>
-                    <option :selected="p.value === '1'" value="1">男 ♂</option>
-                    <option :selected="p.value === '2'" value="2">女 ♀</option>
+                    <option value="0">未设置（显示为男）</option>
+                    <option value="1">男 ♂</option>
+                    <option value="2">女 ♀</option>
                 </select>
             </template>
             <template v-if="p.name === 'authorExpGrade'">
@@ -198,7 +198,7 @@
 </template>
 
 <script setup lang="ts">
-import { inputTextMatchParamPlaceholder } from './widget/InputTextMatchParam.vue';
+import { inputTextMatchParamPlaceholder } from '@/components/post/queryForm/widget/InputTextMatchParam.vue';
 import { faFilter, faPlus, faSortAmountDown, faTimes } from '@fortawesome/free-solid-svg-icons';
 import _ from 'lodash';
 

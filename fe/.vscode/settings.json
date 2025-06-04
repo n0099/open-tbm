@@ -9,25 +9,23 @@
     "typescriptreact"
   ],
   "eslint.useFlatConfig": true,
-  "eslint.runtime": "node", // https://github.com/yarnpkg/berry/pull/6278#issuecomment-2149229422
   "typescript.enablePromptUseWorkspaceTsdk": true,
-  "typescript.tsdk": "node_modules\\typescript\\lib",
-  "typescript.tsserver.experimental.useVsCodeWatcher": false, // https://github.com/yarnpkg/berry/issues/6270
   "[vue]": {
     "editor.defaultFormatter": "Vue.volar"
   },
+  "css.validate": false,
+  "stylelint.validate": ["css", "vue"],
   // below are optional settings
   "vue.complete.casing.props": "autoCamel",
-  "javascript.inlayHints.enumMemberValues.enabled": true,
   "javascript.inlayHints.functionLikeReturnTypes.enabled": true,
   "javascript.inlayHints.parameterNames.enabled": "literals",
   "javascript.inlayHints.parameterTypes.enabled": true,
   "javascript.inlayHints.propertyDeclarationTypes.enabled": true,
   "typescript.inlayHints.enumMemberValues.enabled": true,
-  "typescript.inlayHints.propertyDeclarationTypes.enabled": true,
-  "typescript.inlayHints.parameterTypes.enabled": true,
-  "typescript.inlayHints.parameterNames.enabled": "literals",
   "typescript.inlayHints.functionLikeReturnTypes.enabled": true,
+  "typescript.inlayHints.parameterNames.enabled": "literals",
+  "typescript.inlayHints.parameterTypes.enabled": true,
+  "typescript.inlayHints.propertyDeclarationTypes.enabled": true,
   "vue.inlayHints.missingProps": true,
   "vue.inlayHints.destructuredProps": true,
   "vue.inlayHints.inlineHandlerLeading": true,
