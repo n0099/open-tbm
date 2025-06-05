@@ -2,7 +2,10 @@
 <article class="mt-3 card" :id="`tid/${thread.tid}`">
     <header
         ref="stickyTitleEl"
-        :class="{ 'highlight-post': highlightPostStore.isHighlightingPost(thread, 'tid') }"
+        :class="{
+            'highlight-post': highlightPostStore.isHighlightingPost(thread, 'tid'),
+            'not-match-query-thread': !thread.isMatchQuery
+        }"
         class="thread-title shadow-sm card-header sticky-top">
         <div class="thread-title-inline-start row flex-nowrap">
             <div class="thread-title-inline-start-title-wrapper col-auto flex-shrink-1 w-100 h-100 d-flex">
@@ -130,5 +133,27 @@ const zanTippyContent = (zan: NonNullable<Thread['zan']>) => () => {
     text-overflow: ellipsis;
     flex-basis: 100%;
     inline-size: 0;
+}
+
+@media (prefers-reduced-transparency: no-preference) {
+    /*
+     * selecting children as a workaround to selectors in container query can only select children of the container that has set `container-type`
+     * https://stackoverflow.com/questions/74602394/container-queries-why-cant-i-style-the-container-selector-in-the-container-que
+     */
+    .not-match-query-thread > * {
+        opacity: .5;
+    }
+    .not-match-query-thread:hover > * {
+        opacity: unset;
+    }
+    .not-match-query-thread {
+        /* https://stackoverflow.com/questions/25308823/targeting-positionsticky-elements-that-are-currently-in-a-stuck-state/79471060#79471060 */
+        container-type: scroll-state;
+    }
+    @container scroll-state(stuck: top) {
+        :is(.not-match-query-thread) > * {
+            opacity: unset;
+        }
+    }
 }
 </style>

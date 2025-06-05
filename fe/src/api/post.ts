@@ -32,7 +32,8 @@ export interface Thread extends Post {
     shareCount: UInt,
     zan: ObjUnknown | null,
     geolocation: ObjUnknown | null,
-    authorPhoneType: string
+    authorPhoneType: string,
+    isMatchQuery: boolean
 }
 export interface Reply extends Post {
     pid: Pid,
@@ -41,7 +42,8 @@ export interface Reply extends Post {
     subReplyCount: UInt,
     // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
     isFold: UInt | 0 | 6,
-    geolocation: ObjUnknown | null
+    geolocation: ObjUnknown | null,
+    isMatchQuery: boolean
 }
 export interface SubReply extends Post {
     pid: Pid,

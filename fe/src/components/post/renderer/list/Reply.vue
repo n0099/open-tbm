@@ -1,5 +1,5 @@
 <template>
-<article :id="`pid/${reply.pid}`">
+<article :class="{ 'not-match-query-reply': !reply.isMatchQuery }" :id="`pid/${reply.pid}`">
     <header
         ref="stickyTitleEl"
         :class="{ 'highlight-post': highlightPostStore.isHighlightingPost(reply, 'pid') }"
@@ -102,5 +102,27 @@ const { stickyTitleEl } = useViewportTopmostPostStore().intersectionObserver(
     padding: .25rem;
     font-size: 1rem;
     line-height: 150%;
+}
+
+@media (prefers-reduced-transparency: no-preference) {
+    /*
+     * selecting children as a workaround to selectors in container query can only select children of the container that has set `container-type`
+     * https://stackoverflow.com/questions/74602394/container-queries-why-cant-i-style-the-container-selector-in-the-container-que
+     */
+    .not-match-query-reply :is(.reply-title > *, .reply-author, .reply-content) {
+        opacity: .5;
+    }
+    .not-match-query-reply:hover :is(.reply-title > *, .reply-author, .reply-content) {
+        opacity: unset;
+    }
+    .reply-title {
+        /* https://stackoverflow.com/questions/25308823/targeting-positionsticky-elements-that-are-currently-in-a-stuck-state/79471060#79471060 */
+        container-type: scroll-state;
+    }
+    @container scroll-state(stuck: top) {
+        :is(.reply-title) > * {
+            opacity: unset !important;
+        }
+    }
 }
 </style>
