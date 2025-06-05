@@ -61,13 +61,13 @@ const selectedThreads = ref<[string]>();
 const threadMenuItemRefs = ref<ComponentPublicInstance[]>([]);
 
 useNoScript(`<style>
+    .post-nav > .ant-menu-root {
+        padding-left: 0;
+    }
     @media (max-width: 900px) {
         .post-nav {
             display: none;
         }
-    }
-    .post-nav > .ant-menu-root {
-        padding-left: 0;
     }
 </style>`);
 const [isPostNavExpanded, togglePostNavExpanded] = useToggle(true);
@@ -158,10 +158,17 @@ watch(viewportTopmostPost, async (to, from) => {
 </script>
 
 <style scoped>
-.post-nav-expand {
-    inline-size: v-bind(scrollBarWidth);
-    padding: .125rem;
-    font-size: 1.3rem;
+:deep(.post-nav-thread) {
+    block-size: auto !important; /* show reply nav buttons under thread menu items */
+    white-space: normal;
+    line-height: 2rem;
+    content-visibility: auto;
+    contain-intrinsic-block-size: auto 6rem;
+}
+:deep(.post-nav-thread.border-only-bottom) { /* invisible border to prevent reflow triggered by using border-width: 0px */
+    border-top-color: transparent !important;
+    border-left-color: transparent !important;
+    border-right-color: transparent !important;
 }
 
 .post-nav {
@@ -170,6 +177,16 @@ watch(viewportTopmostPost, async (to, from) => {
 .post-nav:hover {
     overflow-y: auto;
 }
+
+.post-nav-expand {
+    inline-size: v-bind(scrollBarWidth);
+    padding: .125rem;
+    font-size: 1.3rem;
+}
+.post-nav-reply:hover {
+    border-radius: var(--bs-border-radius) !important;
+}
+
 @media (min-width: 900px) {
     .post-nav:hover + .post-nav-expand {
         display: none !important;
@@ -186,7 +203,6 @@ watch(viewportTopmostPost, async (to, from) => {
         flex-grow: 1 !important;
     }
 }
-
 @media (max-width: 900px) {
     .post-nav {
         display: v-bind(postNavDisplay);
@@ -208,22 +224,5 @@ watch(viewportTopmostPost, async (to, from) => {
         inset-block-start: 50%;
         transform: translateY(-50%);
     }
-}
-
-:deep(.post-nav-thread) {
-    block-size: auto !important; /* show reply nav buttons under thread menu items */
-    white-space: normal;
-    line-height: 2rem;
-    content-visibility: auto;
-    contain-intrinsic-block-size: auto 6rem;
-}
-:deep(.post-nav-thread.border-only-bottom) { /* invisible border to prevent reflow triggered by using border-width: 0px */
-    border-top-color: transparent !important;
-    border-left-color: transparent !important;
-    border-right-color: transparent !important;
-}
-
-.post-nav-reply:hover {
-    border-radius: var(--bs-border-radius) !important;
 }
 </style>

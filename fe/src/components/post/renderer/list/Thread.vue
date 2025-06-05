@@ -111,6 +111,9 @@ const zanTippyContent = (zan: NonNullable<Thread['zan']>) => () => {
 :deep(.highlight-post) {
     background-color: antiquewhite !important;
 }
+:deep(.fs-\.75) {
+    font-size: .75rem;
+}
 
 .thread-title {
     block-size: v-bind('replyTitleStyle.insetBlockStart.remString');
@@ -127,9 +130,5 @@ const zanTippyContent = (zan: NonNullable<Thread['zan']>) => () => {
     text-overflow: ellipsis;
     flex-basis: 100%;
     inline-size: 0;
-}
-
-:deep(.fs-\.75) {
-    font-size: .75rem;
 }
 </style>

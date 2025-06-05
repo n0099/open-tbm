@@ -1,3 +1,8 @@
+.is-hydrating-or-ssr ul.ant-menu-horizontal {
+    display: flex;
+    list-style-position: inside;
+}
+
 .input-group-text ~ * > .ant-input-lg {
     block-size: 38px; /* adopt to bootstrap input group */
 }
@@ -23,9 +28,4 @@ address {
     .container { /* let all .container be like .container-fluid when 100dvw is less than the md breakpoint */
         max-width: 100% !important;
     }
-}
-
-.is-hydrating-or-ssr ul.ant-menu-horizontal {
-    display: flex;
-    list-style-position: inside;
 }

@@ -78,9 +78,7 @@
             </button>
             <PostQueryFormWidgetSelectParam
                 @paramChange="changeParam(pI)" :currentParam="p.name"
-                class="select-param" :class="{
-                    'is-invalid': invalidParamsIndex.includes(pI)
-                }" />
+                class="select-param" :class="{ 'is-invalid': invalidParamsIndex.includes(pI) }" />
             <div class="input-group-text">
                 <div class="form-check">
                     <input

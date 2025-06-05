@@ -10,7 +10,7 @@
         <div class="navbar-collapse collapse" id="navbar">
             <ul class="navbar-nav">
                 <template v-for="(nav, _k) in navs" :key="_k">
-                    <li v-if="'routes' in nav" class="nav-item dropdown" :class="{ active: nav.isActive }">
+                    <li v-if="'routes' in nav" class="nav-item dropdown" :class="navClasses(nav)">
                         <a
                             class="nav-link dropdown-toggle" href="#" role="button"
                             data-bs-toggle="dropdown" aria-expanded="false">
@@ -24,7 +24,7 @@
                             </NuxtLink>
                         </div>
                     </li>
-                    <li v-else class="nav-item" :class="{ action: nav.isActive }">
+                    <li v-else class="nav-item" :class="navClasses(nav)">
                         <NuxtLink :to="{ name: nav.route }" noPrefetch class="nav-link">
                             <FontAwesome v-if="nav.icon !== undefined" :icon="nav.icon" /> {{ nav.title }}
                         </NuxtLink>
@@ -43,9 +43,10 @@ import { faCommentDots, faPaperPlane, faSearch, faUsers } from '@fortawesome/fre
 interface Nav { title: string, icon?: IconDefinition, isActive?: boolean }
 interface Route extends Nav { route: string }
 interface DropDown extends Nav { routes: Route[], icon: IconDefinition }
+type Navs = Array<DropDown | Route>;
 
 const route = useRoute();
-const navs = reactive<Array<DropDown | Route>>([
+const navs = reactive<Navs>([
     {
         title: '查询',
         icon: faSearch,
@@ -62,6 +63,7 @@ const navs = reactive<Array<DropDown | Route>>([
         ]
     }
 ]);
+const navClasses = (nav: ArrayElement<Navs>) => ({ action: nav.isActive });
 
 watch(() => route.name, () => {
     navs.forEach(nav => {
