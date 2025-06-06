@@ -1,17 +1,17 @@
 <template>
 <div
-    :class="{ 'is-hydrating-or-ssr': useHydrationStore().isHydratingOrSSR }"
-    class="d-flex flex-column" id="app-wrapper">
+    id="app-wrapper" class="d-flex flex-column"
+    :class="{ 'is-hydrating-or-ssr': useHydrationStore().isHydratingOrSSR }">
     <header>
         <GlobalNavBar />
         <MinimumResolutionWarning />
     </header>
     <img
-        v-show="routeUpdatingStore.isUpdating" :src="iconLoadingBlock"
-        alt="loading" id="global-loading-block" />
+        v-show="routeUpdatingStore.isUpdating" id="global-loading-block"
+        :src="iconLoadingBlock" alt="loading" />
     <div
-        v-show="globalLoadingStore.isLoading" class="spinner-border text-primary"
-        role="status" id="global-loading-spinner">
+        v-show="globalLoadingStore.isLoading" id="global-loading-spinner"
+        class="spinner-border text-primary" role="status">
         <span class="visually-hidden">Loading...</span>
     </div>
     <main>
@@ -19,8 +19,8 @@
             <slot v-if="!routeUpdatingStore.isUpdating" />
         </AConfigProvider>
     </main>
-    <footer class="text-light pt-4 mt-auto" id="footer-upper">
-        <footer class="text-center p-3" id="footer-lower">
+    <footer id="footer-upper" class="text-light pt-4 mt-auto">
+        <footer id="footer-lower" class="text-center p-3">
             <span>{{ config.footerText }}</span>
         </footer>
     </footer>

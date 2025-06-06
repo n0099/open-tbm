@@ -19,14 +19,12 @@
     <p><NuxtLink to="https://www.bilibili.com/video/av46507371" target="_blank">【数据可视化】一分钟看完bilibili吧吧主公投</NuxtLink></p>
     <hr />
     <div
-        ref="top50CandidateCountRef"
-        :class="{ 'loading-huaji': isChartLoading.top50CandidateCount }"
-        class="echarts" id="top50CandidateCount" />
+        ref="top50CandidateCountRef" id="top50CandidateCount"
+        :class="{ 'loading-huaji': isChartLoading.top50CandidateCount }" class="echarts" />
     <hr />
     <div
-        ref="top10CandidatesTimelineRef"
-        :class="{ 'loading-huaji': isChartLoading.top10CandidatesTimeline }"
-        class="echarts" id="top10CandidatesTimeline" />
+        ref="top10CandidatesTimelineRef" id="top10CandidatesTimeline"
+        :class="{ 'loading-huaji': isChartLoading.top10CandidatesTimeline }" class="echarts" />
     <hr />
     <div class="row justify-content-end">
         <label class="col-2 col-form-label text-end" for="top5CandidateCountGroupByTimeGranularity">时间粒度</label>
@@ -35,15 +33,14 @@
                 <span class="input-group-text"><FontAwesome :icon="faCalendarAlt" /></span>
                 <WidgetTimeGranularity
                     v-model="query.top5CandidateCountGroupByTimeGranularity"
-                    :granularities="['minute', 'hour']"
-                    id="top5CandidateCountGroupByTimeGranularity" />
+                    id="top5CandidateCountGroupByTimeGranularity"
+                    :granularities="['minute', 'hour']" />
             </div>
         </div>
     </div>
     <div
-        ref="top5CandidateCountGroupByTimeRef"
-        :class="{ 'loading-huaji': isChartLoading.top5CandidateCountGroupByTime }"
-        class="echarts" id="top5CandidateCountGroupByTime" />
+        ref="top5CandidateCountGroupByTimeRef" id="top5CandidateCountGroupByTime"
+        :class="{ 'loading-huaji': isChartLoading.top5CandidateCountGroupByTime }" class="echarts" />
     <hr />
     <div class="row justify-content-end">
         <label class="col-2 col-form-label text-end" for="allVoteCountGroupByTimeGranularity">时间粒度</label>
@@ -52,15 +49,14 @@
                 <span class="input-group-text"><FontAwesome :icon="faClock" /></span>
                 <WidgetTimeGranularity
                     v-model="query.allVoteCountGroupByTimeGranularity"
-                    :granularities="['minute', 'hour']"
-                    id="allVoteCountGroupByTimeGranularity" />
+                    id="allVoteCountGroupByTimeGranularity"
+                    :granularities="['minute', 'hour']" />
             </div>
         </div>
     </div>
     <div
-        ref="allVoteCountGroupByTimeRef"
-        :class="{ 'loading-huaji': isChartLoading.allVoteCountGroupByTime }"
-        class="echarts" id="allVoteCountGroupByTime" />
+        ref="allVoteCountGroupByTimeRef" id="allVoteCountGroupByTime"
+        :class="{ 'loading-huaji': isChartLoading.allVoteCountGroupByTime }" class="echarts" />
     <hr />
     <Suspense :timeout="0">
         <template #fallback>

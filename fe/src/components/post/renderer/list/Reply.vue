@@ -1,5 +1,5 @@
 <template>
-<article :class="{ 'not-match-query-reply': !reply.isMatchQuery }" :id="`pid/${reply.pid}`">
+<article :id="`pid/${reply.pid}`" :class="{ 'not-match-query-reply': !reply.isMatchQuery }">
     <header
         ref="stickyTitleEl"
         :class="{ 'highlight-post': highlightPostStore.isHighlightingPost(reply, 'pid') }"

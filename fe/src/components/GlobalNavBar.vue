@@ -12,7 +12,7 @@
             aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon" />
         </button>
-        <div class="navbar-collapse collapse" id="navbar">
+        <div id="navbar" class="navbar-collapse collapse">
             <ul class="navbar-nav">
                 <template v-for="(nav, _k) in navs" :key="_k">
                     <li v-if="'routes' in nav" class="nav-item dropdown">

@@ -23,8 +23,8 @@
             <div class="input-group-text">
                 <div class="form-check">
                     <input
-                        v-model="params.nameUseRegex" type="checkbox"
-                        class="form-check-input" id="selectUserNameUseRegex" />
+                        v-model="params.nameUseRegex" id="selectUserNameUseRegex"
+                        type="checkbox" class="form-check-input" />
                     <label class="form-check-label" for="selectUserNameUseRegex">正则</label>
                 </div>
             </div>
@@ -34,8 +34,8 @@
             <div class="input-group-text">
                 <div class="form-check">
                     <input
-                        v-model="params.displayNameUseRegex" type="checkbox"
-                        class="form-check-input" id="selectUserDisplayNameUseRegex" />
+                        v-model="params.displayNameUseRegex" id="selectUserDisplayNameUseRegex"
+                        type="checkbox" class="form-check-input" />
                     <label class="form-check-label" for="selectUserDisplayNameUseRegex">正则</label>
                 </div>
             </div>

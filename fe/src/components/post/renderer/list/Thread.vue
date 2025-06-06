@@ -1,5 +1,5 @@
 <template>
-<article class="mt-3 card" :id="`tid/${thread.tid}`">
+<article :id="`tid/${thread.tid}`" class="mt-3 card">
     <header
         ref="stickyTitleEl"
         :class="{

@@ -3,8 +3,8 @@
     <ul class="list-group list-group-flush">
         <li
             v-for="(subReply, subReplyGroupIndex) in subReplyGroup" :key="subReply.spid"
-            :class="{ 'highlight-post': highlightPostStore.isHighlightingPost(subReply, 'spid') }"
-            class="sub-reply-item list-group-item" :id="`spid/${subReply.spid}`">
+            :id="`spid/${subReply.spid}`" class="sub-reply-item list-group-item"
+            :class="{ 'highlight-post': highlightPostStore.isHighlightingPost(subReply, 'spid') }">
             <article>
                 <address v-for="author in [getUser(subReply.authorUid)]" :key="author.uid" class="d-inline">
                     <NuxtLink

@@ -7,7 +7,7 @@
                 <span class="input-group-text"><FontAwesome :icon="faFilter" /></span>
                 <WidgetSelectForum
                     v-model.number="uniqueParams.fid.value"
-                    :class="{ 'is-invalid': isFidInvalid }" id="paramFid">
+                    id="paramFid" :class="{ 'is-invalid': isFidInvalid }">
                     <template #indicators="{ renderer }">
                         <span class="input-group-text"><RenderFunction :renderer="renderer" /></span>
                     </template>
@@ -19,20 +19,20 @@
             <div class="input-group">
                 <div class="form-check form-check-inline">
                     <input
-                        v-model="uniqueParams.postTypes.value" type="checkbox"
-                        value="thread" class="form-check-input" id="paramPostTypesThread" />
+                        v-model="uniqueParams.postTypes.value" id="paramPostTypesThread"
+                        type="checkbox" value="thread" class="form-check-input" />
                     <label class="form-check-label" for="paramPostTypesThread">主题帖</label>
                 </div>
                 <div class="form-check form-check-inline">
                     <input
-                        v-model="uniqueParams.postTypes.value" type="checkbox"
-                        value="reply" class="form-check-input" id="paramPostTypesReply" />
+                        v-model="uniqueParams.postTypes.value" id="paramPostTypesReply"
+                        type="checkbox" value="reply" class="form-check-input" />
                     <label class="form-check-label" for="paramPostTypesReply">回复帖</label>
                 </div>
                 <div class="form-check form-check-inline">
                     <input
-                        v-model="uniqueParams.postTypes.value" type="checkbox"
-                        value="subReply" class="form-check-input" id="paramPostTypesSubReply" />
+                        v-model="uniqueParams.postTypes.value" id="paramPostTypesSubReply"
+                        type="checkbox" value="subReply" class="form-check-input" />
                     <label class="form-check-label" for="paramPostTypesSubReply">楼中楼</label>
                 </div>
             </div>
@@ -44,9 +44,8 @@
             <div v-for="orderBy in [uniqueParams.orderBy]" :key="orderBy.value" class="input-group">
                 <span class="input-group-text"><FontAwesome :icon="faSortAmountDown" /></span>
                 <select
-                    v-model="orderBy.value"
-                    :class="{ 'is-invalid': isOrderByInvalid }"
-                    class="form-select form-control" id="paramOrder">
+                    v-model="orderBy.value" id="paramOrder"
+                    :class="{ 'is-invalid': isOrderByInvalid }" class="form-select form-control">
                     <option value="default">
                         默认（按帖索引查询按帖子ID正序，按吧索引/搜索查询按发帖时间倒序）
                     </option>
@@ -60,7 +59,7 @@
                 <select
                     v-show="orderBy.value !== 'default'"
                     v-model="orderBy.subParam.direction"
-                    class="form-select form-control" id="paramOrderBy">
+                    id="paramOrderBy" class="form-select form-control">
                     <option value="ASC">
                         正序（从小到大，旧到新）
                     </option>
@@ -82,8 +81,8 @@
             <div class="input-group-text">
                 <div class="form-check">
                     <input
-                        v-model="p.subParam.not" type="checkbox" value="good" class="form-check-input"
-                        :id="`param${_.upperFirst(p.name)}Not-${pI}`" />
+                        v-model="p.subParam.not" :id="`param${_.upperFirst(p.name)}Not-${pI}`"
+                        type="checkbox" value="good" class="form-check-input" />
                     <label
                         :for="`param${_.upperFirst(p.name)}Not-${pI}`"
                         class="text-secondary fw-bold form-check-label">非</label>
@@ -122,8 +121,8 @@
                 <div class="input-group-text">
                     <div class="form-check">
                         <input
-                            v-model="p.value" type="checkbox" value="good" class="form-check-input"
-                            :id="`paramThreadPropertiesGood-${pI}`" />
+                            v-model="p.value" :id="`paramThreadPropertiesGood-${pI}`"
+                            type="checkbox" value="good" class="form-check-input" />
                         <label
                             :for="`paramThreadPropertiesGood-${pI}`"
                             class="text-danger fw-normal form-check-label">精品</label>
@@ -132,8 +131,8 @@
                 <div class="input-group-text">
                     <div class="form-check">
                         <input
-                            v-model="p.value" type="checkbox" value="sticky" class="form-check-input"
-                            :id="`paramThreadPropertiesSticky-${pI}`" />
+                            v-model="p.value" :id="`paramThreadPropertiesSticky-${pI}`"
+                            type="checkbox" value="sticky" class="form-check-input" />
                         <label
                             :for="`paramThreadPropertiesSticky-${pI}`"
                             class="text-primary fw-normal form-check-label">置顶</label>
