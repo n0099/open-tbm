@@ -33,6 +33,7 @@ const rootEl = ref<HTMLElement>();
 const isVisible = ref(false);
 let isVisibleDeounceId = 0;
 const isAlreadySeen = ref(false);
+const placeholderWidth = computed(() => (dateTimeLocale.value.startsWith('zh') ? '' : '2.5rem'));
 
 useIntersectionObserver(rootEl, entries => {
     _.orderBy(entries, 'time').forEach(({ isIntersecting }) => { // https://github.com/vueuse/vueuse/issues/4197
@@ -54,3 +55,9 @@ watchEffect(() => {
     }
 });
 </script>
+
+<style scoped>
+.relative-time-placeholder {
+    width: v-bind(placeholderWidth);
+}
+</style>
