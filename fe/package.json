@@ -8,7 +8,8 @@
         "dev": "NODE_OPTIONS=--stack-trace-limit=100 nuxt dev",
         "generate": "nuxt generate",
         "preview": "nuxt preview",
-        "postinstall": "nuxt prepare"
+        "postinstall": "nuxt prepare",
+        "lint": "eslint; stylelint '**/*.vue'; stylelint '**/*.css'"
     },
     "dependencies": {
         "@ant-design-vue/nuxt": "^1.4.6",
