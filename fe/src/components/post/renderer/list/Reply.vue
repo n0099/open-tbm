@@ -104,7 +104,7 @@ const { stickyTitleEl } = useViewportTopmostPostStore().intersectionObserver(
     line-height: 150%;
 }
 
-@media (prefers-reduced-transparency: no-preference) {
+@media not all and (prefers-reduced-transparency), (prefers-reduced-transparency: no-preference) {
     /*
      * selecting children as a workaround to selectors in container query can only select children of the container that has set `container-type`
      * https://stackoverflow.com/questions/74602394/container-queries-why-cant-i-style-the-container-selector-in-the-container-que
@@ -120,7 +120,7 @@ const { stickyTitleEl } = useViewportTopmostPostStore().intersectionObserver(
         container-type: scroll-state;
     }
     @container scroll-state(stuck: top) {
-        :is(.reply-title) > * {
+        .reply-title > * {
             opacity: unset !important;
         }
     }

@@ -26,14 +26,14 @@ defineProps<{ isLoading: boolean }>();
 </script>
 
 <style scoped>
-@media (prefers-reduced-motion: no-preference) {
+@media not all and (prefers-reduced-motion), (prefers-reduced-motion: no-preference) {
     .animate {
         animation-name: placeholder-post-list;
         animation-play-state: running;
         animation-iteration-count: infinite;
         animation-duration: 1.5s;
     }
-    @media (prefers-reduced-transparency: no-preference) {
+    @media not all and (prefers-reduced-transparency), (prefers-reduced-transparency: no-preference) {
         @keyframes placeholder-post-list {
             0% {
                 opacity: .5;

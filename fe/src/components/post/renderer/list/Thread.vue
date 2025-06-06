@@ -135,7 +135,7 @@ const zanTippyContent = (zan: NonNullable<Thread['zan']>) => () => {
     inline-size: 0;
 }
 
-@media (prefers-reduced-transparency: no-preference) {
+@media not all and (prefers-reduced-transparency), (prefers-reduced-transparency: no-preference) {
     /*
      * selecting children as a workaround to selectors in container query can only select children of the container that has set `container-type`
      * https://stackoverflow.com/questions/74602394/container-queries-why-cant-i-style-the-container-selector-in-the-container-que
@@ -151,7 +151,7 @@ const zanTippyContent = (zan: NonNullable<Thread['zan']>) => () => {
         container-type: scroll-state;
     }
     @container scroll-state(stuck: top) {
-        :is(.not-match-query-thread) > * {
+        .not-match-query-thread > * {
             opacity: unset;
         }
     }

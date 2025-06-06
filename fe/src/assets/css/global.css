@@ -22,6 +22,12 @@ address {
 
 * {
     font-weight: 300;
+    hyphens: auto;
+    line-break: strict;
+    /* https://developer.chrome.com/blog/css-i18n-features */
+    word-break: auto-phrase;
+    text-autospace: ideograph-alpha ideograph-numeric punctuation;
+    text-spacing-trim: normal;
 }
 
 @media (max-width: 991.98px) {
