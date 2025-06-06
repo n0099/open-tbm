@@ -3,7 +3,7 @@ export default defineNuxtPlugin(() => {
 
     const router = useRouter();
     router.beforeEach((to, from) => {
-        if (!isPathsFirstDirectorySame(to.path, from.path))
+        if (!isSecondPartOfRoutePathsSame(to.path, from.path))
             start();
     });
     router.afterEach(stop);

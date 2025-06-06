@@ -1,6 +1,6 @@
 <template>
 <div class="container">
-    <UserQueryForm :query="$route.query" :params="params" :selectUserBy="selectUserBy" class="my-4" />
+    <UserQueryForm :query="route.query" :params="params" :selectUserBy="selectUserBy" class="my-4" />
     <UserPage
         v-for="(users, pageIndex) in userPages"
         :key="`page${users.pages.currentCursor}`"

@@ -9,7 +9,7 @@ export const routeNameSuffix = { cursor: '/cursor' } as const;
 export const routeNameWithCursor = (name: RouteLocationNormalized['name']) => {
     assertRouteNameIsStr(name);
 
-    return _.endsWith(name, routeNameSuffix.cursor) ? name : `${name}${routeNameSuffix.cursor}`;
+    return name.endsWith(routeNameSuffix.cursor) ? name : `${name}${routeNameSuffix.cursor}`;
 };
 export const routeNameWithoutCursor = (name: RouteLocationNormalized['name']) => {
     assertRouteNameIsStr(name);
@@ -29,5 +29,5 @@ export const getNextCursorRoute = (route: RouteLocationNormalized, nextCursor?: 
 
 export const compareRouteIsNewQuery = (to: RouteLocationNormalized, from: RouteLocationNormalized) =>
     !(_.isEqual(to.query, from.query) && _.isEqual(_.omit(to.params, 'cursor'), _.omit(from.params, 'cursor')));
-export const isPathsFirstDirectorySame = (a: string, b: string) =>
+export const isSecondPartOfRoutePathsSame = (a: string, b: string) =>
     a.split('/')[1] === b.split('/')[1];
