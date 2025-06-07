@@ -135,25 +135,29 @@ const zanTippyContent = (zan: NonNullable<Thread['zan']>) => () => {
     inline-size: 0;
 }
 
-@media not all and (prefers-reduced-transparency), (prefers-reduced-transparency: no-preference) {
-    /*
-     * selecting children as a workaround to selectors in container query can only select children of the container that has set `container-type`
-     * https://stackoverflow.com/questions/74602394/container-queries-why-cant-i-style-the-container-selector-in-the-container-que
-     */
+/*
+ * selecting children as a workaround to selectors in container query can only select children of the container that has set `container-type`
+ * https://stackoverflow.com/questions/74602394/container-queries-why-cant-i-style-the-container-selector-in-the-container-que
+ */
+.not-match-query-thread > * {
+    opacity: .5;
+}
+.not-match-query-thread:hover > * {
+    opacity: unset;
+}
+@media (prefers-reduced-transparency) {
     .not-match-query-thread > * {
-        opacity: .5;
-    }
-    .not-match-query-thread:hover > * {
         opacity: unset;
     }
-    .not-match-query-thread {
-        /* https://stackoverflow.com/questions/25308823/targeting-positionsticky-elements-that-are-currently-in-a-stuck-state/79471060#79471060 */
-        container-type: scroll-state;
-    }
-    @container scroll-state(stuck: top) {
-        .not-match-query-thread > * {
-            opacity: unset;
-        }
+}
+
+.not-match-query-thread {
+    /* https://stackoverflow.com/questions/25308823/targeting-positionsticky-elements-that-are-currently-in-a-stuck-state/79471060#79471060 */
+    container: not-match-query-thread / scroll-state;
+}
+@container not-match-query-thread scroll-state(stuck: top) {
+    .not-match-query-thread > * {
+        opacity: unset;
     }
 }
 </style>

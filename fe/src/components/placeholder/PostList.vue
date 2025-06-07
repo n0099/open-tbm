@@ -26,25 +26,26 @@ defineProps<{ isLoading: boolean }>();
 </script>
 
 <style scoped>
-@media not all and (prefers-reduced-motion), (prefers-reduced-motion: no-preference) {
-    .animate {
-        animation-name: placeholder-post-list;
-        animation-play-state: running;
-        animation-iteration-count: infinite;
-        animation-duration: 1.5s;
+.animate {
+    animation-name: placeholder-post-list;
+    animation-play-state: running;
+    animation-iteration-count: infinite;
+    animation-duration: 1.5s;
+}
+@keyframes placeholder-post-list {
+    0% {
+        opacity: .5;
     }
-    @media not all and (prefers-reduced-transparency), (prefers-reduced-transparency: no-preference) {
-        @keyframes placeholder-post-list {
-            0% {
-                opacity: .5;
-            }
-            50% {
-                opacity: 1;
-            }
-            100% {
-                opacity: .5;
-            }
-        }
+    50% {
+        opacity: 1;
+    }
+    100% {
+        opacity: .5;
+    }
+}
+@media (prefers-reduced-motion), (prefers-reduced-transparency) {
+    .animate {
+        animation-name: none;
     }
 }
 </style>
