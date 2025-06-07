@@ -95,8 +95,13 @@ const { stickyTitleEl } = useViewportTopmostPostStore().intersectionObserver(
     --predicted-image-height: 0px;
     --predicted-reply-content-height: 0px;
     --predicted-sub-reply-content-height: 0px;
-    contain-intrinsic-block-size: auto max(11rem, (var(--sub-reply-group-count) * 4rem) + var(--predicted-image-height)
-        + var(--predicted-reply-content-height) + var(--predicted-sub-reply-content-height));
+    contain-intrinsic-block-size: auto max(
+        11rem,
+        (var(--sub-reply-group-count) * 4rem)
+            + var(--predicted-image-height)
+            + var(--predicted-reply-content-height)
+            + var(--predicted-sub-reply-content-height)
+    );
 }
 .reply-author {
     z-index: 1018;

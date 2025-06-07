@@ -61,6 +61,7 @@ const selectedThreads = ref<[string]>();
 const threadMenuItemRefs = ref<ComponentPublicInstance[]>([]);
 
 useNoScript(`<style>
+    /* cannot use logical property as overriding existing physical property */
     .post-nav > .ant-menu-root {
         padding-left: 0;
     }
@@ -166,9 +167,9 @@ watch(viewportTopmostPost, async (to, from) => {
     contain-intrinsic-block-size: auto 6rem;
 }
 :deep(.post-nav-thread.border-only-bottom) { /* invisible border to prevent reflow triggered by using border-width: 0px */
-    border-top-color: transparent !important;
-    border-left-color: transparent !important;
-    border-right-color: transparent !important;
+    border-block-start-color: transparent !important;
+    border-inline-start-color: transparent !important;
+    border-inline-end-color: transparent !important;
 }
 
 .post-nav {

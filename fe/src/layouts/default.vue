@@ -68,8 +68,8 @@ if (import.meta.client) {
 
 #global-loading-spinner {
     position: absolute;
-    right: 1rem;
-    top: 1rem;
+    inset-inline-end: 1rem;
+    inset-block-start: 1rem;
 }
 #global-loading-block {
     height: 200px;
