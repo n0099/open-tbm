@@ -7,6 +7,7 @@
             'not-match-query-thread': !thread.isMatchQuery
         }"
         class="thread-title shadow-sm card-header sticky-top">
+        <div class="sticky-stuck-indicator" />
         <div class="thread-title-inline-start row flex-nowrap">
             <div class="thread-title-inline-start-title-wrapper col-auto flex-shrink-1 w-100 h-100 d-flex">
                 <PostBadgeThread :thread="thread" />
@@ -122,6 +123,8 @@ const zanTippyContent = (zan: NonNullable<Thread['zan']>) => () => {
     block-size: v-bind('replyTitleStyle.insetBlockStart.remString');
     padding: .75rem 1rem .5rem 1rem;
     background-color: #f2f2f2;
+    /* https://stackoverflow.com/questions/25308823/targeting-positionsticky-elements-that-are-currently-in-a-stuck-state/79471060#79471060 */
+    container: thread-title / scroll-state;
 }
 .thread-title-inline-start {
     max-block-size: 1.6rem;
@@ -151,13 +154,17 @@ const zanTippyContent = (zan: NonNullable<Thread['zan']>) => () => {
     }
 }
 
-.not-match-query-thread {
-    /* https://stackoverflow.com/questions/25308823/targeting-positionsticky-elements-that-are-currently-in-a-stuck-state/79471060#79471060 */
-    container: not-match-query-thread / scroll-state;
-}
-@container not-match-query-thread scroll-state(stuck: top) {
+@container thread-title scroll-state(stuck: block-start) {
     .not-match-query-thread > * {
         opacity: unset;
+    }
+    .sticky-stuck-indicator {
+        --is-stuck: 'true';
+    }
+}
+@container thread-title scroll-state(stuck: none) {
+    .sticky-stuck-indicator {
+        --is-stuck: 'false';
     }
 }
 </style>

@@ -4,8 +4,23 @@ export const useViewportTopmostPostStore = defineStore('viewportTopmostPost', ()
     interface TopmostPost { cursor: Cursor, tid: Tid, pid?: Pid }
     const viewportTopmostPost = ref<TopmostPost>();
     const { height: windowHeight } = useWindowSize();
-    const intersectionObserver = (newTopmostPost: TopmostPost, topOffset = 0) => {
-        const stickyTitleEl = ref<HTMLElement>();
+    type UsingImplement = (stickyTitleEl: Ref<HTMLElement | undefined>, newTopmostPost: TopmostPost, topOffset?: number) => void;
+    const usingScrollState: UsingImplement = (stickyTitleEl, newTopmostPost) => {
+        // https://github.com/vueuse/vueuse/blob/ae573a0fb2b6dc0ef7a6a9d349f011984f49ae48/packages/core/useIntersectionObserver/index.ts#L68-L96
+        // eslint-disable-next-line @typescript-eslint/no-empty-function
+        let cleanup = () => {};
+        watch(stickyTitleEl, async () => {
+            cleanup();
+            const observer = new (await import('style-observer')).StyleObserver(records => {
+                records.forEach(() => { viewportTopmostPost.value = newTopmostPost });
+            });
+            const postIdEl = stickyTitleEl.value?.querySelector('.sticky-stuck-indicator');
+            if (!_.isNil(postIdEl))
+                observer.observe(postIdEl, '--is-stuck');
+            cleanup = () => { observer.unobserve() };
+        }, { flush: 'post' });
+    };
+    const usingIntersectionObserver: UsingImplement = (stickyTitleEl, newTopmostPost, topOffset = 0) => {
         const onIntersect = (entries: IntersectionObserverEntry[]) => {
             _.orderBy(entries, 'time').forEach(e => { // https://github.com/vueuse/vueuse/issues/4197
                 if (e.isIntersecting
@@ -33,6 +48,13 @@ export const useViewportTopmostPostStore = defineStore('viewportTopmostPost', ()
                 stopExistingIntersectionObserver = stop;
             }, { debounce: 5000, immediate: true });
         }
+    };
+    const intersectionObserver = (newTopmostPost: TopmostPost, topOffset = 0) => {
+        const stickyTitleEl = ref<HTMLElement>();
+        if (import.meta.client && CSS.supports('container-type', 'scroll-state'))
+            usingScrollState(stickyTitleEl, newTopmostPost);
+        else
+            usingIntersectionObserver(stickyTitleEl, newTopmostPost, topOffset);
 
         return { stickyTitleEl };
     };

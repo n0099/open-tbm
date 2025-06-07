@@ -11996,6 +11996,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"style-observer@npm:^0.1.1":
+  version: 0.1.1
+  resolution: "style-observer@npm:0.1.1"
+  checksum: 10c0/071dc7b3bd4e7de4030a5dafbb689e9a8dc2106b332cfbb1e531093b9810fe0d7d5ff15276ccd0bdbc34d209707f38d046fb39018470841e26d79afd2fe95fb4
+  languageName: node
+  linkType: hard
+
 "stylehacks@npm:^7.0.5":
   version: 7.0.5
   resolution: "stylehacks@npm:7.0.5"
@@ -12283,6 +12290,7 @@ __metadata:
     scroll-into-view-if-needed: "npm:^3.1.0"
     serialize-error: "npm:^12.0.0"
     stats.js: "npm:^0.17.0"
+    style-observer: "npm:^0.1.1"
     stylelint: "npm:^16.20.0"
     stylelint-actions-formatters: "npm:^16.3.1"
     stylelint-config-recommended-vue: "npm:^1.6.0"

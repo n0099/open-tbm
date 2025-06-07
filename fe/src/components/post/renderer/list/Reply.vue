@@ -4,6 +4,7 @@
         ref="stickyTitleEl"
         :class="{ 'highlight-post': highlightPostStore.isHighlightingPost(reply, 'pid') }"
         class="reply-title sticky-top card-header">
+        <div class="sticky-stuck-indicator" />
         <div class="d-inline-flex gap-1 fs-5">
             <span class="badge bg-secondary user-select-all">{{ reply.floor }}楼</span>
             <span v-if="reply.subReplyCount > 0" class="badge bg-info user-select-all">
@@ -82,7 +83,7 @@ const { stickyTitleEl } = useViewportTopmostPostStore().intersectionObserver(
     border-block-end: 0;
     background: linear-gradient(rgba(237, 237, 237, 1), rgba(237, 237, 237, .1));
     /* https://stackoverflow.com/questions/25308823/targeting-positionsticky-elements-that-are-currently-in-a-stuck-state/79471060#79471060 */
-    container: not-match-query-reply / scroll-state;
+    container: reply-title / scroll-state;
 }
 .reply-title.highlight-post {
     background-image: none !important;
@@ -127,9 +128,17 @@ const { stickyTitleEl } = useViewportTopmostPostStore().intersectionObserver(
     }
 }
 
-@container not-match-query-reply scroll-state(stuck: top) {
+@container reply-title scroll-state(stuck: block-start) {
     .reply-title > * {
         opacity: unset !important;
+    }
+    .sticky-stuck-indicator {
+        --is-stuck: 'true';
+    }
+}
+@container reply-title scroll-state(stuck: none) {
+    .sticky-stuck-indicator {
+        --is-stuck: 'false';
     }
 }
 </style>
