@@ -4,7 +4,7 @@
         ref="stickyTitleEl"
         :class="{ 'highlight-post': highlightPostStore.isHighlightingPost(reply, 'pid') }"
         class="reply-title sticky-top card-header">
-        <div class="sticky-stuck-indicator" />
+        <div class="sticky-stuck-indicator" :data-cursor="currentCursor" :data-tid="reply.tid" :data-pid="reply.pid" />
         <div class="d-inline-flex gap-1 fs-5">
             <span class="badge bg-secondary user-select-all">{{ reply.floor }}楼</span>
             <span v-if="reply.subReplyCount > 0" class="badge bg-info user-select-all">
@@ -68,7 +68,7 @@ const { reply } = defineProps<{
 }>();
 const highlightPostStore = useHighlightPostStore();
 const { getUser, currentCursor } = usePostPageProvision().inject();
-const { stickyTitleEl } = useViewportTopmostPostStore().intersectionObserver(
+const { stickyTitleEl } = await useViewportTopmostPostStore().observe(
     { cursor: currentCursor.value, tid: reply.tid, pid: reply.pid },
     replyTitleStyle.insetBlockStart.px
 );

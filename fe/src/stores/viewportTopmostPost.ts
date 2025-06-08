@@ -1,39 +1,49 @@
+import type { StyleObserver } from 'style-observer';
 import _ from 'lodash';
 
 export const useViewportTopmostPostStore = defineStore('viewportTopmostPost', () => {
     interface TopmostPost { cursor: Cursor, tid: Tid, pid?: Pid }
     const viewportTopmostPost = ref<TopmostPost>();
-    type UsingImplement = (stickyTitleEl: Ref<HTMLElement | undefined>, newTopmostPost: TopmostPost, topOffset?: number) => void;
-    const usingScrollState = (): UsingImplement => {
+    type UsingImplement = Promise<(stickyTitleEl: Ref<HTMLElement | undefined>, newTopmostPost: TopmostPost, topOffset?: number) => void>;
+    const usingScrollState = async (): UsingImplement => {
         const stuckPosts = ref<TopmostPost[]>([]); // https://github.com/w3c/csswg-drafts/issues/12302
+        type Record = Parameters<ConstructorParameters<typeof StyleObserver>[0]>[0];
+        const compareTopmostPosts = (newTopmostPost: TopmostPost) => (topmostPost: TopmostPost) =>
+            _.isEqual(topmostPost, newTopmostPost);
+        const observer = new (await import('style-observer')).StyleObserver(_.throttle((records: Record) => {
+            const findStuckPosts = (el: HTMLElement) => {
+                const { cursor = '', tid, pid } = el.dataset;
+                const newTopmostPost: TopmostPost = { cursor, tid: Number(tid), pid: undefinedOr(pid, Number) };
+
+                return compareTopmostPosts(newTopmostPost);
+            };
+            records.forEach(entry => {
+                viewportTopmostPost.value = entry.value === "'true'"
+                    ? stuckPosts.value.find(findStuckPosts(entry.target as HTMLElement))
+                    : stuckPosts.value[stuckPosts.value.findIndex(findStuckPosts(entry.target as HTMLElement)) - 1];
+            });
+        }, 300, { trailing: true }));
 
         return (stickyTitleEl, newTopmostPost) => {
-            const predicate = (topmostPost: TopmostPost) => _.isEqual(topmostPost, newTopmostPost);
-
             // assume the invoking order of current function is the same as https://en.wikipedia.org/wiki/Depth-first_search order of all posts tree
-            if (!stuckPosts.value.some(predicate))
+            if (!stuckPosts.value.some(compareTopmostPosts(newTopmostPost)))
                 stuckPosts.value.push(newTopmostPost);
 
             // https://github.com/vueuse/vueuse/blob/ae573a0fb2b6dc0ef7a6a9d349f011984f49ae48/packages/core/useIntersectionObserver/index.ts#L68-L96
             // eslint-disable-next-line @typescript-eslint/no-empty-function
             let cleanup = () => {};
-            watch(stickyTitleEl, async () => {
+            watch(stickyTitleEl, () => {
                 cleanup();
-                const observer = new (await import('style-observer')).StyleObserver(records => {
-                    records.forEach(entry => {
-                        viewportTopmostPost.value = entry.value === "'true'"
-                            ? stuckPosts.value.find(predicate)
-                            : stuckPosts.value[stuckPosts.value.findIndex(predicate) - 1];
-                    });
-                });
                 const postIdEl = stickyTitleEl.value?.querySelector('.sticky-stuck-indicator');
-                if (!_.isNil(postIdEl))
+                if (!_.isNil(postIdEl)) {
                     observer.observe(postIdEl, '--is-stuck');
-                cleanup = () => { observer.unobserve() };
+                    cleanup = () => { observer.unobserve(postIdEl) };
+                }
             }, { flush: 'post' });
         };
     };
-    const usingIntersectionObserver = (): UsingImplement => {
+    // eslint-disable-next-line @typescript-eslint/require-await
+    const usingIntersectionObserver = async (): UsingImplement => {
         const { height: windowHeight } = useWindowSize();
 
         return (stickyTitleEl, newTopmostPost, topOffset = 0) => {
@@ -68,12 +78,12 @@ export const useViewportTopmostPostStore = defineStore('viewportTopmostPost', ()
     const implement = import.meta.client && CSS.supports('container-type', 'scroll-state')
         ? usingScrollState()
         : usingIntersectionObserver();
-    const intersectionObserver = (newTopmostPost: TopmostPost, topOffset = 0) => {
+    const observe = async (newTopmostPost: TopmostPost, topOffset = 0) => {
         const stickyTitleEl = ref<HTMLElement>();
-        implement(stickyTitleEl, newTopmostPost, topOffset);
+        (await implement)(stickyTitleEl, newTopmostPost, topOffset);
 
         return { stickyTitleEl };
     };
 
-    return { viewportTopmostPost, intersectionObserver };
+    return { viewportTopmostPost, observe };
 });

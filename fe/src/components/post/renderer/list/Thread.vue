@@ -7,7 +7,7 @@
             'not-match-query-thread': !thread.isMatchQuery
         }"
         class="thread-title shadow-sm card-header sticky-top">
-        <div class="sticky-stuck-indicator" />
+        <div class="sticky-stuck-indicator" :data-cursor="currentCursor" :data-tid="thread.tid" />
         <div class="thread-title-inline-start row flex-nowrap">
             <div class="thread-title-inline-start-title-wrapper col-auto flex-shrink-1 w-100 h-100 d-flex">
                 <PostBadgeThread :thread="thread" />
@@ -83,8 +83,8 @@ const { thread } = defineProps<{
 }>();
 const highlightPostStore = useHighlightPostStore();
 const { currentCursor } = usePostPageProvision().inject();
-const { stickyTitleEl } = useViewportTopmostPostStore()
-    .intersectionObserver({ cursor: currentCursor.value, tid: thread.tid });
+const { stickyTitleEl } = await useViewportTopmostPostStore()
+    .observe({ cursor: currentCursor.value, tid: thread.tid });
 
 // todo: fetch users info in zan.userIdList
 const zanTippyContent = (zan: NonNullable<Thread['zan']>) => () => {
