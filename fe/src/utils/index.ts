@@ -55,6 +55,8 @@ export const tiebaPostLink = (tid: Tid, pid?: Pid, spid?: Spid) => {
     return `https://tieba.baidu.com/p/${tid}`;
 };
 
+// eslint-disable-next-line @typescript-eslint/no-empty-function
+export const noop = () => {};
 export const removeStart = (s: string, remove: string) => (s.startsWith(remove) ? s.slice(remove.length) : s);
 export const removeEnd = (s: string, remove: string) => (s.endsWith(remove) ? s.slice(0, -remove.length) : s);
 export const boolPropToStr = <T>(object: Record<string, T | boolean>): Record<string, T | string> =>
