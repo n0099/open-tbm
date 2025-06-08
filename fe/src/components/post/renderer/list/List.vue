@@ -56,9 +56,9 @@ if (import.meta.client) {
     });
 }
 
-const replyElementRefs = useTemplateRefsList<HTMLElement>();
+const replyElementRefs = useTemplateRefsList<HTMLElement | null>();
 onMounted(async () => {
     await nextTick();
-    guessReplyContainIntrinsicBlockSize(replyElementRefs.value);
+    guessReplyContainIntrinsicBlockSize(replyElementRefs.value.filter(el => el !== null));
 });
 </script>

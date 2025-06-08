@@ -9,7 +9,7 @@ export const useViewportTopmostPostStore = defineStore('viewportTopmostPost', ()
 
         return { cursor, tid: Number(tid), pid: undefinedOr(pid, Number) };
     };
-    type UsingImplement = Promise<(stickyTitleEl: Ref<HTMLElement | undefined>, newTopmostPost: TopmostPost, topOffset?: number) => void>;
+    type UsingImplement = Promise<(stickyTitleEl: Ref<HTMLElement | undefined | null>, newTopmostPost: TopmostPost, topOffset?: number) => void>;
     const usingScrollState = async (): UsingImplement => {
         const stuckPosts = ref<TopmostPost[]>([]); // https://github.com/w3c/csswg-drafts/issues/12302
         type Record = Parameters<ConstructorParameters<typeof StyleObserver>[0]>[0];
@@ -70,12 +70,12 @@ export const useViewportTopmostPostStore = defineStore('viewportTopmostPost', ()
         return (stickyTitleEl, newTopmostPost, topOffset = 0) => {
             let stopExistingWindowHeightWatcher = noop;
             watchImmediate(() => toValue(stickyTitleEl), (currentTarget, originalTarget) => {
-                if (originalTarget !== undefined) {
+                if (!_.isNil(originalTarget)) {
                     (topOffset === 0 ? observerForZeroTopOffset : observerForNonZeroTopOffset)
                         .unobserve(originalTarget);
                 }
 
-                if (currentTarget !== undefined) {
+                if (!_.isNil(currentTarget)) {
                     if (topOffset === 0) {
                         observerForZeroTopOffset.observe(currentTarget);
                     } else {
@@ -96,11 +96,16 @@ export const useViewportTopmostPostStore = defineStore('viewportTopmostPost', ()
             }, { flush: 'post' });
         };
     };
-    const implement = import.meta.client && CSS.supports('container-type', 'scroll-state')
-        ? usingScrollState()
-        : usingIntersectionObserver();
+    const implement = (async (): UsingImplement => {
+        if (import.meta.client && CSS.supports('container-type', 'scroll-state'))
+            return usingScrollState();
+        if ('IntersectionObserver' in globalThis)
+            return usingIntersectionObserver();
+
+        return noop;
+    })();
     const observe = async (newTopmostPost: TopmostPost, topOffset = 0) => {
-        const stickyTitleEl = ref<HTMLElement>();
+        const stickyTitleEl = ref<HTMLElement | null>();
         (await implement)(stickyTitleEl, newTopmostPost, topOffset);
 
         return { stickyTitleEl };

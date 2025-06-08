@@ -64,7 +64,7 @@ const { reply } = defineProps<{
     previousReply?: ReplyWithGroupedSubReplies,
     reply: ReplyWithGroupedSubReplies,
     nextReply?: ReplyWithGroupedSubReplies,
-    replyElementRefs: TemplateRefsList<HTMLElement>
+    replyElementRefs: TemplateRefsList<HTMLElement | null>
 }>();
 const highlightPostStore = useHighlightPostStore();
 const { getUser, currentCursor } = usePostPageProvision().inject();

@@ -79,7 +79,7 @@ const { thread } = defineProps<{
     previousThread?: ThreadWithGroupedSubReplies,
     thread: ThreadWithGroupedSubReplies,
     nextThread?: ThreadWithGroupedSubReplies,
-    replyElementRefs: TemplateRefsList<HTMLElement>
+    replyElementRefs: TemplateRefsList<HTMLElement | null>
 }>();
 const highlightPostStore = useHighlightPostStore();
 const { currentCursor } = usePostPageProvision().inject();

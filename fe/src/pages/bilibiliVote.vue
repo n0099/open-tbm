@@ -138,21 +138,19 @@ const candidatesDetailColumns: Array<{
     sorter: (a, b) => (a.officialValidCount ?? 0) - (b.officialValidCount ?? 0)
 }];
 
+const top50CandidateCountRef = useTemplateRef('top50CandidateCountRef');
+const top10CandidatesTimelineRef = useTemplateRef('top10CandidatesTimelineRef');
+const top5CandidateCountGroupByTimeRef = useTemplateRef('top5CandidateCountGroupByTimeRef');
+const allVoteCountGroupByTimeRef = useTemplateRef('allVoteCountGroupByTimeRef');
 const chartElementRefs = {
-    top50CandidateCount: ref<HTMLElement>(),
-    top10CandidatesTimeline: ref<HTMLElement>(),
-    top5CandidateCountGroupByTime: ref<HTMLElement>(),
-    allVoteCountGroupByTime: ref<HTMLElement>()
-};
-useResizeableEcharts(Object.values(chartElementRefs));
-type ChartName = keyof typeof chartElementRefs;
-const chartNames = Object.keys(chartElementRefs) as ChartName[];
-const {
     top50CandidateCount: top50CandidateCountRef,
     top10CandidatesTimeline: top10CandidatesTimelineRef,
     top5CandidateCountGroupByTime: top5CandidateCountGroupByTimeRef,
     allVoteCountGroupByTime: allVoteCountGroupByTimeRef
-} = chartElementRefs;
+};
+useResizeableEcharts(Object.values(chartElementRefs));
+type ChartName = keyof typeof chartElementRefs;
+const chartNames = Object.keys(chartElementRefs) as ChartName[];
 const echartsInstances: Record<ChartName, echarts.ECharts | null> = {
     top50CandidateCount: null,
     top10CandidatesTimeline: null,
@@ -738,7 +736,7 @@ watch(() => query.value.top5CandidateCountGroupByTimeGranularity,
 watch(() => query.value.allVoteCountGroupByTimeGranularity,
     loadChart('allVoteCountGroupByTime'));
 onMounted(() => {
-    _.map(chartElementRefs, (elRef: Ref<HTMLElement | undefined>, chartName: ChartName) => {
+    _.map(chartElementRefs, (elRef, chartName: ChartName) => {
         if (elRef.value === undefined)
             return;
         const chart = echarts.init(elRef.value, echarts4ColorTheme);

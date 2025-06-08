@@ -52,13 +52,13 @@ export const useRelativeTimeStore = defineStore('relativeTime', () => {
         : undefined;
     const observe = () => {
         const isVisibleRef = ref<Ref<boolean>>();
-        const observeTargetEl = ref<Element>();
+        const observeTargetEl = ref<Element | null>();
         if ('IntersectionObserver' in globalThis) {
             watchImmediate(observeTargetEl, (currentTarget, originalTarget) => {
-                if (originalTarget !== undefined)
-                    intersectionObserver.unobserve(originalTarget);
-                if (currentTarget !== undefined) {
-                    intersectionObserver.observe(currentTarget);
+                if (!_.isNil(originalTarget))
+                    intersectionObserver?.unobserve(originalTarget);
+                if (!_.isNil(currentTarget)) {
+                    intersectionObserver?.observe(currentTarget);
                     isVisibleRef.value = getElementVisibility(currentTarget).isVisible;
                 }
             }, { flush: 'post' });

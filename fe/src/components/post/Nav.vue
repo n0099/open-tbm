@@ -11,7 +11,7 @@
                 :key="pageMenuKey(cursor)" :eventKey="pageMenuKey(cursor)" :title="cursorTemplate(cursor)">
                 <AMenuItem
                     v-for="thread in posts.threads" :key="threadMenuKey(cursor, thread.tid)"
-                    ref="threadMenuItemRefs" :title="thread.title"
+                    ref="threadMenuItemsRef" :title="thread.title"
                     :class="menuThreadClasses(thread)" class="post-nav-thread border ps-2 ps-lg-3 pe-1">
                     {{ thread.title }}
                     <div class="d-block btn-group p-1 text-wrap" role="group">
@@ -58,7 +58,7 @@ const hydrationStore = useHydrationStore();
 const { data } = useApiPosts(computed(() => queryParam));
 const expandedPages = ref<string[]>([]);
 const selectedThreads = ref<[string]>();
-const threadMenuItemRefs = ref<ComponentPublicInstance[]>([]);
+const threadMenuItemsRef = useTemplateRef('threadMenuItemsRef');
 
 useNoScript(`<style>
     /* cannot use logical property as overriding existing physical property */
@@ -151,7 +151,7 @@ watch(viewportTopmostPost, async (to, from) => {
         return;
     expandedPages.value = [pageMenuKey(cursor)];
     await nextTick(); // wait for expand
-    const threadEl = (threadMenuItemRefs.value.find(i => i.$.vnode.key === menuKey)
+    const threadEl = (threadMenuItemsRef.value?.find(i => i?.$.vnode.key === menuKey)
         ?.$el as Element | null)?.previousElementSibling ?? null;
     if (threadEl !== null)
         scrollIntoView(threadEl, { scrollMode: 'if-needed', boundary: document.querySelector('.post-nav') });
