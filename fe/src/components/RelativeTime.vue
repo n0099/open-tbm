@@ -1,5 +1,5 @@
 <template>
-<span ref="rootEl">
+<span ref="observeTargetEl">
     <template v-if="hydrationStore.isHydratingOrSSR || !isAlreadySeen">
         <template v-if="relativeTo === undefined">
             {{ dateTimeInShanghai.toLocaleString({
@@ -17,7 +17,6 @@
 
 <script setup lang="ts">
 import type { DateTime } from 'luxon';
-import _ from 'lodash';
 
 const { dateTime, relativeTo } = defineProps<{
     dateTime: DateTime<true>,
@@ -29,27 +28,17 @@ const dateTimeInShanghai = computed(() => setDateTimeZoneAndLocale()(dateTime));
 const updateTimerDep = computed(() =>
     (relativeTo === undefined ? relativeTimeStore.registerTimerDep(dateTime).value : undefined));
 const updatedTimes = ref(0);
-const rootEl = ref<HTMLElement>();
-const isVisible = ref(false);
-let isVisibleDeounceId = 0;
+const { observeTargetEl, isVisibleRef } = relativeTimeStore.observe();
 const isAlreadySeen = ref(false);
 const placeholderWidth = computed(() => (dateTimeLocale.value.startsWith('zh') ? '' : '2.5rem'));
 
-useIntersectionObserver(rootEl, entries => {
-    _.orderBy(entries, 'time').forEach(({ isIntersecting }) => { // https://github.com/vueuse/vueuse/issues/4197
-        clearTimeout(isVisibleDeounceId);
-        // eslint-disable-next-line unicorn/prefer-global-this
-        isVisibleDeounceId = window.setTimeout(() => {
-            isVisible.value = isIntersecting;
-        }, isIntersecting ? 500 : 0);
-    });
-}, { threshold: 1, rootMargin: '100%' });
 watchEffect(() => {
-    if (isVisible.value // is in viewport
+    const isVisible = isVisibleRef.value?.value ?? false;
+    if (isVisible// is in viewport
         && isAlreadySeen.value) { // is not the initial render to prevent immediately re-render
         updatedTimes.value++; // force re-render the relativeEl
     }
-    if (!isAlreadySeen.value && isVisible.value) {
+    if (!isAlreadySeen.value && isVisible) {
         void updateTimerDep.value; /** track {@link updateTimerDep} as watch dep */
         isAlreadySeen.value = true; // must set AFTER the above if
     }
