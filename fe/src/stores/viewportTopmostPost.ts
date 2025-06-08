@@ -97,8 +97,9 @@ export const useViewportTopmostPostStore = defineStore('viewportTopmostPost', ()
         };
     };
     const implement = (async (): UsingImplement => {
-        if (import.meta.client && CSS.supports('container-type', 'scroll-state'))
-            return usingScrollState();
+        /** {@link StyleObserver} is still slower than {@link IntersectionObserver} */
+        // if (import.meta.client && CSS.supports('container-type', 'scroll-state'))
+        //     return usingScrollState();
         if ('IntersectionObserver' in globalThis)
             return usingIntersectionObserver();
 

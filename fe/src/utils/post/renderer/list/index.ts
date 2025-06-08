@@ -32,7 +32,7 @@ export const guessReplyContainIntrinsicBlockSize = (replyElements: HTMLElement[]
             if (!s.endsWith('px'))
                 throw new Error(`Unit of '${s}' is not in pixels`);
 
-            return Number(removeEnd(s, 'px')); // parseInt() will also remove any suffix
+            return Number(removeEnd(s, 'px')); /** {@link parseInt()} will also remove any suffix */
         };
 
         const getCSSPropertyInPixels = (el: HTMLElement, property: string) => (isCSMSupported

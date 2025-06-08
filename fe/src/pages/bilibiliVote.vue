@@ -159,7 +159,7 @@ const echartsInstances: Record<ChartName, echarts.ECharts | null> = {
 };
 
 let top10CandidatesTimelineVotes: Record<'invalid' | 'valid', Top10CandidatesTimeline> = { valid: [], invalid: [] };
-type Top10CandidatesTimelineDataset = Array<CandidateVoteCount & { voteFor: string }>;
+type Top10CandidatesTimelineDataset = Array<CandidateVoteCount & { voteFor: ReturnType<typeof formatCandidateName> }>;
 interface VoteCountSeriesLabelFormatterParams {
     data: OptionDataItem | ArrayElement<Top10CandidatesTimelineDataset>,
     name: string
@@ -533,7 +533,6 @@ const chartLoadder = {
 
         const options: ChartOptionTop10CandidatesTimeline[] = [];
         _.each(_.groupBy(json.top10CandidatesTimeline, 'endTime'), (timeGroup, time) => {
-            // [{ voteFor: formatCandidateName(1), validCount: 1, invalidCount: 0, officialValidCount: null },...]
             const dataset: Top10CandidatesTimelineDataset = _.chain(timeGroup)
                 .sortBy('count')
                 .groupBy('voteFor')
