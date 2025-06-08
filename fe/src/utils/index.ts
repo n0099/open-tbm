@@ -10,6 +10,7 @@ export type Int = number;
 export type UInt = number;
 export type Float = number;
 export type BoolInt = 0 | 1;
+export type TimeoutOrIntervalId = number;
 
 export type ObjUnknown = Record<string, unknown>;
 export type ObjEmpty = Record<string, never>;

@@ -78,8 +78,8 @@ const emitModelChange = () => {
     emit('update:modelValue', { selectBy: selectBy.value, params: params.value });
 };
 
-watch(params, emitModelChange, { deep: true });
-watch(() => modelValue, () => {
+watchDeep(params, emitModelChange);
+watchImmediate(() => modelValue, () => {
     // emit with default params value when parent haven't passing modelValue
     if (_.isEmpty(modelValue))
         emitModelChange();
@@ -99,7 +99,7 @@ watch(() => modelValue, () => {
         selectBy.value = 'nameNULL';
     if (params.value.displayName === 'NULL')
         selectBy.value = 'displayNameNULL';
-}, { immediate: true });
+});
 onMounted(() => {
     // defer listening to prevent watch triggered by assigning initial selectBy
     watchEffect(() => {

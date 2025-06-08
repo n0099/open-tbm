@@ -1,6 +1,6 @@
 export const useRouteUpdatingStore = defineStore('isRouteUpdating', () => {
     const globalLoadingStore = useGlobalLoadingStore();
-    let debounceId = 0;
+    let debounceId: TimeoutOrIntervalId = 0;
     const isUpdating = ref(false);
     const start = () => { isUpdating.value = true };
     const stop = () => { isUpdating.value = false };

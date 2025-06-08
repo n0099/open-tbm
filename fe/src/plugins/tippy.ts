@@ -14,7 +14,7 @@ if (import.meta.client) {
 
 const tippyInstances = new Set<Instance>(); // https://stackoverflow.com/questions/20508628/why-are-weakmaps-not-enumerable
 const enableAnimation = useMediaQuery('(prefers-reduced-motion: no-preference)');
-watch(enableAnimation, async () => {
+watchImmediate(enableAnimation, async () => {
     if (enableAnimation.value)
         await import('tippy.js/animations/perspective.css');
     const prop: Partial<DefaultProps> = { animation: enableAnimation.value ? 'perspective' : false };
@@ -22,7 +22,7 @@ watch(enableAnimation, async () => {
         instance.setProps(prop);
     });
     tippy.setDefaultProps(prop);
-}, { immediate: true });
+});
 
 export default defineNuxtPlugin(nuxt => {
     // eslint-disable-next-line @typescript-eslint/naming-convention

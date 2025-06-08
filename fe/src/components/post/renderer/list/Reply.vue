@@ -115,6 +115,7 @@ const { stickyTitleEl } = await useViewportTopmostPostStore().observe(
 /*
  * selecting children as a workaround to selectors in container query can only select children of the container that has set `container-type`
  * https://stackoverflow.com/questions/74602394/container-queries-why-cant-i-style-the-container-selector-in-the-container-que
+ * https://github.com/w3c/csswg-drafts/issues/5979#issuecomment-2597218725
  */
 .not-match-query-reply :is(.reply-title > *, .reply-author, .reply-content) {
     opacity: .5;

@@ -195,13 +195,13 @@ const useQueryForm = <
         };
     };
 
-    watch([uniqueParams, params], newParamsArray => {
+    watchDeep([uniqueParams, params], newParamsArray => {
         const [newUniqueParams, newParams] = newParamsArray;
         _.chain([...Object.values(newUniqueParams), ...newParams])
             .filter(param => param.name in deps.paramsWatcher)
             .each(param => deps.paramsWatcher[param.name]?.(param))
             .value();
-    }, { deep: true });
+    });
 
     onBeforeMount(() => {
         uniqueParams.value = _.mapValues(uniqueParams.value, _.unary(fillParamDefaultValue)) as UniqueParams;

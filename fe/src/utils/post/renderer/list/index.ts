@@ -9,7 +9,7 @@ const remWithPixels = (rem: number) => ({
     get px() { return convertRemToPixels(this.rem) }
 });
 export const replyTitleStyle = {
-    insetBlockStart: remWithPixels(5),
+    insetBlockStart: remWithPixels(5), // https://github.com/w3c/csswg-drafts/issues/8905
     marginBlockStart: remWithPixels(0.625),
     get topWithoutMargin() {
         return remWithPixels(this.insetBlockStart.rem - this.marginBlockStart.rem);
