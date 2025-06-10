@@ -20,9 +20,9 @@ class ReplyRepository extends PostRepository
             ->select("'reply' AS postType", 't.pid AS postId', 't.fid', 't.tid', 't.pid');
     }
 
-    public function getPosts(int $fid, array|\ArrayAccess $postsId): array
+    public function getPosts(array|\ArrayAccess $postsId): array
     {
-        $dql = 'SELECT t FROM App\Entity\Post\Reply t WHERE t.fid = :fid AND t.pid IN (:pid)';
-        return $this->getQueryResultWithParams($dql, ['fid' => $fid, 'pid' => $postsId]);
+        $dql = 'SELECT t FROM App\Entity\Post\Reply t WHERE t.pid IN (:pid)';
+        return $this->getQueryResultWithParams($dql, ['pid' => $postsId]);
     }
 }

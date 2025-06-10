@@ -60,7 +60,7 @@ readonly class PostsTree
             ->map(fn(ReplyKey $postKey) => $postKey->parentPostId)
             ->concat($result->subReplies->map(fn(SubReplyKey $postKey) => $postKey->tid))
             ->unique();
-        $this->threads = collect($postModels['thread']->getPosts($fid, $parentThreadsID->concat($tids)))
+        $this->threads = collect($postModels['thread']->getPosts($parentThreadsID->concat($tids)))
             ->map(fn(\App\Entity\Post\Thread $entity) => Thread::fromEntity($entity))
             ->each(static fn(Thread $thread) =>
                 $thread->setIsMatchQuery($tids->contains($thread->getTid())));
@@ -70,14 +70,14 @@ readonly class PostsTree
         /** @var Collection<int, int> $parentRepliesID parent pid of all sub replies */
         $parentRepliesID = $result->subReplies->map(fn(SubReplyKey $postKey) => $postKey->parentPostId)->unique();
         $allRepliesId = $parentRepliesID->concat($pids);
-        $this->replies = collect($postModels['reply']->getPosts($fid, $allRepliesId))
+        $this->replies = collect($postModels['reply']->getPosts($allRepliesId))
             ->map(fn(\App\Entity\Post\Reply $entity) => Reply::fromEntity($entity))
             ->each(static fn(Reply $reply) =>
                 $reply->setIsMatchQuery($pids->contains($reply->getPid())));
         $this->stopwatch->stop('fillWithRepliesFields');
 
         $this->stopwatch->start('fillWithSubRepliesFields');
-        $this->subReplies = collect($postModels['subReply']->getPosts($fid, $spids))
+        $this->subReplies = collect($postModels['subReply']->getPosts($spids))
             ->map(fn(\App\Entity\Post\SubReply $entity) => SubReply::fromEntity($entity));
         $this->stopwatch->stop('fillWithSubRepliesFields');
 

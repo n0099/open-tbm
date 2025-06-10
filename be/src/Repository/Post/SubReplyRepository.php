@@ -20,9 +20,9 @@ class SubReplyRepository extends PostRepository
             ->select("'subReply' AS postType", 't.spid AS postId', 't.fid', 't.tid', 't.pid');
     }
 
-    public function getPosts(int $fid, array|\ArrayAccess $postsId): array
+    public function getPosts(array|\ArrayAccess $postsId): array
     {
-        $dql = 'SELECT t FROM App\Entity\Post\SubReply t WHERE t.fid = :fid AND t.spid IN (:spid)';
-        return $this->getQueryResultWithParams($dql, ['fid' => $fid, 'spid' => $postsId]);
+        $dql = 'SELECT t FROM App\Entity\Post\SubReply t WHERE t.spid IN (:spid)';
+        return $this->getQueryResultWithParams($dql, ['spid' => $postsId]);
     }
 }
