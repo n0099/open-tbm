@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\DTO\User\AuthorExpGrade;
 use App\DTO\User\ForumModerator;
 use App\DTO\User\User;
+use App\Entity\LatestReplier;
 use App\Entity\Post\Post;
 use App\Entity\Post\Thread;
 use App\PostsQuery\ParamsValidator;
@@ -65,26 +66,41 @@ class PostsController extends AbstractController
         $latestRepliers = $this->latestReplierRepository->getLatestRepliersWithoutNameWhenHasUid(
             $this->query->postsTree->threads->map(fn(Thread $thread) => $thread->getLatestReplierId()),
         );
-        $uids = collect([$this->query->postsTree->threads, $this->query->postsTree->replies, $this->query->postsTree->subReplies])
-            ->flatMap(static fn(Collection $posts) =>
-                $posts->map(fn(Post $post) => $post->getAuthorUid()))
-            ->concat($latestRepliers->pluck('uid')
-                ->filter(static fn(?int $uid) => $uid !== null))
+        $posts = collect([
+            $this->query->postsTree->threads,
+            $this->query->postsTree->replies,
+            $this->query->postsTree->subReplies
+        ])->flatten();
+        $latestRepliersUidKeyById = $latestRepliers
+            ->mapWithKeys(fn(array|LatestReplier $latestReplier) => [
+                is_array($latestReplier) ? $latestReplier['id'] : $latestReplier->getId() =>
+                    is_array($latestReplier) ? $latestReplier['uid'] : $latestReplier->getUid()
+            ])
+            ->filter(static fn(?int $uid) => $uid !== null);
+        $uids = $posts
+            ->map(fn(Post $post) => $post->getAuthorUid())
+            ->concat($latestRepliersUidKeyById)
             ->unique();
         $users = collect($this->userRepository->getUsers($uids))
-            ->map(fn(\App\Entity\User $entity) => User::fromEntity($entity));
+            ->mapWithKeys(fn(\App\Entity\User $entity) => [$entity->getUid() => User::fromEntity($entity)]);
         $this->stopwatch->stop('queryUsers');
 
         $this->stopwatch->start('queryUserRelated');
-        $fid = $this->query->queryResult->fid;
-        $authorExpGrades = collect($this->authorExpGradeRepository->getLatestOfUsers($fid, $uids))
+        $authorsUidKeyByFid = $posts
+            ->map(fn(Post $post) => ['fid' => $post->getFid(), 'authorUid' => $post->getAuthorUid()])
+            ->groupBy(fn(array $fidAndAuthorId) => $fidAndAuthorId['fid'])
+            ->map(fn(Collection $fidAndAuthorsUid) => $fidAndAuthorsUid->pluck('authorUid'));
+        $authorExpGrades = collect($this->authorExpGradeRepository->getLatestOfUsers($authorsUidKeyByFid))
             ->keyBy(fn(AuthorExpGrade $authorExpGrade) => $authorExpGrade->uid);
-        $users->each(fn(User $user) => $user->setCurrentAuthorExpGrade($authorExpGrades[$user->getUid()] ?? null));
-
-        $forumModerators = collect($this->forumModeratorRepository
-                ->getLatestOfUsers($fid, $users->map(fn(User $user) => $user->getPortrait())))
-            ->keyBy(fn(ForumModerator $forumModerator) => $forumModerator->portrait);
-        $users->each(fn(User $user) => $user->setCurrentForumModerator($forumModerators->get($user->getPortrait())));
+        $forumModerators = collect($this->forumModeratorRepository->getLatestOfUsers($authorsUidKeyByFid
+            ->map(fn(Collection $authorsUid) => $authorsUid
+                ->map(fn(int $authorUid) => $users->get($authorUid)?->getPortrait())
+                ->filter(fn(?string $portrait) => $portrait !== null))
+        ))->keyBy(fn(ForumModerator $forumModerator) => $forumModerator->portrait);
+        $users = $users->each(fn(User $user) => $user->setForumSpecific([
+            'authorExpGrades' => $authorExpGrades->get($user->getUid()),
+            'forumModerators' => $forumModerators->get($user->getPortrait())
+        ]));
         $this->stopwatch->stop('queryUserRelated');
 
         return [
