@@ -54,7 +54,7 @@ class UsersController extends AbstractController
 
         ['result' => $result, 'hasMorePages' => $hasMorePages] =
             $this->queryResult->getQueryResult($queries, $this->perPageItems);
-        $resultCount = count($result);
+        $resultCount = $result->count();
         Helper::abortAPIIf(40402, $resultCount === 0);
 
         return [
