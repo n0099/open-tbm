@@ -1,9 +1,13 @@
 <template>
-<article class="mt-3 card" :id="`tid/${thread.tid}`">
+<article :id="`tid/${thread.tid}`" class="mt-3 card">
     <header
         ref="stickyTitleEl"
-        :class="{ 'highlight-post': highlightPostStore.isHighlightingPost(thread, 'tid') }"
+        :class="{
+            'highlight-post': highlightPostStore.isHighlightingPost(thread, 'tid'),
+            'not-match-query-thread': !thread.isMatchQuery
+        }"
         class="thread-title shadow-sm card-header sticky-top">
+        <div class="sticky-stuck-indicator" :data-cursor="currentCursor" :data-tid="thread.tid" />
         <div class="thread-title-inline-start row flex-nowrap">
             <div class="thread-title-inline-start-title-wrapper col-auto flex-shrink-1 w-100 h-100 d-flex">
                 <PostBadgeThread :thread="thread" />
@@ -75,12 +79,12 @@ const { thread } = defineProps<{
     previousThread?: ThreadWithGroupedSubReplies,
     thread: ThreadWithGroupedSubReplies,
     nextThread?: ThreadWithGroupedSubReplies,
-    replyElementRefs: TemplateRefsList<HTMLElement>
+    replyElementRefs: TemplateRefsList<HTMLElement | null>
 }>();
 const highlightPostStore = useHighlightPostStore();
 const { currentCursor } = usePostPageProvision().inject();
-const { stickyTitleEl } = useViewportTopmostPostStore()
-    .intersectionObserver({ cursor: currentCursor.value, tid: thread.tid });
+const { stickyTitleEl } = await useViewportTopmostPostStore()
+    .observe({ cursor: currentCursor.value, tid: thread.tid });
 
 // todo: fetch users info in zan.userIdList
 const zanTippyContent = (zan: NonNullable<Thread['zan']>) => () => {
@@ -111,11 +115,16 @@ const zanTippyContent = (zan: NonNullable<Thread['zan']>) => () => {
 :deep(.highlight-post) {
     background-color: antiquewhite !important;
 }
+:deep(.fs-\.75) {
+    font-size: .75rem;
+}
 
 .thread-title {
     block-size: v-bind('replyTitleStyle.insetBlockStart.remString');
     padding: .75rem 1rem .5rem 1rem;
     background-color: #f2f2f2;
+    /* https://stackoverflow.com/questions/25308823/targeting-positionsticky-elements-that-are-currently-in-a-stuck-state/79471060#79471060 */
+    container: thread-title / scroll-state;
 }
 .thread-title-inline-start {
     max-block-size: 1.6rem;
@@ -129,7 +138,34 @@ const zanTippyContent = (zan: NonNullable<Thread['zan']>) => () => {
     inline-size: 0;
 }
 
-:deep(.fs-\.75) {
-    font-size: .75rem;
+/*
+ * selecting children as a workaround to selectors in container query can only select children of the container that has set `container-type`
+ * https://stackoverflow.com/questions/74602394/container-queries-why-cant-i-style-the-container-selector-in-the-container-que
+ * https://github.com/w3c/csswg-drafts/issues/5979#issuecomment-2597218725
+ */
+.not-match-query-thread > * {
+    opacity: .5;
+}
+.not-match-query-thread:hover > * {
+    opacity: unset;
+}
+@media (prefers-reduced-transparency) {
+    .not-match-query-thread > * {
+        opacity: unset;
+    }
+}
+
+@container thread-title scroll-state(stuck: block-start) {
+    .not-match-query-thread > * {
+        opacity: unset;
+    }
+    .sticky-stuck-indicator {
+        --is-stuck: 'true';
+    }
+}
+@container thread-title scroll-state(stuck: none) {
+    .sticky-stuck-indicator {
+        --is-stuck: 'false';
+    }
 }
 </style>

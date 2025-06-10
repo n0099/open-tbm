@@ -23,7 +23,6 @@ const { current, relativeTo, relativeToText, postType, timestampType } = defineP
 }>();
 const hydrationStore = useHydrationStore();
 const currentInShanghai = computed(() => setDateTimeZoneAndLocale()(current));
-const placeholderWidth = computed(() => (dateTimeLocale.value.startsWith('zh') ? '' : '2.5rem'));
 
 const tippyContentRelativeTo = computed(() => {
     if (relativeTo === undefined || relativeToText === undefined)
@@ -62,9 +61,3 @@ const tippyContent = () => {
         ${tippyContentRelativeTo.value}`;
 };
 </script>
-
-<style scoped>
-:deep(.relative-time-placeholder) {
-    width: v-bind(placeholderWidth);
-}
-</style>

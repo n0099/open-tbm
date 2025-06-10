@@ -3,7 +3,7 @@
     <WidgetSelectUser v-model="selectUser" />
     <label class="col-2 col-form-label text-end" for="queryGender">性别</label>
     <div class="col-3">
-        <select v-model="gender" class="form-select" id="queryGender">
+        <select v-model="gender" id="queryGender" class="form-select">
             <option value="default">不限</option>
             <option value="NULL">NULL</option>
             <option value="0">未指定（显示为男）</option>

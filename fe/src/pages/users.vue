@@ -1,13 +1,13 @@
 <template>
 <div class="container">
-    <UserQueryForm :query="$route.query" :params="params" :selectUserBy="selectUserBy" class="my-4" />
+    <UserQueryForm :query="route.query" :params="params" :selectUserBy="selectUserBy" class="my-4" />
     <UserPage
         v-for="(users, pageIndex) in userPages"
         :key="`page${users.pages.currentCursor}`"
+        :id="`page${users.pages.currentCursor}`"
         :users="users"
         :isLoadingNewPage="isLoading"
-        :isLastPageInPages="pageIndex === userPages.length - 1"
-        :id="`page${users.pages.currentCursor}`" />
+        :isLastPageInPages="pageIndex === userPages.length - 1" />
     <PlaceholderError v-if="lastFetchError !== null" :error="lastFetchError" class="border-top" />
     <PlaceholderPostList v-show="showPlaceholderPostList" :isLoading="isLoading" />
 </div>

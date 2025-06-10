@@ -1,3 +1,8 @@
+.is-hydrating-or-ssr ul.ant-menu-horizontal {
+    display: flex;
+    list-style-position: inside;
+}
+
 .input-group-text ~ * > .ant-input-lg {
     block-size: 38px; /* adopt to bootstrap input group */
 }
@@ -12,20 +17,22 @@ a {
 }
 
 address {
+    /* cannot use logical property as overriding existing physical property */
     margin-bottom: 0 !important; /* https://getbootstrap.com/docs/5.3/content/reboot/#address */
 }
 
 * {
     font-weight: 300;
+    hyphens: auto;
+    line-break: strict;
+    /* https://developer.chrome.com/blog/css-i18n-features */
+    word-break: auto-phrase;
+    text-autospace: ideograph-alpha ideograph-numeric punctuation;
+    text-spacing-trim: normal;
 }
 
 @media (max-width: 991.98px) {
     .container { /* let all .container be like .container-fluid when 100dvw is less than the md breakpoint */
         max-width: 100% !important;
     }
-}
-
-.is-hydrating-or-ssr ul.ant-menu-horizontal {
-    display: flex;
-    list-style-position: inside;
 }

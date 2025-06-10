@@ -3,8 +3,8 @@
     <div class="input-group">
         <select v-model="selectBy" class="select-user-by form-select">
             <option
-                v-for="[description, pssibleSelecteBy] in Object.entries(possibleSelectByDescription)"
-                :key="pssibleSelecteBy">
+                v-for="[selecteBy, description] in Object.entries(selectByDescription)"
+                :key="selecteBy" :value="selecteBy">
                 {{ description }}
             </option>
         </select>
@@ -23,8 +23,8 @@
             <div class="input-group-text">
                 <div class="form-check">
                     <input
-                        v-model="params.nameUseRegex" type="checkbox"
-                        class="form-check-input" id="selectUserNameUseRegex" />
+                        v-model="params.nameUseRegex" id="selectUserNameUseRegex"
+                        type="checkbox" class="form-check-input" />
                     <label class="form-check-label" for="selectUserNameUseRegex">正则</label>
                 </div>
             </div>
@@ -34,8 +34,8 @@
             <div class="input-group-text">
                 <div class="form-check">
                     <input
-                        v-model="params.displayNameUseRegex" type="checkbox"
-                        class="form-check-input" id="selectUserDisplayNameUseRegex" />
+                        v-model="params.displayNameUseRegex" id="selectUserDisplayNameUseRegex"
+                        type="checkbox" class="form-check-input" />
                     <label class="form-check-label" for="selectUserDisplayNameUseRegex">正则</label>
                 </div>
             </div>
@@ -59,7 +59,7 @@ const emit = defineEmits({
         && _.isObject(p.params) // todo: check p.params against props.paramsNameMap
 });
 const selectBy = ref<SelectUserBy>('');
-const possibleSelectByDescription: Record<SelectUserBy, string> = {
+const selectByDescription: Record<SelectUserBy, string> = {
     // eslint-disable-next-line @typescript-eslint/naming-convention
     '': '未选择',
     uid: '百度UID',
@@ -78,8 +78,8 @@ const emitModelChange = () => {
     emit('update:modelValue', { selectBy: selectBy.value, params: params.value });
 };
 
-watch(params, emitModelChange, { deep: true });
-watch(() => modelValue, () => {
+watchDeep(params, emitModelChange);
+watchImmediate(() => modelValue, () => {
     // emit with default params value when parent haven't passing modelValue
     if (_.isEmpty(modelValue))
         emitModelChange();
@@ -99,7 +99,7 @@ watch(() => modelValue, () => {
         selectBy.value = 'nameNULL';
     if (params.value.displayName === 'NULL')
         selectBy.value = 'displayNameNULL';
-}, { immediate: true });
+});
 onMounted(() => {
     // defer listening to prevent watch triggered by assigning initial selectBy
     watchEffect(() => {

@@ -44,7 +44,7 @@ readonly class QueryResult
         private Stopwatch $stopwatch,
         private CursorCodec $cursorCodec,
         private ContainerBagInterface $containerBag,
-        private int $perPageItems = 50,
+        private int $perPageItems = 100,
     ) {}
 
     /** @return array{result: Collection, hasMorePages: bool, queryPlan: array} */
@@ -116,11 +116,11 @@ readonly class QueryResult
                 $qb->setParameter("cursor_$fieldName", $fieldValue)); // prevent overwriting existing param
         });
         [
-            'unionOfQueriesSQL' => $unionOfQueriesSQL,
+            'rawSQL' => $rawSQL,
             'postsKeyByTypePluralName' => $postsKeyByTypePluralName,
             'hasMorePages' => $hasMorePages,
             'queryPlan' => $queryPlan
-        ] = $this->getUnionQueryResult($queries, $isOrderByDesc, $maxResults);
+        ] = $this->getPostQueriesResult($queries, $isOrderByDesc, $maxResults);
 
         $this->threads = $postsKeyByTypePluralName->get('threads', collect());
         $this->replies = $postsKeyByTypePluralName->get('replies', collect());
@@ -134,7 +134,7 @@ readonly class QueryResult
                 $queryByPostIDParamsName->map(static fn(string $postID) => Helper::POST_ID_TO_TYPE_PLURAL[$postID])
             ))
             : null;
-        $this->query = ['query' => $unionOfQueriesSQL, 'plan' => $queryPlan];
+        $this->query = ['query' => $rawSQL, 'plan' => $queryPlan];
 
         $this->stopwatch->stop('setResult');
     }
@@ -151,33 +151,43 @@ readonly class QueryResult
      * @param Collection<Helpecr::POST_TYPE, QueryBuilder> $queries
      * @param bool $isOrderByDesc
      * @param int $maxResults
-     * @return array{unionOfQueriesSQL: string, postsKeyByTypePluralName: PostsKeyByTypePluralName, hasMorePages: bool, queryPlan: array}
+     * @return array{rawSQL: string, postsKeyByTypePluralName: PostsKeyByTypePluralName, hasMorePages: bool, queryPlan: array}
      */
-    private function getUnionQueryResult(Collection $queries, bool $isOrderByDesc, int $maxResults): array
+    private function getPostQueriesResult(Collection $queries, bool $isOrderByDesc, int $maxResults): array
     {
-        /** @var DBALQueryBuilder $unionOfQueries */
-        // https://stackoverflow.com/questions/36959801/doctrine-orm-querybuilder-or-dbal-querybuilder
-        $unionOfQueries = $queries->reduce(function (?DBALQueryBuilder $dbalQueryBuilder, QueryBuilder $ormQueryBuilder) {
-            $ormQuery = $ormQueryBuilder->getQuery();
-            $ormQuery->setHint(\Doctrine\ORM\Query::HINT_CUSTOM_OUTPUT_WALKER, InterpolateParametersSQLOutputWalker::class);
-            $sql = $ormQuery->getSQL();
-            if ($dbalQueryBuilder === null) {
-                return $ormQueryBuilder->getEntityManager()->getConnection()
-                    ->createQueryBuilder()->union($sql);
-            }
-            return $dbalQueryBuilder->addUnion($sql, UnionType::ALL);
-        });
+        $getParametersInterpolatedRawSQL = static function (QueryBuilder $queryBuilder) {
+            $query = $queryBuilder->getQuery();
+            $query->setHint(\Doctrine\ORM\Query::HINT_CUSTOM_OUTPUT_WALKER, InterpolateParametersSQLOutputWalker::class);
+            return $query->getSQL();
+        };
         $firstQuery = $queries->first();
+        /** @var DBALQueryBuilder|QueryBuilder $flattedQueryBuilder */
+        $flattedQueryBuilder = $queries->count() === 1
+            ? $firstQuery
+            // https://stackoverflow.com/questions/36959801/doctrine-orm-querybuilder-or-dbal-querybuilder
+            : $queries->reduce(function (?DBALQueryBuilder $dbalQueryBuilder, QueryBuilder $ormQueryBuilder) use ($getParametersInterpolatedRawSQL) {
+                $sql = $getParametersInterpolatedRawSQL($ormQueryBuilder);
+                if ($dbalQueryBuilder === null) {
+                    return $ormQueryBuilder->getEntityManager()->getConnection()
+                        ->createQueryBuilder()->union($sql);
+                }
+                return $dbalQueryBuilder->addUnion($sql, UnionType::ALL);
+            });
 
         /** @var array{key-of<UnionPostKey>, string} $firstQueryFieldAliases */
         // field name and aliases in the first query in a union will override any other queries in union
         $firstQueryFieldAliases = array_flip((new Parser($firstQuery->getQuery()))
             ->parse()->getResultSetMapping()->scalarMappings);
-        $unionOfQueries = $unionOfQueries
-            ->addOrderBy($firstQueryFieldAliases['orderByField'], $isOrderByDesc === true ? 'DESC' : 'ASC')
-            ->addOrderBy($firstQueryFieldAliases['postId'])
-            ->setMaxResults($maxResults);
-        $unionOfQueriesSQL = (new SqlFormatter(new NullHighlighter()))->format($unionOfQueries->getSQL());
+        if ($flattedQueryBuilder instanceof DBALQueryBuilder) {
+            $flattedQueryBuilder = $flattedQueryBuilder
+                ->addOrderBy($firstQueryFieldAliases['orderByField'], $isOrderByDesc === true ? 'DESC' : 'ASC')
+                ->addOrderBy($firstQueryFieldAliases['postId'])
+                ->setMaxResults($maxResults);
+        }
+        $rawSQL = (new SqlFormatter(new NullHighlighter()))->format(match (true) {
+            $flattedQueryBuilder instanceof DBALQueryBuilder => $flattedQueryBuilder->getSQL(),
+            $flattedQueryBuilder instanceof QueryBuilder => $getParametersInterpolatedRawSQL($flattedQueryBuilder)
+        });
 
         $rsm = new ResultSetMapping();
         foreach ($firstQueryFieldAliases as $fieldName => $fieldAlias) {
@@ -185,7 +195,7 @@ readonly class QueryResult
         }
 
         ['result' => $result, 'hasMorePages' => $hasMorePages, 'queryPlan' => $queryPlan] = $this->getQueryResult(
-            $firstQuery->getEntityManager()->createNativeQuery($unionOfQueriesSQL, $rsm),
+            $firstQuery->getEntityManager()->createNativeQuery($rawSQL, $rsm),
             $this->perPageItems
         );
         /** @var PostsKeyByTypePluralName $postsKeyByTypePluralName */
@@ -211,7 +221,7 @@ readonly class QueryResult
         Helper::abortAPIIf(40401, $postsKeyByTypePluralName->every(static fn(Collection $i) => $i->isEmpty()));
 
         return [
-            'unionOfQueriesSQL' => $unionOfQueriesSQL,
+            'rawSQL' => $rawSQL,
             'postsKeyByTypePluralName' => $postsKeyByTypePluralName,
             'hasMorePages' => $hasMorePages,
             'queryPlan' => $queryPlan

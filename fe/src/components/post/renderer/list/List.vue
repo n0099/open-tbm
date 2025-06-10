@@ -1,5 +1,5 @@
 <template>
-<div :data-cursor="nestedPosts.pages.currentCursor" class="post-render-list pb-3">
+<div :data-cursor="currentCursor" class="post-render-list pb-3">
     <PostRendererListThread
         v-for="(thread, index) in nestedPosts.threads" :key="thread.tid"
         :previousThread="nestedPosts.threads[index - 1]" :thread="thread"
@@ -12,6 +12,7 @@ import type { RouterScrollBehavior } from 'vue-router';
 import _ from 'lodash';
 
 const { posts } = defineProps<{ posts: ApiPosts['response'] }>();
+const { currentCursor } = usePostPageProvision().inject();
 const nestedPosts = computed(() => {
     const newPosts = refDeepClone(posts) as // https://github.com/microsoft/TypeScript/issues/33591
         Modify<ApiPosts['response'], { threads: Array<ThreadWithGroupedSubReplies<SubReply>> }>;
@@ -55,9 +56,9 @@ if (import.meta.client) {
     });
 }
 
-const replyElementRefs = useTemplateRefsList<HTMLElement>();
+const replyElementRefs = useTemplateRefsList<HTMLElement | null>();
 onMounted(async () => {
     await nextTick();
-    guessReplyContainIntrinsicBlockSize(replyElementRefs.value);
+    guessReplyContainIntrinsicBlockSize(replyElementRefs.value.filter(el => el !== null));
 });
 </script>

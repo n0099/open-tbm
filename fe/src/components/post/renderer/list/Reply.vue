@@ -1,9 +1,10 @@
 <template>
-<article :id="`pid/${reply.pid}`">
+<article :id="`pid/${reply.pid}`" :class="{ 'not-match-query-reply': !reply.isMatchQuery }">
     <header
         ref="stickyTitleEl"
         :class="{ 'highlight-post': highlightPostStore.isHighlightingPost(reply, 'pid') }"
         class="reply-title sticky-top card-header">
+        <div class="sticky-stuck-indicator" :data-cursor="currentCursor" :data-tid="reply.tid" :data-pid="reply.pid" />
         <div class="d-inline-flex gap-1 fs-5">
             <span class="badge bg-secondary user-select-all">{{ reply.floor }}楼</span>
             <span v-if="reply.subReplyCount > 0" class="badge bg-info user-select-all">
@@ -63,11 +64,11 @@ const { reply } = defineProps<{
     previousReply?: ReplyWithGroupedSubReplies,
     reply: ReplyWithGroupedSubReplies,
     nextReply?: ReplyWithGroupedSubReplies,
-    replyElementRefs: TemplateRefsList<HTMLElement>
+    replyElementRefs: TemplateRefsList<HTMLElement | null>
 }>();
 const highlightPostStore = useHighlightPostStore();
 const { getUser, currentCursor } = usePostPageProvision().inject();
-const { stickyTitleEl } = useViewportTopmostPostStore().intersectionObserver(
+const { stickyTitleEl } = await useViewportTopmostPostStore().observe(
     { cursor: currentCursor.value, tid: reply.tid, pid: reply.pid },
     replyTitleStyle.insetBlockStart.px
 );
@@ -81,6 +82,8 @@ const { stickyTitleEl } = useViewportTopmostPostStore().intersectionObserver(
     border-block-start: 1px solid #ededed;
     border-block-end: 0;
     background: linear-gradient(rgba(237, 237, 237, 1), rgba(237, 237, 237, .1));
+    /* https://stackoverflow.com/questions/25308823/targeting-positionsticky-elements-that-are-currently-in-a-stuck-state/79471060#79471060 */
+    container: reply-title / scroll-state;
 }
 .reply-title.highlight-post {
     background-image: none !important;
@@ -93,8 +96,13 @@ const { stickyTitleEl } = useViewportTopmostPostStore().intersectionObserver(
     --predicted-image-height: 0px;
     --predicted-reply-content-height: 0px;
     --predicted-sub-reply-content-height: 0px;
-    contain-intrinsic-block-size: auto max(11rem, (var(--sub-reply-group-count) * 4rem) + var(--predicted-image-height)
-        + var(--predicted-reply-content-height) + var(--predicted-sub-reply-content-height));
+    contain-intrinsic-block-size: auto max(
+        11rem,
+        (var(--sub-reply-group-count) * 4rem)
+            + var(--predicted-image-height)
+            + var(--predicted-reply-content-height)
+            + var(--predicted-sub-reply-content-height)
+    );
 }
 .reply-author {
     z-index: 1018;
@@ -102,5 +110,36 @@ const { stickyTitleEl } = useViewportTopmostPostStore().intersectionObserver(
     padding: .25rem;
     font-size: 1rem;
     line-height: 150%;
+}
+
+/*
+ * selecting children as a workaround to selectors in container query can only select children of the container that has set `container-type`
+ * https://stackoverflow.com/questions/74602394/container-queries-why-cant-i-style-the-container-selector-in-the-container-que
+ * https://github.com/w3c/csswg-drafts/issues/5979#issuecomment-2597218725
+ */
+.not-match-query-reply :is(.reply-title > *, .reply-author, .reply-content) {
+    opacity: .5;
+}
+.not-match-query-reply:hover :is(.reply-title > *, .reply-author, .reply-content) {
+    opacity: unset;
+}
+@media (prefers-reduced-transparency) {
+    .not-match-query-reply :is(.reply-title > *, .reply-author, .reply-content) {
+        opacity: unset;
+    }
+}
+
+@container reply-title scroll-state(stuck: block-start) {
+    .reply-title > * {
+        opacity: unset !important;
+    }
+    .sticky-stuck-indicator {
+        --is-stuck: 'true';
+    }
+}
+@container reply-title scroll-state(stuck: none) {
+    .sticky-stuck-indicator {
+        --is-stuck: 'false';
+    }
 }
 </style>

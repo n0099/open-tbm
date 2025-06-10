@@ -1,7 +1,7 @@
 <template>
 <div>
     <PageCurrentButton :currentCursor="users.pages.currentCursor" />
-    <div v-for="(user, userIndex) in users.users" :key="user.uid" class="row" :id="user.uid.toString()">
+    <div v-for="(user, userIndex) in users.users" :key="user.uid" :id="user.uid.toString()" class="row">
         <div class="col-3">
             <img
                 :src="toUserPortraitImageUrl(user.portrait)" loading="lazy"

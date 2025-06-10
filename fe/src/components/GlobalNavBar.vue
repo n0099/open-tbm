@@ -1,33 +1,32 @@
 <template>
+<DefineNavItem v-slot="{ nav }">
+    <NuxtLink :to="{ name: nav.route }" noPrefetch class="nav-link" v-bind="navLinkAttrs(nav)">
+        <FontAwesome v-if="nav.icon !== undefined" :icon="nav.icon" /> {{ nav.title }}
+    </NuxtLink>
+</DefineNavItem>
 <nav class="navbar navbar-expand-lg shadow-sm bg-light">
-    <div class="container-fluid" id="nav">
+    <div class="container-fluid">
         <NuxtLink to="/" noPrefetch class="navbar-brand">{{ useSiteConfig().name }}</NuxtLink>
         <button
-            class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar"
+            class="navbar-toggler" type="button" data-bs-target="#navbar" data-bs-toggle="collapse"
             aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon" />
         </button>
-        <div class="navbar-collapse collapse" id="navbar">
+        <div id="navbar" class="navbar-collapse collapse">
             <ul class="navbar-nav">
                 <template v-for="(nav, _k) in navs" :key="_k">
-                    <li v-if="'routes' in nav" class="nav-item dropdown" :class="{ active: nav.isActive }">
+                    <li v-if="'routes' in nav" class="nav-item dropdown">
                         <a
                             class="nav-link dropdown-toggle" href="#" role="button"
-                            data-bs-toggle="dropdown" aria-expanded="false">
+                            data-bs-toggle="dropdown" aria-expanded="false" v-bind="navLinkAttrs(nav)">
                             <FontAwesome v-if="nav.icon !== undefined" :icon="nav.icon" /> {{ nav.title }}
                         </a>
                         <div class="dropdown-menu">
-                            <NuxtLink
-                                v-for="r in nav.routes" :key="r.route"
-                                :to="{ name: r.route }" noPrefetch class="nav-link">
-                                <FontAwesome v-if="r.icon !== undefined" :icon="r.icon" /> {{ r.title }}
-                            </NuxtLink>
+                            <ReuseNavItem v-for="r in nav.routes" :key="r.route" :nav="r" />
                         </div>
                     </li>
-                    <li v-else class="nav-item" :class="{ action: nav.isActive }">
-                        <NuxtLink :to="{ name: nav.route }" noPrefetch class="nav-link">
-                            <FontAwesome v-if="nav.icon !== undefined" :icon="nav.icon" /> {{ nav.title }}
-                        </NuxtLink>
+                    <li v-else class="nav-item">
+                        <ReuseNavItem :nav="nav" />
                     </li>
                 </template>
             </ul>
@@ -37,15 +36,17 @@
 </template>
 
 <script setup lang="ts">
+import type { AriaAttributes } from 'vue';
 import type { IconDefinition } from '@fortawesome/free-solid-svg-icons';
 import { faCommentDots, faPaperPlane, faSearch, faUsers } from '@fortawesome/free-solid-svg-icons';
 
 interface Nav { title: string, icon?: IconDefinition, isActive?: boolean }
 interface Route extends Nav { route: string }
 interface DropDown extends Nav { routes: Route[], icon: IconDefinition }
+type Navs = Array<DropDown | Route>;
 
 const route = useRoute();
-const navs = reactive<Array<DropDown | Route>>([
+const navs = reactive<Navs>([
     {
         title: '查询',
         icon: faSearch,
@@ -62,12 +63,23 @@ const navs = reactive<Array<DropDown | Route>>([
         ]
     }
 ]);
+const [DefineNavItem, ReuseNavItem] = createReusableTemplate<{ nav: Route }>();
+const navLinkAttrs = (nav: ArrayElement<Navs>) => ({
+    class: { active: nav.isActive },
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    ...nav.isActive === true ? { 'aria-current': 'page' } as Pick<AriaAttributes, 'aria-current'> : {}
+});
 
-watch(() => route.name, () => {
+watchEffect(() => {
+    assertRouteNameIsStr(route.name);
+    const routeName = route.name;
     navs.forEach(nav => {
-        nav.isActive = 'routes' in nav
-            ? nav.routes.some(i => i.route === route.name)
-            : nav.route === route.name;
+        if ('routes' in nav) {
+            nav.isActive = nav.routes.some(r => routeName.startsWith(r.route));
+            nav.routes.forEach(r => { r.isActive = routeName.startsWith(r.route) });
+        } else {
+            nav.isActive = routeName.startsWith(nav.route);
+        }
     });
 });
 </script>

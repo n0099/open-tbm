@@ -43,4 +43,9 @@ defineProps<{ isLoading: boolean }>();
         opacity: .5;
     }
 }
+@media (prefers-reduced-motion), (prefers-reduced-transparency) {
+    .animate {
+        animation-name: none;
+    }
+}
 </style>

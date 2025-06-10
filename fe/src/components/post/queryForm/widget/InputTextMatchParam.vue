@@ -3,34 +3,26 @@
     <div class="form-check form-check-inline">
         <input
             @input="emitModelChange('matchBy', ($event.target as HTMLInputElement).value as 'regex')"
-            :checked="modelValue.subParam.matchBy === 'regex'"
-            :name="inputName" value="regex"
-            type="radio" class="form-check-input" :id="inputID('Regex')" />
-        <label :for="inputID('Regex')" class="form-check-label">正则</label>
+            v-bind="inputAttrs('regex')" />
+        <label :for="inputID('regex')" class="form-check-label">正则</label>
     </div>
     <div class="form-check form-check-inline">
         <input
             @input="emitModelChange('matchBy', ($event.target as HTMLInputElement).value as 'implicit')"
-            :checked="modelValue.subParam.matchBy === 'implicit'"
-            :name="inputName" value="implicit"
-            type="radio" class="form-check-input" :id="inputID('Implicit')" />
-        <label :for="inputID('Implicit')" class="form-check-label">模糊</label>
+            v-bind="inputAttrs('implicit')" />
+        <label :for="inputID('implicit')" class="form-check-label">模糊</label>
     </div>
     <div class="form-check form-check-inline">
         <input
             @input="emitModelChange('matchBy', ($event.target as HTMLInputElement).value as 'explicit')"
-            :checked="modelValue.subParam.matchBy === 'explicit'"
-            :name="inputName" value="explicit"
-            type="radio" class="form-check-input" :id="inputID('Explicit')" />
-        <label :for="inputID('Explicit')" class="form-check-label">精确</label>
+            v-bind="inputAttrs('explicit')" />
+        <label :for="inputID('explicit')" class="form-check-label">精确</label>
     </div>
     <div class="form-check form-check-inline">
         <input
             @input="emitModelChange('spaceSplit', ($event.target as HTMLInputElement).checked)"
-            :checked="modelValue.subParam.spaceSplit"
-            :disabled="modelValue.subParam.matchBy === 'regex'"
-            type="checkbox" class="form-check-input" :id="inputID('SpaceSplit')" />
-        <label :for="inputID('SpaceSplit')" class="form-check-label">空格分隔</label>
+            v-bind="inputAttrs('spaceSplit')" />
+        <label :for="inputID('spaceSplit')" class="form-check-label">空格分隔</label>
     </div>
 </div>
 </template>
@@ -57,7 +49,6 @@ defineEmits({
         && _.isBoolean(p.subParam.spaceSplit)
 });
 const modelValue = defineModel<KnownTextParams>({ required: true });
-
 const emitModelChange = (
     name: keyof NamelessParamText['subParam'],
     value: ObjValues<NamelessParamText['subParam']>
@@ -67,10 +58,26 @@ const emitModelChange = (
         subParam: { ...modelValue.value.subParam, [name]: value }
     } as KnownTextParams;
 };
-const inputID = (type: 'Explicit' | 'Implicit' | 'Regex' | 'SpaceSplit') =>
-    `param${_.upperFirst(modelValue.value.name)}${type}-${paramIndex}`;
-const inputName = computed(() =>
-    `param${_.upperFirst(modelValue.value.name)}-${paramIndex}`);
+
+type InputType = KnownTextParams['subParam']['matchBy'] | 'spaceSplit';
+const inputID = (type: InputType) =>
+    `param${_.upperFirst(modelValue.value.name)}${_.upperFirst(type)}-${paramIndex}`;
+const inputAttrs = (type: InputType) => ({
+    id: inputID(type),
+    class: 'form-check-input',
+    ...type === 'spaceSplit'
+        ? {
+            type: 'checkbox',
+            checked: modelValue.value.subParam.spaceSplit,
+            disabled: modelValue.value.subParam.matchBy === 'regex'
+        }
+        : {
+            type: 'radio',
+            checked: modelValue.value.subParam.matchBy === type,
+            name: `param${_.upperFirst(modelValue.value.name)}-${paramIndex}`,
+            value: type
+        }
+});
 </script>
 
 <style scoped>

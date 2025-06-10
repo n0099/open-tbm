@@ -1,24 +1,34 @@
-import type { Instance, Props } from 'tippy.js';
+import type { DefaultProps, Instance, Props } from 'tippy.js';
 import tippy from 'tippy.js';
-import 'tippy.js/animations/perspective.css';
 import 'tippy.js/dist/tippy.css';
 import 'tippy.js/themes/light.css';
 import _ from 'lodash';
 
 if (import.meta.client) {
     tippy.setDefaultProps({
-        animation: 'perspective',
         interactive: true,
         theme: 'light',
         maxWidth: 'none'
     });
 };
 
+const tippyInstances = new Set<Instance>(); // https://stackoverflow.com/questions/20508628/why-are-weakmaps-not-enumerable
+const enableAnimation = useMediaQuery('(prefers-reduced-motion: no-preference)');
+watchImmediate(enableAnimation, async () => {
+    if (enableAnimation.value)
+        await import('tippy.js/animations/perspective.css');
+    const prop: Partial<DefaultProps> = { animation: enableAnimation.value ? 'perspective' : false };
+    tippyInstances.forEach(instance => {
+        instance.setProps(prop);
+    });
+    tippy.setDefaultProps(prop);
+});
+
 export default defineNuxtPlugin(nuxt => {
     // eslint-disable-next-line @typescript-eslint/naming-convention
-    const tippyInstance = (el: unknown) => (el as { _tippy?: Instance })._tippy;
+    const getTippyInstance = (el: HTMLElement) => (el as { _tippy?: Instance })._tippy;
     type Content = string | (() => string);
-    const tippyProps = (content: Content): Partial<Props> => (_.isFunction(content)
+    const contentProp = (content: Content): Partial<Props> => (_.isFunction(content)
         ? {
             plugins: [{ // https://github.com/atomiks/tippyjs/issues/826
                 fn: () => ({
@@ -33,18 +43,22 @@ export default defineNuxtPlugin(nuxt => {
     nuxt.vueApp.directive<HTMLElement, Content>('tippy', {
         mounted(el, binding) {
             el.removeAttribute('title');
-            tippy([el], {
+            tippyInstances.add(tippy(el, {
                 allowHTML: true,
                 appendTo: document.body,
-                ...tippyProps(binding.value)
-            });
+                ...contentProp(binding.value)
+            }));
         },
         updated(el, binding) {
             if (binding.value !== binding.oldValue)
-                tippyInstance(el)?.setProps(tippyProps(binding.value));
+                getTippyInstance(el)?.setProps(contentProp(binding.value));
         },
         unmounted(el) {
-            tippyInstance(el)?.destroy();
+            const instance = getTippyInstance(el);
+            if (instance === undefined)
+                return;
+            instance.destroy();
+            tippyInstances.delete(instance);
         },
         getSSRProps: binding => ({
             title: toValue(binding.value)

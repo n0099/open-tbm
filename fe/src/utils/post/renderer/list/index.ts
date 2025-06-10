@@ -9,7 +9,7 @@ const remWithPixels = (rem: number) => ({
     get px() { return convertRemToPixels(this.rem) }
 });
 export const replyTitleStyle = {
-    insetBlockStart: remWithPixels(5),
+    insetBlockStart: remWithPixels(5), // https://github.com/w3c/csswg-drafts/issues/8905
     marginBlockStart: remWithPixels(0.625),
     get topWithoutMargin() {
         return remWithPixels(this.insetBlockStart.rem - this.marginBlockStart.rem);
@@ -26,12 +26,13 @@ export const guessReplyContainIntrinsicBlockSize = (replyElements: HTMLElement[]
         // https://bugzilla.mozilla.org/show_bug.cgi?id=1857849
         // https://github.com/surma/ishoudinireadyyet.com
         // https://github.com/tylergaw/css-typed-om/
+        // https://gist.github.com/paulirish/5d52fb081b3570c81e3a?permalink_comment_id=5299116#gistcomment-5299116
         const isCSMSupported = 'computedStyleMap' in el;
         const pixelStringToNumber = (s: string) => {
             if (!s.endsWith('px'))
                 throw new Error(`Unit of '${s}' is not in pixels`);
 
-            return Number(removeEnd(s, 'px')); // parseInt() will also remove any suffix
+            return Number(removeEnd(s, 'px')); /** {@link parseInt()} will also remove any suffix */
         };
 
         const getCSSPropertyInPixels = (el: HTMLElement, property: string) => (isCSMSupported
@@ -39,8 +40,8 @@ export const guessReplyContainIntrinsicBlockSize = (replyElements: HTMLElement[]
             : pixelStringToNumber(getComputedStyle(el).getPropertyValue(property)));
         const getInnerWidth = (el: HTMLElement | null) => (el === null
             ? 0
-            : el.clientWidth - getCSSPropertyInPixels(el, 'padding-left')
-                - getCSSPropertyInPixels(el, 'padding-right'));
+            : el.clientWidth - getCSSPropertyInPixels(el, 'padding-inline-start')
+                - getCSSPropertyInPixels(el, 'padding-inline-end')); // https://bugzilla.mozilla.org/show_bug.cgi?id=1116638
 
         const convertRemUnitValueToPixels = (unitValue: CSSUnitValue) => (unitValue.unit === 'number'
             ? convertRemToPixels(unitValue.value)
