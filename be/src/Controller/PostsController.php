@@ -65,6 +65,7 @@ class PostsController extends AbstractController
         $this->stopwatch->start('queryUsers');
         $latestRepliersIdKeyByFid = $this->query->postsTree->threads
             ->map(fn(Thread $thread) => ['fid' => $thread->getFid(), 'latestReplierId' => $thread->getLatestReplierId()])
+            ->filter(fn(array $fidAndLatestReplierId) => $fidAndLatestReplierId['latestReplierId'] !== null)
             ->groupBy(fn(array $fidAndLatestReplierId) => $fidAndLatestReplierId['fid'])
             ->map(fn(Collection $fidAndLatestRepliersUid) => $fidAndLatestRepliersUid->pluck('latestReplierId'));
         $latestRepliers = $this->latestReplierRepository->getLatestRepliersWithoutNameWhenHasUid($latestRepliersIdKeyByFid->flatten());
@@ -73,7 +74,7 @@ class PostsController extends AbstractController
             $this->query->postsTree->replies,
             $this->query->postsTree->subReplies
         ])->flatten();
-        $latestRepliersUidKeyById = $latestRepliers
+        $latestRepliersUidKeyById = collect($latestRepliers)
             ->mapWithKeys(fn(array|LatestReplier $latestReplier) => [
                 is_array($latestReplier) ? $latestReplier['id'] : $latestReplier->getId() =>
                     is_array($latestReplier) ? $latestReplier['uid'] : $latestReplier->getUid()
@@ -112,6 +113,7 @@ class PostsController extends AbstractController
                 ->map(fn(int $uid) => $users->get($uid)?->getPortrait())
                 ->filter(fn(?string $portrait) => $portrait !== null))
         ))->keyBy(fn(ForumModerator $forumModerator) => $forumModerator->portrait);
+
         $users = $users->each(fn(User $user) => $user->setForumSpecific([
             'authorExpGrades' => $authorExpGrades->get($user->getUid()),
             'forumModerators' => $forumModerators->get($user->getPortrait())
@@ -124,7 +126,9 @@ class PostsController extends AbstractController
                 'nextCursor' => $this->query->queryResult->nextCursor,
                 ...$matchQueryPostCounts,
             ],
-            'forum' => $this->forumRepository->getForum($fid),
+            'forums' => collect($this->forumRepository
+                ->getForums($posts->map(fn(Post $post) => $post->getFid())->unique())
+            )->mapWithKeys(fn(array $forum) => [$forum['fid'] => $forum['name']]),
             'threads' => $this->query->postsTree->reOrderNestedPosts(
                 $this->query->postsTree->nestPostsWithParent(),
                 $this->query->getOrderByField(),

@@ -25,10 +25,9 @@ class ForumRepository extends BaseRepository
         return $this->isEntityExists($dql, ['fid' => $fid]);
     }
 
-    public function getForum(int $fid): array
+    public function getForums(array|\ArrayAccess $fids): array
     {
-        $dql = 'SELECT t.fid, t.name FROM App\Entity\Forum t WHERE t.fid = :fid';
-        return $this->createQueryWithParams($dql, ['fid' => $fid])
-            ->setMaxResults(1)->getSingleResult();
+        $dql = 'SELECT t.fid, t.name FROM App\Entity\Forum t WHERE t.fid IN (:fids)';
+        return $this->createQueryWithParams($dql, ['fids' => $fids])->getResult();
     }
 }
