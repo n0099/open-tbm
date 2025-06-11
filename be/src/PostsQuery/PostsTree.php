@@ -45,7 +45,6 @@ readonly class PostsTree
      */
     public function fillWithParentPost(QueryResult $result): array
     {
-        $fid = $result->fid;
         /** @var Collection<int> $tids */
         $tids = $result->threads->map(fn(ThreadKey $postKey) => $postKey->postId);
         /** @var Collection<int> $pids */
@@ -83,12 +82,12 @@ readonly class PostsTree
 
         $this->stopwatch->start('parsePostContentProtoBufBytes');
         // not using one-to-one association due to relying on PostRepository->getTableNameSuffix()
-        $replyContents = collect($this->replyContentRepository->getPostsContent($fid, $allRepliesId))
+        $replyContents = collect($this->replyContentRepository->getPostsContent($allRepliesId))
             ->mapWithKeys(fn(ReplyContent $content) => [$content->getPid() => $content->getContent()]);
         $this->replies->each(fn(Reply $reply) =>
             $reply->setContent($replyContents->get($reply->getPid())));
 
-        $subReplyContents = collect($this->subReplyContentRepository->getPostsContent($fid, $spids))
+        $subReplyContents = collect($this->subReplyContentRepository->getPostsContent($spids))
             ->mapWithKeys(fn(SubReplyContent $content) => [$content->getSpid() => $content->getContent()]);
         $this->subReplies->each(fn(SubReply $subReply) =>
             $subReply->setContent($subReplyContents->get($subReply->getSpid())));
