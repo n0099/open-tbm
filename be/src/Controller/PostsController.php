@@ -63,9 +63,11 @@ class PostsController extends AbstractController
         $this->stopwatch->stop('fillWithParentPost');
 
         $this->stopwatch->start('queryUsers');
-        $latestRepliers = $this->latestReplierRepository->getLatestRepliersWithoutNameWhenHasUid(
-            $this->query->postsTree->threads->map(fn(Thread $thread) => $thread->getLatestReplierId()),
-        );
+        $latestRepliersIdKeyByFid = $this->query->postsTree->threads
+            ->map(fn(Thread $thread) => ['fid' => $thread->getFid(), 'latestReplierId' => $thread->getLatestReplierId()])
+            ->groupBy(fn(array $fidAndLatestReplierId) => $fidAndLatestReplierId['fid'])
+            ->map(fn(Collection $fidAndLatestRepliersUid) => $fidAndLatestRepliersUid->pluck('latestReplierId'));
+        $latestRepliers = $this->latestReplierRepository->getLatestRepliersWithoutNameWhenHasUid($latestRepliersIdKeyByFid->flatten());
         $posts = collect([
             $this->query->postsTree->threads,
             $this->query->postsTree->replies,
@@ -92,9 +94,22 @@ class PostsController extends AbstractController
             ->map(fn(Collection $fidAndAuthorsUid) => $fidAndAuthorsUid->pluck('authorUid'));
         $authorExpGrades = collect($this->authorExpGradeRepository->getLatestOfUsers($authorsUidKeyByFid))
             ->keyBy(fn(AuthorExpGrade $authorExpGrade) => $authorExpGrade->uid);
-        $forumModerators = collect($this->forumModeratorRepository->getLatestOfUsers($authorsUidKeyByFid
-            ->map(fn(Collection $authorsUid) => $authorsUid
-                ->map(fn(int $authorUid) => $users->get($authorUid)?->getPortrait())
+
+        /** @var Collection<int, int> $intersectedFidInUsersId */
+        /** @var Collection<int, int> $uniqueFidInAuthorsUid */
+        [$intersectedFidInUsersId, $uniqueFidInAuthorsUid] = $authorsUidKeyByFid->keys()
+            ->partition(fn(int $fid) => $latestRepliersIdKeyByFid->keys()->contains($fid));
+        $usersIdKeyByFid = $intersectedFidInUsersId
+            ->mapWithKeys(fn(int $fid) => [$fid =>
+                $latestRepliersIdKeyByFid[$fid]
+                    ->map(fn(int $latestReplierId) => $latestRepliersUidKeyById->get($latestReplierId))
+                    ->filter(fn(?int $latestReplierUid) => $latestReplierUid !== null)
+                    ->merge($authorsUidKeyByFid[$fid])
+                    ->unique()])
+            ->merge($authorsUidKeyByFid->only($uniqueFidInAuthorsUid));
+        $forumModerators = collect($this->forumModeratorRepository->getLatestOfUsers($usersIdKeyByFid
+            ->map(fn(Collection $usersId) => $usersId
+                ->map(fn(int $uid) => $users->get($uid)?->getPortrait())
                 ->filter(fn(?string $portrait) => $portrait !== null))
         ))->keyBy(fn(ForumModerator $forumModerator) => $forumModerator->portrait);
         $users = $users->each(fn(User $user) => $user->setForumSpecific([
