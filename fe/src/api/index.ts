@@ -51,7 +51,8 @@ export const queryFunction = async <TResponse>
                     Accept: 'application/json',
                     ...requestHeaders
                 },
-                signal
+                signal,
+                retry: 0
             }
         ) as TResponse;
     } catch (e: unknown) {
