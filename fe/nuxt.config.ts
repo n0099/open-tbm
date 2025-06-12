@@ -1,10 +1,27 @@
 import type { PluginVisualizerOptions } from 'rollup-plugin-visualizer';
 import { keysWithSameValue } from './src/utils';
 import { analyzer } from 'vite-bundle-analyzer';
+import { access, constants } from 'node:fs/promises';
+
+const tryAccessDevServerCert = async (): Promise<NonNullable<Parameters<typeof defineNuxtConfig>[0]['devServer']>['https']> => {
+    // pin https cert to prevent showing https://chromium.googlesource.com/chromium/src/+/lkgr/components/security_interstitials/ after every nuxt restart
+    // https://stackoverflow.com/questions/10175812/how-can-i-generate-a-self-signed-ssl-certificate-using-openssl/41366949#41366949
+    // openssl req -x509 -newkey ec -pkeyopt ec_paramgen_curve:secp384r1 -days 365 -nodes -keyout nuxt-dev.key -out nuxt-dev.crt -subj '/CN=localhost'
+    const key = './nuxt-dev.key';
+    const cert = './nuxt-dev.crt';
+    try {
+        await access(key, constants.R_OK);
+        await access(cert, constants.R_OK);
+
+        return { key, cert };
+    } catch {
+        return true;
+    }
+};
 
 export default defineNuxtConfig({
     compatibilityDate: '2025-04-24',
-    devServer: { https: true },
+    devServer: { https: await tryAccessDevServerCert() },
     srcDir: 'src',
     imports: { dirs: ['api/**', 'utils/**'] },
     modules: [
