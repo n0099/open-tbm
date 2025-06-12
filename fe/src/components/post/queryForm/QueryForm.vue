@@ -203,7 +203,7 @@ const { queryFormDeps } = defineProps<{
     isLoading: boolean,
     queryFormDeps: QueryFormDeps
 }>();
-const {
+const { // https://github.com/orgs/vuejs/discussions/6147
     isOrderByInvalid,
     isFidInvalid,
     currentQueryType,
