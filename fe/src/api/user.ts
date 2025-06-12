@@ -31,12 +31,14 @@ export interface User extends TimestampFields {
     fansNickname: string | null,
     icon: ObjUnknown[] | null,
     ipGeolocation: string | null,
-    currentForumModerator: {
-        discoveredAt: UnixTimestamp,
-        moderatorTypes: ForumModeratorType | '' | `${ForumModeratorType},${ForumModeratorType}`
-    } | null,
-    currentAuthorExpGrade: {
-        discoveredAt: UnixTimestamp,
-        authorExpGrade: AuthorExpGrade
-    } | null
+    forumSpecific: {
+        authorExpGrade: {
+            discoveredAt: UnixTimestamp,
+            authorExpGrade: AuthorExpGrade
+        } | null,
+        forumModerator: {
+            discoveredAt: UnixTimestamp,
+            moderatorTypes: ForumModeratorType | '' | `${ForumModeratorType},${ForumModeratorType}`
+        } | null
+    }
 }

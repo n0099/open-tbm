@@ -25,8 +25,10 @@ export const baseGetUser = (users: User[]) => {
         ipGeolocation: null,
         createdAt: 0,
         updatedAt: 0,
-        currentForumModerator: null,
-        currentAuthorExpGrade: null
+        forumSpecific: {
+            authorExpGrade: null,
+            forumModerator: null
+        }
     };
 };
 export const baseGetLatestReplier = (latestRepliers: LatestReplier[]) => {
