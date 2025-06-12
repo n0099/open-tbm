@@ -6,24 +6,30 @@ export const usePostsSEO = (
 ) => {
     const route = useRoute();
     const firstPostPage = computed(() => data.value?.pages[0]);
-    const firstPostPageForum = computed(() => firstPostPage.value?.forum);
+    const firstPostPageForumName = computed((): string | null => {
+        if (firstPostPage.value?.forums === undefined)
+            return null;
+
+        const forumNames = Object.values(firstPostPage.value.forums);
+        if (forumNames.length === 1)
+            return forumNames[0];
+
+        return null;
+    });
     const firstThread = computed(() => firstPostPage.value?.threads[0]);
     useHead({
         title: computed(() => {
-            if (firstPostPage.value === undefined)
-                return '帖子查询';
-            switch (currentQueryType.value) {
-                case 'fid':
-                case 'search':
-                    return `${firstPostPageForum.value?.name}吧 - 帖子查询`;
-                case 'postID':
-                    return `${firstThread.value?.title} - ${firstPostPageForum.value?.name}吧 - 帖子查询`;
-                case 'empty':
+            const titleParts = ['帖子查询'];
+            if (currentQueryType.value !== 'empty') {
+                if (['search', 'fid'].includes(currentQueryType.value) && firstPostPageForumName.value !== null)
+                    titleParts.unshift(`${firstPostPageForumName.value}吧`);
+                if (currentQueryType.value === 'postID' && firstThread.value?.title !== undefined)
+                    titleParts.unshift(firstThread.value.title);
             }
 
-            return '帖子查询';
+            return titleParts.join(' - ');
         })
     });
-    defineOgImageComponent('Post', { routePath: route.path, firstPostPage, firstPostPageForum, firstThread, currentQueryType });
+    defineOgImageComponent('Post', { routePath: route.path, firstPostPage, firstPostPageForumName, firstThread, currentQueryType });
     usePostsSchemaOrg(data);
 };

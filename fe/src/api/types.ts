@@ -30,8 +30,7 @@ export type ApiPosts = Api<CursorPagination & {
         matchQueryPostCount: Record<PostType, UInt>,
         notMatchQueryParentPostCount: Record<Exclude<PostType, 'subRely'>, UInt>
     },
-    type: 'index' | 'search',
-    forum: Pick<ArrayElement<ApiForums['response']>, 'fid' | 'name'>,
+    forums: Record<Fid, string>,
     threads: Array<Thread & {
         replies: Array<Reply & {
             subReplies: SubReply[]

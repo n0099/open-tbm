@@ -30,22 +30,16 @@ export const getQueryFormDeps = () => {
 
     const currentQueryType = computed(() => {
         const clearedParams = clearedParamsDefaultValue(); // not including unique params
-        if (_.isEmpty(clearedParams)) { // is there no other params
-            // ignore the post type param since index query (postID or fid) doesn't restrict them
-            const clearedUniqueParams = _.omit(clearedUniqueParamsDefaultValue(), 'postTypes');
-            if (_.isEmpty(clearedUniqueParams)) {
-                return 'empty'; // only fill unique param postTypes and/or orderBy doesn't query anything
-            } else if (clearedUniqueParams.fid !== undefined) {
-                // note when query with postTypes and/or orderBy param, the route will go params instead of fid
+        if (_.isEmpty(clearedParams)) {
+            const clearedUniqueParams = clearedUniqueParamsDefaultValue();
+            if (_.isEmpty(clearedUniqueParams))
+                return 'empty';
+            if (clearedUniqueParams.fid !== undefined)
                 return 'fid';
-            }
         }
 
         // is there no other params except post id params
         if (_.isEmpty(_.reject(clearedParams, isPostIDParam))
-
-            // is there only one post id param
-            && _.filter(clearedParams, isPostIDParam).length === 1
 
             // is all post ID params doesn't own any sub param
             && _.chain(clearedParams).map('subParam').filter().isEmpty().value())
@@ -83,25 +77,10 @@ export const getQueryFormDeps = () => {
         // check query type
         isFidInvalid.value = false;
         const clearedUniqueParams = clearedUniqueParamsDefaultValue();
-        switch (currentQueryType.value) {
-            case 'empty':
-                notyShow('warning', '请选择贴吧或/并输入查询参数<br>勿只选择帖子类型参数');
-
-                return false; // exit early
-            case 'postID':
-                if (clearedUniqueParams.fid !== undefined) {
-                    uniqueParams.value.fid.value = 0; // reset fid to default,
-                    notyShow('info', '已移除按帖索引查询所不需要的查询贴吧参数');
-                    await router.push(generateRoute()); // update route to match new params without fid
-                }
-                break;
-            case 'search':
-                if (clearedUniqueParams.fid === undefined) {
-                    isFidInvalid.value = true; // search query require fid param
-                    notyShow('warning', '搜索查询必须指定查询贴吧');
-                }
-                break;
-            case 'fid':
+        if (currentQueryType.value === 'postID' && clearedUniqueParams.fid !== undefined) {
+            uniqueParams.value.fid.value = 0; // reset fid to default,
+            notyShow('info', '已移除按帖索引查询所不需要的查询贴吧参数');
+            await router.push(generateRoute()); // update route to match new params without fid
         }
 
         const isRequiredPostTypes = (current: PostType[], required?: ObjValues<RequiredPostTypes>): required is undefined => {
@@ -111,10 +90,9 @@ export const getQueryFormDeps = () => {
         const requiredPostTypesToString = (required: NonNullable<ObjValues<RequiredPostTypes>>) => required.join(' | ');
         const postTypes = _.sortBy(uniqueParams.value.postTypes.value);
 
-        // check params required post types, index query doesn't restrict on post types
         invalidParamsIndex.value = []; // reset to prevent duplicate indexes
+        // check params required post types, query by post id or fid doesn't restrict on post types
         if (currentQueryType.value !== 'postID' && currentQueryType.value !== 'fid') {
-            /** we don't {@link Array.filter()} here for post types validate */
             params.value.map(clearParamDefaultValue).forEach((param, paramIndex) => {
                 if (param?.name === undefined || param.value === undefined) {
                     invalidParamsIndex.value.push(paramIndex);
