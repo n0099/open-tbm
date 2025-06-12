@@ -12,6 +12,7 @@ export class ApiResponseError extends Error {
         public readonly fetchError?: FetchError
     ) {
         super(JSON.stringify({ fetchError, errorCode, errorInfo }));
+        this.name = 'ApiResponseError';
     }
 }
 
