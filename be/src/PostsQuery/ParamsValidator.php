@@ -40,7 +40,7 @@ class ParamsValidator
         $this->validate40004($newPostTypes);
     }
 
-    public function setRequiredPostTypesByParams(): array
+    private function setRequiredPostTypesByParams(): array
     {
         $currentPostTypes = $this->params->getUniqueParamValue('postTypes');
         $requiredPostTypes = array_intersect(Helper::POST_TYPES, ...array_values(Arr::only(

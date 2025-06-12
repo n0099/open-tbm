@@ -12,6 +12,7 @@ export class ApiResponseError extends Error {
         public readonly fetchError?: FetchError
     ) {
         super(JSON.stringify({ fetchError, errorCode, errorInfo }));
+        this.name = 'ApiResponseError';
     }
 }
 
@@ -50,7 +51,8 @@ export const queryFunction = async <TResponse>
                     Accept: 'application/json',
                     ...requestHeaders
                 },
-                signal
+                signal,
+                retry: 0
             }
         ) as TResponse;
     } catch (e: unknown) {
