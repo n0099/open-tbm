@@ -115,8 +115,8 @@ class PostsController extends AbstractController
         ))->keyBy(fn(ForumModerator $forumModerator) => $forumModerator->portrait);
 
         $users = $users->each(fn(User $user) => $user->setForumSpecific([
-            'authorExpGrades' => $authorExpGrades->get($user->getUid()),
-            'forumModerators' => $forumModerators->get($user->getPortrait())
+            'authorExpGrade' => $authorExpGrades->get($user->getUid()),
+            'forumModerator' => $forumModerators->get($user->getPortrait())
         ]));
         $this->stopwatch->stop('queryUserRelated');
 
@@ -134,7 +134,7 @@ class PostsController extends AbstractController
                 $this->query->getOrderByField(),
                 $this->query->isOrderByDesc(),
             ),
-            'users' => $users,
+            'users' => $users->values(),
             'latestRepliers' => $latestRepliers,
             'query' => $this->query->queryResult->query,
         ];
