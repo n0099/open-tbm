@@ -10,7 +10,7 @@
             <AMenuItem key="table">表格视图</AMenuItem>
         </AMenu>
     </aside>
-    <div v-if="!(data === undefined || _.isEmpty(data.pages) || _.isEmpty(route.params))" class="container-fluid">
+    <div v-if="!(data === undefined || _.isEmpty(data.pages))" class="container-fluid">
         <div class="row flex-nowrap">
             <LazyPostNav v-if="renderType === 'list'" :queryParam="queryParam" />
             <div class="post-page col mx-auto ps-0" :class="{ 'renderer-list': renderType === 'list' }">

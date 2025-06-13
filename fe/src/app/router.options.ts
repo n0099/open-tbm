@@ -37,7 +37,8 @@ export default {
                     _.isString(to.params.idType) && _.isString(to.params.id)
                     && `/posts/${to.params.idType}id/${to.params.id}`
             },
-            postCursorRoute(':pathMatch(.*)*', 'posts/param')
+            postCursorRoute(':pathMatch(.*)*', 'posts/param'),
+            postCursorRoute('', 'posts/empty')
         ];
 
         const userCursorRoute = withCursorRoute(async () => import('@/pages/users.vue'));
