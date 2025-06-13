@@ -1,6 +1,6 @@
 <template>
 <article>
-    <PageCurrentButton :currentCursor="posts.pages.currentCursor" />
+    <PageCurrentButton :currentCursor="currentCursor" />
     <Suspense suspensible :timeout="0">
         <template #fallback>
             <PlaceholderPostList isLoading />
@@ -13,22 +13,21 @@
     </Suspense>
     <PageNextButton
         v-if="isLastPageInPages && !isFetching && hasNextPage"
-        @click="$emit('clickNextPage')" :nextPageRoute="nextPageRoute" />
+        @click="$emit('clickNextPage')" :nextCursor="nextCursor" />
 </article>
 </template>
 
 <script setup lang="ts">
 import type { PostRenderer } from '@/pages/posts.vue';
-import type { RouteLocationRaw } from 'vue-router';
 
 const { posts } = defineProps<{
     posts: ApiPosts['response'],
     renderType: PostRenderer,
     isFetching: boolean,
     hasNextPage: boolean,
-    isLastPageInPages: boolean,
-    nextPageRoute: RouteLocationRaw
+    isLastPageInPages: boolean
 }>();
 defineEmits<{ clickNextPage: [] }>();
-usePostPageProvision().provide({ ...posts, currentCursor: posts.pages.currentCursor });
+const { pages: { currentCursor, nextCursor } } = posts;
+usePostPageProvision().provide({ ...posts, currentCursor });
 </script>
