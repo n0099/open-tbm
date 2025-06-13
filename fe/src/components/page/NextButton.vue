@@ -9,6 +9,7 @@
         </NuxtLink>
     </div>
     <div class="col align-middle"><hr /></div>
+    <PageDecodedCursor v-if="nextCursor !== null" :encodedCursor="nextCursor" class="text-center mt-2 mb-0" />
 </nav>
 </template>
 
