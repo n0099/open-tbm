@@ -10,6 +10,7 @@ export const useViewportTopmostPostStore = defineStore('viewportTopmostPost', ()
         return { cursor, tid: Number(tid), pid: undefinedOr(pid, Number) };
     };
     type UsingImplement = Promise<(stickyTitleEl: Ref<HTMLElement | undefined | null>, newTopmostPost: TopmostPost, topOffset?: number) => void>;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const usingScrollState = async (): UsingImplement => {
         const stuckPosts = ref<TopmostPost[]>([]); // https://github.com/w3c/csswg-drafts/issues/12302
         type Record = Parameters<ConstructorParameters<typeof StyleObserver>[0]>[0];
@@ -62,9 +63,7 @@ export const useViewportTopmostPostStore = defineStore('viewportTopmostPost', ()
         // https://stackoverflow.com/questions/16302483/event-to-detect-when-positionsticky-is-triggered
         // https://stackoverflow.com/questions/54807535/intersection-observer-api-observe-the-center-of-the-viewport
         // https://web.archive.org/web/20240111160426/https://wilsotobianco.com/experiments/intersection-observer-playground/
-        // eslint-disable-next-line compat/compat
         const observerForZeroTopOffset = new IntersectionObserver(onIntersect, { rootMargin: '0px 0px -100% 0px' });
-        // eslint-disable-next-line compat/compat
         let observerForNonZeroTopOffset = new IntersectionObserver(noop);
 
         return (stickyTitleEl, newTopmostPost, topOffset = 0) => {

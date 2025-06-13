@@ -1,6 +1,6 @@
 <template>
 <nav
-    class="post-nav col p-0 vh-100 sticky-top border-0"
+    class="post-nav col p-0 sticky-top border-0"
     :class="{ 'd-none': !isPostNavExpanded }" :aria-expanded="isPostNavExpanded">
     <AMenu
         v-model:selectedKeys="selectedThreads" v-model:openKeys="expandedPages" @click="selectThread($event)"
@@ -33,7 +33,7 @@
         'border-start': isPostNavExpanded,
         'border-end': !isPostNavExpanded
     }"
-    class="post-nav-expand col-auto align-items-center d-flex vh-100 sticky-top border-light-subtle">
+    class="post-nav-expand col-auto align-items-center d-flex sticky-top border-light-subtle">
     <a
         v-if="!hydrationStore.isHydratingOrSSR"
         @click="togglePostNavExpanded()" class="text-primary">
@@ -174,6 +174,9 @@ watch(viewportTopmostPost, async (to, from) => {
 
 .post-nav {
     overflow: hidden;
+}
+.post-nav, .post-nav-expand {
+    max-height: 100dvh;
 }
 .post-nav:hover {
     overflow-y: auto;

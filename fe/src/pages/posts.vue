@@ -20,8 +20,7 @@
                     @clickNextPage="fetchNextPage()"
                     :posts="page" :renderType="renderType"
                     :isFetching="isFetching" :hasNextPage="hasNextPage"
-                    :isLastPageInPages="pageIndex === data.pages.length - 1"
-                    :nextPageRoute="getNextCursorRoute(route, page.pages.nextCursor)" />
+                    :isLastPageInPages="pageIndex === data.pages.length - 1" />
             </div>
             <div v-if="renderType === 'list'" class="col d-none d-xxl-block p-0" />
         </div>
