@@ -38,7 +38,6 @@ export const useRelativeTimeStore = defineStore('relativeTime', () => {
         return oldVisibility;
     };
     const intersectionObserver = 'IntersectionObserver' in globalThis
-        // eslint-disable-next-line compat/compat
         ? new IntersectionObserver(entries => {
             _.orderBy(entries, entry => entry.time).forEach(entry => { // https://github.com/vueuse/vueuse/issues/4197
                 const visibility = getElementVisibility(entry.target);

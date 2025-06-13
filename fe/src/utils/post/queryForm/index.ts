@@ -113,7 +113,7 @@ export const getQueryFormDeps = () => {
 
         // check params required post types, index query doesn't restrict on post types
         invalidParamsIndex.value = []; // reset to prevent duplicate indexes
-        if (currentQueryType.value !== 'postID' && currentQueryType.value !== 'fid') {
+        if (!['postID', 'fid'].includes(currentQueryType.value)) {
             /** we don't {@link Array.filter()} here for post types validate */
             params.value.map(clearParamDefaultValue).forEach((param, paramIndex) => {
                 if (param?.name === undefined || param.value === undefined) {

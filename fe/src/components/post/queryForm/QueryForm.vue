@@ -157,7 +157,7 @@
                     </option>
                 </select>
             </template>
-            <template v-if="p.name === 'authorGender' || p.name === 'latestReplierGender'">
+            <template v-if="['authorGender', 'latestReplierGender'].includes(p.name)">
                 <select v-model="p.value" class="form-control flex-grow-0 w-25">
                     <option value="0">未设置（显示为男）</option>
                     <option value="1">男 ♂</option>

@@ -44,7 +44,7 @@ const paramsDefaultValue = {
 } as const;
 const omitDefaultParamsValue = (params: Record<string, LocationQueryValueRaw>) => {
     _.each(paramsDefaultValue, (value, param) => {
-        if (params[param] === value || params[param] === undefined)
+        if ([value, undefined].includes(params[param]))
             Reflect.deleteProperty(params, param);
     });
 
