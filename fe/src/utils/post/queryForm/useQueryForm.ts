@@ -17,7 +17,6 @@ const useQueryForm = <
     type UniqueParam = ObjValues<UniqueParams>;
     type Param = ObjValues<Params>;
 
-    // [{ name: '', value: '', subParam: { name: value } },...]
     const uniqueParams = ref<UniqueParams>({} as UniqueParams) as Ref<UniqueParams>;
     const params = ref<Param[]>([]) as Ref<Param[]>;
     const invalidParamsIndex = ref<number[]>([]);
@@ -42,7 +41,7 @@ const useQueryForm = <
     const addParam = (name: string) => {
         params.value.push(fillParamDefaultValue({ name }));
     };
-    const changeParam = (beforeParamIndex: number) => (afterParamName: string) => {
+    const changeParam = (beforeParamIndex: number, afterParamName: string) => {
         _.pull(invalidParamsIndex.value, beforeParamIndex);
         params.value[beforeParamIndex] = fillParamDefaultValue({ name: afterParamName });
     };

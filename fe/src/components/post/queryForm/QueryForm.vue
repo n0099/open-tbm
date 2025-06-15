@@ -76,7 +76,7 @@
                 <FontAwesome :icon="faTimes" />
             </button>
             <PostQueryFormWidgetSelectParam
-                @paramChange="changeParam(pI)" :currentParam="p.name"
+                @paramChange="changeParam(pI, $event)" :currentParam="p.name"
                 class="select-param" :class="{ 'is-invalid': invalidParamsIndex.includes(pI) }" />
             <div class="input-group-text">
                 <div class="form-check">
@@ -91,7 +91,7 @@
             <template v-if="isPostIDParam(p)">
                 <LazyPostQueryFormWidgetSelectRange v-model="p.subParam.range" />
                 <LazyPostQueryFormWidgetInputNumericParam
-                    @update:modelValue="onParamUpdate(pI)"
+                    @update:modelValue="onParamUpdate(pI, $event)"
                     :modelValue="params[pI] as KnownNumericParams"
                     :placeholders="getPostIDParamPlaceholders(p)" />
             </template>
@@ -105,14 +105,14 @@
                     v-model="p.value" :placeholder="inputTextMatchParamPlaceholder(p)"
                     type="text" class="form-control" required />
                 <PostQueryFormWidgetInputTextMatchParam
-                    @update:modelValue="onParamUpdate(pI)"
+                    @update:modelValue="onParamUpdate(pI, $event)"
                     :modelValue="params[pI] as KnownTextParams"
                     :paramIndex="pI" />
             </template>
             <template v-if="['threadViewCount', 'threadShareCount', 'threadReplyCount', 'replySubReplyCount'].includes(p.name)">
                 <LazyPostQueryFormWidgetSelectRange v-model="p.subParam.range" />
                 <LazyPostQueryFormWidgetInputNumericParam
-                    @update:modelValue="onParamUpdate(pI)"
+                    @update:modelValue="onParamUpdate(pI, $event)"
                     :modelValue="params[pI] as KnownNumericParams"
                     :paramIndex="pI"
                     :placeholders="{ IN: '100,101,102,...', BETWEEN: '100,200', equals: '100' }" />
@@ -142,7 +142,7 @@
             <template v-if="['authorUid', 'latestReplierUid'].includes(p.name)">
                 <LazyPostQueryFormWidgetSelectRange v-model="p.subParam.range" />
                 <LazyPostQueryFormWidgetInputNumericParam
-                    @update:modelValue="onParamUpdate(pI)"
+                    @update:modelValue="onParamUpdate(pI, $event)"
                     :modelValue="params[pI] as KnownNumericParams"
                     :placeholders="uidParamsPlaceholder" />
             </template>
@@ -167,7 +167,7 @@
             <template v-if="p.name === 'authorExpGrade'">
                 <LazyPostQueryFormWidgetSelectRange v-model="p.subParam.range" />
                 <LazyPostQueryFormWidgetInputNumericParam
-                    @update:modelValue="onParamUpdate(pI)"
+                    @update:modelValue="onParamUpdate(pI, $event)"
                     :modelValue="params[pI] as KnownNumericParams"
                     :placeholders="{ IN: '9,10,11,...', BETWEEN: '9,18', equals: '18' }" />
             </template>
@@ -221,8 +221,7 @@ const getPostIDParamPlaceholders = (p: Param) => ({
     BETWEEN: p.name === 'tid' ? '5000000000,6000000000' : '15000000000,16000000000',
     equals: p.name === 'tid' ? '5000000000' : '15000000000'
 });
-const onParamUpdate = (index: number) =>
-    (e: KnownTextParams | KnownNumericParams) => { params.value[index] = e };
+const onParamUpdate = (index: number, event: KnownTextParams | KnownNumericParams) => { params.value[index] = event };
 const uidParamsPlaceholder = {
     IN: '4000000000,4000000001,4000000002,...',
     BETWEEN: '4000000000,5000000000',
