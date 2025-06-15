@@ -5,7 +5,6 @@
 <select
     v-if="!isFetching && isSuccess && data !== undefined" v-model="modelValue"
     class="form-select form-control" v-bind="$attrs">
-    <option value="0">未指定</option>
     <option v-for="forum in data" :key="forum.fid" :value="forum.fid">
         {{ forum.name }}
     </option>

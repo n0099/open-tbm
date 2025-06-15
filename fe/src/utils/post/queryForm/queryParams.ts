@@ -72,6 +72,7 @@ export interface NamelessParamText {
 interface NamelessParamDateTime { value: string, subParam: { range: undefined } }
 interface NamelessParamGender { value: '0' | '1' | '2' }
 interface NamelessParamsOther {
+    fid: { value: Fid },
     threadProperties: { value: Array<'good' | 'sticky'> },
     authorManagerType: { value: ForumModeratorType | 'NULL' }
 }
@@ -86,7 +87,6 @@ export type KnownNumericParams = KnownParams[ArrayElement<typeof paramNamesKeyBy
 export type KnownTextParams = KnownParams[ArrayElement<typeof paramNamesKeyByType.text>];
 export type KnownDateTimeParams = KnownParams[ArrayElement<typeof paramNamesKeyByType.dateTime>];
 export interface KnownUniqueParams extends Record<string, UnknownParam> {
-    fid: { name: 'fid', value: Fid, subParam: ObjEmpty },
     postTypes: { name: 'postTypes', value: PostType[], subParam: ObjEmpty },
     orderBy: {
         name: 'orderBy',
@@ -173,7 +173,6 @@ const useQueryFormDependency: Parameters<typeof useQueryForm>[0] = {
 export const useQueryFormWithUniqueParams = () => {
     const ret = useQueryForm<KnownUniqueParams, KnownParams>(useQueryFormDependency);
     ret.uniqueParams.value = {
-        fid: { name: 'fid', ...paramsDefaultValue.fid },
         postTypes: {
             name: 'postTypes',
             ...paramsDefaultValue.postTypes as DeepWritable<typeof paramsDefaultValue.postTypes>

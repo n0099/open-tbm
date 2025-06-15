@@ -1,3 +1,4 @@
+import type { UnwrapRef } from 'vue';
 import type { RouteLocationNormalized } from 'vue-router';
 import _ from 'lodash';
 
@@ -13,7 +14,6 @@ export type QueryFormDeps = ReturnType<typeof getQueryFormDeps>;
 export const getQueryFormDeps = () => {
     const router = useRouter();
     const isOrderByInvalid = ref(false);
-    const isFidInvalid = ref(false);
     const queryFormWithUniqueParams = useQueryFormWithUniqueParams();
     const {
         uniqueParams,
@@ -28,13 +28,16 @@ export const getQueryFormDeps = () => {
         generateParamRoute
     } = queryFormWithUniqueParams;
 
+    const isFidParamExists = (paramsToFind: Array<Partial<ArrayElement<UnwrapRef<typeof params>>>>) =>
+        paramsToFind.some(param => param.name === 'fid');
+    const getFidParams = (paramsToFind: Array<Partial<ArrayElement<UnwrapRef<typeof params>>>>) =>
+        paramsToFind.filter(param => param.name === 'fid') as Array<KnownParams['fid']> | undefined;
     const currentQueryType = computed(() => {
-        const clearedParams = clearedParamsDefaultValue(); // not including unique params
-        if (_.isEmpty(clearedParams)) {
-            const clearedUniqueParams = clearedUniqueParamsDefaultValue();
-            if (_.isEmpty(clearedUniqueParams))
+        const clearedParams = clearedParamsDefaultValue();
+        if (_.isEmpty(clearedUniqueParamsDefaultValue())) {
+            if (_.isEmpty(clearedParams))
                 return 'empty';
-            if (clearedUniqueParams.fid !== undefined)
+            if (isFidParamExists(clearedParams))
                 return 'fid';
         }
 
@@ -64,21 +67,20 @@ export const getQueryFormDeps = () => {
                 }
             }
         }
-        if (clearedUniqueParams.fid !== undefined
+        if (isFidParamExists(clearedParams)
             && _.isEmpty(clearedParams)
-            && _.isEmpty(_.omit(clearedUniqueParams, 'fid'))) { // fid route
-            return { name: 'posts/fid', params: { fid: clearedUniqueParams.fid.value.toString() } };
+            && _.isEmpty(_.omit(clearedParams, 'fid'))
+            && _.pick(clearedParams, 'fid').length === 1) { // fid route
+            return { name: 'posts/fid', params: { fid: getFidParams(clearedParams)?.[0].value.toString() } };
         }
 
         return generateParamRoute(clearedUniqueParams, clearedParams); // param route
     };
 
     const checkParams = async (): Promise<boolean> => {
-        // check query type
-        isFidInvalid.value = false;
-        const clearedUniqueParams = clearedUniqueParamsDefaultValue();
-        if (currentQueryType.value === 'postID' && clearedUniqueParams.fid !== undefined) {
-            uniqueParams.value.fid.value = 0; // reset fid to default,
+        const clearedParams = clearedParamsDefaultValue();
+        if (currentQueryType.value === 'postID' && isFidParamExists(clearedParams)) {
+            getFidParams(clearedParams)?.forEach(param => { param.value = 0 }); // reset fid to default
             notyShow('info', '已移除按帖索引查询所不需要的查询贴吧参数');
             await router.push(generateRoute()); // update route to match new params without fid
         }
@@ -119,7 +121,7 @@ export const getQueryFormDeps = () => {
         }
 
         // return false when there have at least one invalid params
-        return _.isEmpty(invalidParamsIndex.value) && !(isOrderByInvalid.value || isFidInvalid.value);
+        return _.isEmpty(invalidParamsIndex.value) && !isOrderByInvalid.value;
     };
     const parseRoute = (route: RouteLocationNormalized) => {
         assertRouteNameIsStr(route.name);
@@ -131,7 +133,7 @@ export const getQueryFormDeps = () => {
         if (routeName === 'posts/param' && _.isArray(route.params.pathMatch)) {
             parseParamRoute(route.params.pathMatch); // omit the cursor param from route full path
         } else if (routeName === 'posts/fid' && !_.isArray(route.params.fid)) {
-            uniqueParams.value.fid.value = Number(route.params.fid);
+            params.value = [{ name: 'fid', value: Number(route.params.fid), subParam: {} }];
         } else { // post id routes
             uniqueParams.value = _.mapValues(uniqueParams.value, param =>
                 fillParamDefaultValue(param, true)) as KnownUniqueParams; // reset to default
@@ -148,5 +150,5 @@ export const getQueryFormDeps = () => {
         return false;
     };
 
-    return { isOrderByInvalid, isFidInvalid, currentQueryType, generateRoute, parseRouteToGetFlattenParams, ...queryFormWithUniqueParams };
+    return { isOrderByInvalid, currentQueryType, generateRoute, parseRouteToGetFlattenParams, ...queryFormWithUniqueParams };
 };

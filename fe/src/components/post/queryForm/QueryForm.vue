@@ -1,19 +1,6 @@
 <template>
 <form @submit.prevent="queryFormSubmit()" class="mt-3">
     <div class="row">
-        <label class="col-1 col-form-label" for="paramFid">贴吧</label>
-        <div class="col-3">
-            <div class="input-group">
-                <span class="input-group-text"><FontAwesome :icon="faFilter" /></span>
-                <WidgetSelectForum
-                    v-model.number="uniqueParams.fid.value"
-                    id="paramFid" :class="{ 'is-invalid': isFidInvalid }">
-                    <template #indicators="{ renderer }">
-                        <span class="input-group-text"><RenderFunction :renderer="renderer" /></span>
-                    </template>
-                </WidgetSelectForum>
-            </div>
-        </div>
         <label class="col-1 col-form-label text-center">帖子类型</label>
         <div class="col my-auto">
             <div class="input-group">
@@ -78,6 +65,13 @@
                         class="text-secondary fw-bold form-check-label">非</label>
                 </div>
             </div>
+            <template v-if="p.name === 'fid'">
+                <WidgetSelectForum v-model.number="p.value" class="flex-grow-0 w-50">
+                    <template #indicators="{ renderer }">
+                        <span class="input-group-text"><RenderFunction :renderer="renderer" /></span>
+                    </template>
+                </WidgetSelectForum>
+            </template>
             <template v-if="isPostIDParam(p)">
                 <LazyPostQueryFormWidgetSelectRange v-model="p.subParam.range" />
                 <LazyPostQueryFormWidgetInputNumericParam
@@ -179,7 +173,7 @@
 
 <script setup lang="ts">
 import { inputTextParamPlaceholder } from '@/components/post/queryForm/widget/InputTextParam.vue';
-import { faFilter, faPlus, faSortAmountDown, faTimes } from '@fortawesome/free-solid-svg-icons';
+import { faPlus, faSortAmountDown, faTimes } from '@fortawesome/free-solid-svg-icons';
 import _ from 'lodash';
 
 const { queryFormDeps } = defineProps<{
@@ -188,7 +182,6 @@ const { queryFormDeps } = defineProps<{
 }>();
 const { // https://github.com/orgs/vuejs/discussions/6147
     isOrderByInvalid,
-    isFidInvalid,
     currentQueryType,
     generateRoute,
     uniqueParams,
