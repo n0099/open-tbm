@@ -2,12 +2,12 @@ import type { RouteLocationNormalized } from 'vue-router';
 import _ from 'lodash';
 
 export type Param = ObjValues<KnownParams>;
-export const isDateTimeParam = (param: Param): param is KnownDateTimeParams =>
-    (paramsNameKeyByType.dateTime as Writable<typeof paramsNameKeyByType.dateTime> as string[]).includes(param.name);
-export const isTextParam = (param: Param): param is KnownTextParams =>
-    (paramsNameKeyByType.text as Writable<typeof paramsNameKeyByType.text> as string[]).includes(param.name);
 export const isPostIDParam = (param: Param): param is AddNameToParam<PostIDStr, NamelessParamNumeric> =>
     (postID as Writable<typeof postID> as string[]).includes(param.name);
+export const isTextParam = (param: Param): param is KnownTextParams =>
+    (paramNamesKeyByType.text as Writable<typeof paramNamesKeyByType.text> as string[]).includes(param.name);
+export const isDateTimeParam = (param: Param): param is KnownDateTimeParams =>
+    (paramNamesKeyByType.dateTime as Writable<typeof paramNamesKeyByType.dateTime> as string[]).includes(param.name);
 export type QueryFormDeps = ReturnType<typeof getQueryFormDeps>;
 
 export const getQueryFormDeps = () => {

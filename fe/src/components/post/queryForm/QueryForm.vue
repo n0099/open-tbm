@@ -92,9 +92,9 @@
             </template>
             <template v-if="isTextParam(p)">
                 <input
-                    v-model="p.value" :placeholder="inputTextMatchParamPlaceholder(p)"
+                    v-model="p.value" :placeholder="inputTextParamPlaceholder(p)"
                     type="text" class="form-control" required />
-                <PostQueryFormWidgetInputTextMatchParam
+                <PostQueryFormWidgetInputTextParam
                     @update:modelValue="onParamUpdate(pI, $event)"
                     :modelValue="params[pI] as KnownTextParams"
                     :paramIndex="pI" />
@@ -178,7 +178,7 @@
 </template>
 
 <script setup lang="ts">
-import { inputTextMatchParamPlaceholder } from '@/components/post/queryForm/widget/InputTextMatchParam.vue';
+import { inputTextParamPlaceholder } from '@/components/post/queryForm/widget/InputTextParam.vue';
 import { faFilter, faPlus, faSortAmountDown, faTimes } from '@fortawesome/free-solid-svg-icons';
 import _ from 'lodash';
 
