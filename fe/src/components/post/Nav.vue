@@ -136,6 +136,8 @@ watchImmediate(() => [route.params.cursor, data.value?.pages], () => {
     // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     if (!(route.params.cursor === undefined || _.isString(route.params.cursor)))
         return;
+    if (!(data.value?.pages.some(page => page.pages.currentCursor === getRouteCursorParam(route)) ?? false))
+        return;
     expandedPages.value = [pageMenuKey(route.params.cursor)];
 });
 watch(viewportTopmostPost, async (to, from) => {
