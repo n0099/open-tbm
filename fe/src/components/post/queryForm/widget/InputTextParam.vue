@@ -33,7 +33,7 @@ const matchByDescription = {
     explicit: '精确',
     regex: '正则'
 };
-export const inputTextMatchParamPlaceholder = (p: KnownTextParams) =>
+export const inputTextParamPlaceholder = (p: KnownTextParams) =>
     `${matchByDescription[p.subParam.matchBy]}匹配 空格${p.subParam.spaceSplit ? '不能' : ''}分割关键词`;
 </script>
 

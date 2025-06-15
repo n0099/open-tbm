@@ -4,7 +4,7 @@ import _ from 'lodash';
 export interface UnknownParam { name: string, value: unknown, subParam: ObjUnknown & { not?: boolean } }
 export interface NamelessUnknownParam { value?: unknown, subParam?: ObjUnknown }
 export type ParamPreprocessorOrWatcher = (p: UnknownParam) => void;
-const useQueryForm = <
+export const useQueryForm = <
     UniqueParams extends Record<string, UnknownParam> = Record<string, UnknownParam>,
     Params extends Record<string, UnknownParam> = Record<string, UnknownParam>
 >(
@@ -17,7 +17,6 @@ const useQueryForm = <
     type UniqueParam = ObjValues<UniqueParams>;
     type Param = ObjValues<Params>;
 
-    // [{ name: '', value: '', subParam: { name: value } },...]
     const uniqueParams = ref<UniqueParams>({} as UniqueParams) as Ref<UniqueParams>;
     const params = ref<Param[]>([]) as Ref<Param[]>;
     const invalidParamsIndex = ref<number[]>([]);
@@ -42,7 +41,7 @@ const useQueryForm = <
     const addParam = (name: string) => {
         params.value.push(fillParamDefaultValue({ name }));
     };
-    const changeParam = (beforeParamIndex: number) => (afterParamName: string) => {
+    const changeParam = (beforeParamIndex: number, afterParamName: string) => {
         _.pull(invalidParamsIndex.value, beforeParamIndex);
         params.value[beforeParamIndex] = fillParamDefaultValue({ name: afterParamName });
     };
@@ -86,17 +85,16 @@ const useQueryForm = <
         if (_.isEmpty(newParam.subParam))
             delete newParam.subParam;
 
-        /** return null for further {@link _.filter()} */
         return _.isEmpty(_.omit(newParam, 'name')) ? null : newParam;
     };
-    const clearedParamsDefaultValue = (): Array<Partial<Param>> =>
-
-        /** {@link _.filter()} will remove falsy values like null */
-        _.filter(params.value.map(clearParamDefaultValue)) as Array<Partial<Param>>;
-    const clearedUniqueParamsDefaultValue = (): Partial<UniqueParams> =>
-
-        /** {@link _.mapValues()} return object which remains keys, {@link _.pickBy()} like {@link _.filter()} for objects */
-        _.pickBy(_.mapValues(uniqueParams.value, clearParamDefaultValue)) as Partial<UniqueParams>;
+    const clearedParamsDefaultValue = (): Array<Partial<Param>> => _.chain(params.value)
+        .map(clearParamDefaultValue)
+        .filter(param => param !== null)
+        .value() as Array<Partial<Param>>;
+    const clearedUniqueParamsDefaultValue = (): Partial<UniqueParams> => _.chain(uniqueParams.value)
+        .mapValues(clearParamDefaultValue)
+        .pickBy(param => param !== null)
+        .value() as Partial<UniqueParams>;
     const removeUndefinedFromPartialObjectValues = <T extends Partial<T>, R>(object: Partial<T>) =>
         Object.values(object).filter(i => i !== undefined) as R[];
     const flattenParams = (): ObjUnknown[] => {
@@ -224,4 +222,3 @@ const useQueryForm = <
         generateParamRoute
     };
 };
-export default useQueryForm;

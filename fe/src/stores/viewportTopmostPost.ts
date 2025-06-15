@@ -97,6 +97,7 @@ export const useViewportTopmostPostStore = defineStore('viewportTopmostPost', ()
     };
     const implement = (async (): UsingImplement => {
         /** {@link StyleObserver} is still slower than {@link IntersectionObserver} */
+        // try out https://github.com/w3c/csswg-drafts/issues/6205#issuecomment-2677234279
         // if (import.meta.client && CSS.supports('container-type', 'scroll-state'))
         //     return usingScrollState();
         if ('IntersectionObserver' in globalThis)
