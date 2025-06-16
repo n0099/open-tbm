@@ -1,6 +1,7 @@
 .vscode/*
 !.vscode/settings.json
 !.vscode/extensions.json
+!.vscode/launch.json
 .type-coverage
 nuxt-dev.*
 
