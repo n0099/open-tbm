@@ -176,10 +176,9 @@ const voteCountSeriesLabelFormatter = (
 ) => {
     const [timeline] = echartsInstances.top10CandidatesTimeline?.getOption()
         .timeline as [{ data: number[], currentIndex: number }];
-    const previousTimelineValue = _.find(votesData, {
-        endTime: timeline.data[timeline.currentIndex - 1],
-        voteFor: Number(candidateIndex.slice(0, Math.max(0, candidateIndex.indexOf('号')))) // trim trailing '号' in series name
-    });
+    const previousTimelineValue = _.find(votesData, vote =>
+        vote.endTime === timeline.data[timeline.currentIndex - 1]
+        && vote.voteFor === Number(candidateIndex.slice(0, Math.max(0, candidateIndex.indexOf('号'))))); // trim trailing '号' in series name
 
     return `${currentCount} (+${currentCount - (previousTimelineValue?.count ?? 0)})`;
 };
@@ -466,7 +465,7 @@ interface Coord { coord: [number, number] }
 type DiffWithPreviousMarkLineFormatter =
     Array<[Coord & { label: { show: true, position: 'middle', formatter: string } }, Coord]>;
 const findVoteCount = (votes: Array<{ isValid: IsValid, count: number }>, isValid: IsValid) =>
-    _.find(votes, { isValid })?.count ?? 0;
+    _.find(votes, vote => vote.isValid === isValid)?.count ?? 0;
 const formatCandidateName = (id: number) => `${id}号\n${json.candidateNames[id - 1]}`;
 
 // eslint-disable-next-line capitalized-comments
@@ -483,10 +482,10 @@ const chartLoadder = {
             .groupBy('voteFor')
 
             // sort grouped candidate by its descending total votes count
-            .sortBy(candidate => -_.sumBy(candidate, 'count'))
+            .sortBy(candidates => -_.sumBy(candidates, candidate => candidate.count))
             .map(candidateVotes => {
-                const validVotes = _.find(candidateVotes, { isValid: 1 });
-                const invalidVotes = _.find(candidateVotes, { isValid: 0 });
+                const validVotes = _.find(candidateVotes, vote => vote.isValid === 1);
+                const invalidVotes = _.find(candidateVotes, vote => vote.isValid === 0);
                 const officialValidCount = _.find(json.top50CandidatesOfficialValidVoteCount,
                     { voteFor: candidateVotes[0].voteFor })
                     ?.officialValidCount ?? 0;
@@ -502,7 +501,7 @@ const chartLoadder = {
             })
             .value();
 
-        const validCount = _.map(dataset, 'validCount');
+        const validCount = _.map(dataset, i => i.validCount);
         const validCountDiffWithPrevious: DiffWithPreviousMarkLineFormatter = validCount.map((count, index) => [{
             label: {
                 show: true,
@@ -527,12 +526,12 @@ const chartLoadder = {
     },
     top10CandidatesTimeline() {
         top10CandidatesTimelineVotes = {
-            valid: _.filter(json.top10CandidatesTimeline, { isValid: 1 }),
-            invalid: _.filter(json.top10CandidatesTimeline, { isValid: 0 })
+            valid: _.filter(json.top10CandidatesTimeline, vote => vote.isValid === 1),
+            invalid: _.filter(json.top10CandidatesTimeline, vote => vote.isValid === 0)
         };
 
         const options: ChartOptionTop10CandidatesTimeline[] = [];
-        _.each(_.groupBy(json.top10CandidatesTimeline, 'endTime'), (timeGroup, time) => {
+        _.each(_.groupBy(json.top10CandidatesTimeline, vote => vote.endTime), (timeGroup, time) => {
             const dataset: Top10CandidatesTimelineDataset = _.chain(timeGroup)
                 .sortBy('count')
                 .groupBy('voteFor')
@@ -545,7 +544,7 @@ const chartLoadder = {
                 }))
                 .value();
 
-            const validCount = _.map(dataset, 'validCount');
+            const validCount = _.map(dataset, i => i.validCount);
             const validCountDiffWithPrevious: DiffWithPreviousMarkLineFormatter =
                 (validCount.map((count, index) => [
                     {
@@ -602,7 +601,7 @@ const chartLoadder = {
         const originalTimelineOptions = structuredClone(options.at(-1));
         if (originalTimelineOptions === undefined || !_.isArray(originalTimelineOptions.series))
             return;
-        _.remove(originalTimelineOptions.series, { id: 'totalVotesValidation' });
+        _.remove(originalTimelineOptions.series, serie => serie.id === 'totalVotesValidation');
         options.push(_.merge(originalTimelineOptions, { // deep merge
             dataset: {
                 source: _.chain(json.top50CandidatesOfficialValidVoteCount)
@@ -655,8 +654,8 @@ const chartLoadder = {
             : json.top5CandidatesVoteCountGroupByHour;
         const top5CandidatesIndex = _.chain(top5CandidateCountGroupByTime)
             .filter({ isValid: 1 }).map('voteFor').sort().sortedUniq().value(); // not order by votes count
-        const validVotes = _.filter(top5CandidateCountGroupByTime, { isValid: 1 });
-        const invalidVotes = _.filter(top5CandidateCountGroupByTime, { isValid: 0 });
+        const validVotes = _.filter(top5CandidateCountGroupByTime, vote => vote.isValid === 1);
+        const invalidVotes = _.filter(top5CandidateCountGroupByTime, vote => vote.isValid === 0);
         const series: LineSeriesOption[] = [];
         top5CandidatesIndex.forEach(candidateIndex => {
             series.push({
@@ -664,7 +663,7 @@ const chartLoadder = {
                 type: 'line',
                 symbolSize: 2,
                 smooth: true,
-                data: _.filter(validVotes, { voteFor: candidateIndex }).map(i => [i.time, i.count])
+                data: _.filter(validVotes, vote => vote.voteFor === candidateIndex).map(i => [i.time, i.count])
             }, {
                 name: `${candidateIndex}号无效票增量`,
                 type: 'line',
@@ -672,7 +671,7 @@ const chartLoadder = {
                 smooth: true,
                 xAxisIndex: 1,
                 yAxisIndex: 1,
-                data: _.filter(invalidVotes, { voteFor: candidateIndex }).map(i => [i.time, i.count])
+                data: _.filter(invalidVotes, vote => vote.voteFor === candidateIndex).map(i => [i.time, i.count])
             });
         });
         echartsInstances.top5CandidateCountGroupByTime?.setOption({
@@ -716,7 +715,7 @@ candidatesDetailData.value = Object.values(_.merge(
         .map((candidateName, index) =>
             ({ candidateIndex: index + 1, candidateName, officialValidCount: null, validCount: 0, invalidCount: 0 }))
         .map(candidate => {
-            const candidateVotes = _.filter(json.allCandidatesVoteCount, { voteFor: candidate.candidateIndex });
+            const candidateVotes = _.filter(json.allCandidatesVoteCount, vote => vote.voteFor === candidate.candidateIndex);
 
             return {
                 ...candidate,
