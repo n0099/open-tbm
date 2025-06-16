@@ -9,8 +9,8 @@ export const isTextParam = (param: Param): param is KnownTextParams =>
     (paramNamesKeyByType.text as Writable<typeof paramNamesKeyByType.text> as string[]).includes(param.name);
 export const isDateTimeParam = (param: Param): param is KnownDateTimeParams =>
     (paramNamesKeyByType.dateTime as Writable<typeof paramNamesKeyByType.dateTime> as string[]).includes(param.name);
-export type QueryFormDeps = ReturnType<typeof getQueryFormDeps>;
 
+export type QueryFormDeps = ReturnType<typeof getQueryFormDeps>;
 export const getQueryFormDeps = () => {
     const router = useRouter();
     const isOrderByInvalid = ref(false);
@@ -55,8 +55,8 @@ export const getQueryFormDeps = () => {
         const clearedUniqueParams = clearedUniqueParamsDefaultValue();
         if (_.isEmpty(clearedUniqueParams)) { // check whether query by post id or not
             for (const postIDName of _.reverse(postID)) {
-                const postIDParam = _.filter(clearedParams, p => p.name === postIDName);
-                if (_.isEmpty(_.reject(clearedParams, p => p.name === postIDName)) // is there no other params
+                const postIDParam = clearedParams.filter(p => p.name === postIDName);
+                if (_.isEmpty(clearedParams.filter(p => p.name !== postIDName)) // is there no other params
                     && postIDParam.length === 1 // is there only one post id param
                     && postIDParam[0]?.subParam === undefined) { // is range subParam not set
                     // exit early to prevent pushing other route
