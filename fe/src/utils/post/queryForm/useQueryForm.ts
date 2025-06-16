@@ -96,7 +96,7 @@ export const useQueryForm = <
         .pickBy(param => param !== null)
         .value() as Partial<UniqueParams>;
     const removeUndefinedFromPartialObjectValues = <T extends Partial<T>, R>(object: Partial<T>) =>
-        Object.values(object).filter(i => i !== undefined) as R[];
+        _.filter(object, i => i !== undefined) as R[];
     const flattenParams = (): ObjUnknown[] => {
         const flattenParam = (param: Partial<UnknownParam>) => {
             const flatted: ObjUnknown = {};
@@ -133,7 +133,7 @@ export const useQueryForm = <
         _.chain(routePath)
             .map(paramWithSub => {
                 const parsedParam: NamelessUnknownParam & { name: string } = { name: '', subParam: {} };
-                paramWithSub.split(';').forEach((paramNameAndValue, paramIndex) => { // split multiple params
+                paramWithSub.split(';').forEach((paramNameAndValue, paramIndex) => {
                     // split kv pair by first colon, using substr to prevent split array type param value
                     const colonOffset = Math.max(0, paramNameAndValue.indexOf(':'));
                     const paramName = paramNameAndValue.slice(0, colonOffset);
