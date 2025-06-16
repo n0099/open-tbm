@@ -68,9 +68,8 @@ export const getQueryFormDeps = () => {
             }
         }
         if (isFidParamExists(clearedParams)
-            && _.isEmpty(clearedParams)
-            && _.isEmpty(_.omit(clearedParams, 'fid'))
-            && _.pick(clearedParams, 'fid').length === 1) { // fid route
+            && _.isEmpty(_.omitBy(clearedParams, p => p.name === 'fid'))
+            && _.filter(clearedParams, p => p.name === 'fid').length === 1) { // fid route
             return { name: 'posts/fid', params: { fid: getFidParams(clearedParams)?.[0].value.toString() } };
         }
 
@@ -129,17 +128,15 @@ export const getQueryFormDeps = () => {
         uniqueParams.value = _.mapValues(uniqueParams.value, _.unary(fillParamDefaultValue)) as KnownUniqueParams;
         params.value = [];
 
-        // parse route path to params
-        if (routeName === 'posts/param' && _.isArray(route.params.pathMatch)) {
-            parseParamRoute(route.params.pathMatch); // omit the cursor param from route full path
-        } else if (routeName === 'posts/fid' && !_.isArray(route.params.fid)) {
-            params.value = [{ name: 'fid', value: Number(route.params.fid), subParam: {} }];
-        } else { // post id routes
-            uniqueParams.value = _.mapValues(uniqueParams.value, param =>
-                fillParamDefaultValue(param, true)) as KnownUniqueParams; // reset to default
-            params.value = _.map(_.omit(route.params, 'pathMatch', 'cursor'), (value, name) =>
-                fillParamDefaultValue({ name, value }));
-        }
+        ([...postID, 'fid'] as const).forEach((name: PostIDStr | 'fid') => {
+            if (routeName === `posts/${name}` && !_.isArray(route.params[name])) {
+                params.value = name === 'fid'
+                    ? [{ name, value: Number(route.params[name]), subParam: {} }]
+                    : [{ name, value: route.params[name], subParam: {} }];
+            }
+        });
+        if (_.isArray(route.params.pathMatch))
+            parseParamRoute(route.params.pathMatch.filter(i => i !== ''));
     };
     const parseRouteToGetFlattenParams = async (route: RouteLocationNormalized)
     : Promise<ReturnType<typeof flattenParams> | false> => {
