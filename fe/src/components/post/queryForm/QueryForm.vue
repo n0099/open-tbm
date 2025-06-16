@@ -93,7 +93,12 @@
                     :modelValue="params[pI] as KnownTextParams"
                     :paramIndex="pI" />
             </template>
-            <template v-if="['threadViewCount', 'threadShareCount', 'threadReplyCount', 'replySubReplyCount'].includes(p.name)">
+            <template
+                v-if=" // https://github.com/microsoft/TypeScript/issues/51678
+                    p.name === 'threadViewCount'
+                        || p.name === 'threadShareCount'
+                        || p.name === 'threadReplyCount'
+                        || p.name === 'replySubReplyCount'">
                 <LazyPostQueryFormWidgetSelectRange v-model="p.subParam.range" />
                 <LazyPostQueryFormWidgetInputNumericParam
                     @update:modelValue="onParamUpdate(pI, $event)"
@@ -116,7 +121,7 @@
                     </div>
                 </div>
             </template>
-            <template v-if="['authorUid', 'latestReplierUid'].includes(p.name)">
+            <template v-if="p.name === 'authorUid' || p.name === 'latestReplierUid'">
                 <LazyPostQueryFormWidgetSelectRange v-model="p.subParam.range" />
                 <LazyPostQueryFormWidgetInputNumericParam
                     @update:modelValue="onParamUpdate(pI, $event)"

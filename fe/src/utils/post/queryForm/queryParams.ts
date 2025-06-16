@@ -58,7 +58,7 @@ export const paramNamesKeyByType = {
 
 export const numericParamSubParamRangeValues = ['<', '=', '>', 'BETWEEN', 'IN'] as const;
 export interface NamelessParamNumeric {
-    value: string,
+    value: string, // support subParam.range === BETWEEN or IN
     subParam: { range: ArrayElement<typeof numericParamSubParamRangeValues> }
 }
 export const textParamSubParamMatchByValues = ['explicit', 'implicit', 'regex'] as const;
@@ -77,12 +77,24 @@ interface NamelessParamsOther {
     authorManagerType: { value: ForumModeratorType | 'NULL' }
 }
 
-export type AddNameToParam<Name, NamelessParam> = NamelessParam & { name: Name, value: unknown, subParam: ObjEmpty };
+export type AddNameToParam<Name extends UnknownParam['name'], NamelessParam extends Partial<UnknownParam>> =
+Omit<NamelessParam, 'subParam'>
+    & {
+        name: Name,
+        value: unknown,
+        subParam: ObjEmpty
+        | { not?: boolean }
+
+            // https://stackoverflow.com/questions/68232762/check-if-type-is-the-unknown-type
+            & (unknown extends NamelessParam['subParam']
+                ? ObjEmpty
+                : NamelessParam['subParam'])
+    };
 export type KnownParams = { [P in keyof NamelessParamsOther]: AddNameToParam<P, NamelessParamsOther[P]> }
-& { [P in ArrayElement<typeof paramNamesKeyByType.numeric>]: AddNameToParam<P, NamelessParamNumeric> }
-& { [P in ArrayElement<typeof paramNamesKeyByType.text>]: AddNameToParam<P, NamelessParamText> }
-& { [P in ArrayElement<typeof paramNamesKeyByType.dateTime>]: AddNameToParam<P, NamelessParamDateTime> }
-& { [P in ArrayElement<typeof paramNamesKeyByType.gender>]: AddNameToParam<P, NamelessParamGender> };
+    & { [P in ArrayElement<typeof paramNamesKeyByType.numeric>]: AddNameToParam<P, NamelessParamNumeric> }
+    & { [P in ArrayElement<typeof paramNamesKeyByType.text>]: AddNameToParam<P, NamelessParamText> }
+    & { [P in ArrayElement<typeof paramNamesKeyByType.dateTime>]: AddNameToParam<P, NamelessParamDateTime> }
+    & { [P in ArrayElement<typeof paramNamesKeyByType.gender>]: AddNameToParam<P, NamelessParamGender> };
 export type KnownNumericParams = KnownParams[ArrayElement<typeof paramNamesKeyByType.numeric>];
 export type KnownTextParams = KnownParams[ArrayElement<typeof paramNamesKeyByType.text>];
 export type KnownDateTimeParams = KnownParams[ArrayElement<typeof paramNamesKeyByType.dateTime>];
