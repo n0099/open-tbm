@@ -46,7 +46,7 @@ readonly class Query extends BaseQuery
                 : $orderByParam->getSub('direction') === 'DESC');
 
         $this->queryResult->setResult(
-            $this->buildQueries($params, $fid),
+            $this->buildQueries($params),
             $cursor,
             $this->getOrderByField(),
             $this->isOrderByDesc(),
@@ -55,17 +55,14 @@ readonly class Query extends BaseQuery
     }
 
     /** @return Collection<string, QueryBuilder> key by post type */
-    private function buildQueries(QueryParams $params, ?int $fid): Collection
+    private function buildQueries(QueryParams $params): Collection
     {
         /** @var array<string, array> $cachedUserQueryResult key by param name */
         $cachedUserQueryResult = [];
         return collect($this->postRepositoryFactory->newForumPosts())
             ->only($params->getUniqueParamValue('postTypes'))
-            ->map(function (PostRepository $repository) use ($fid, $params, &$cachedUserQueryResult): QueryBuilder {
+            ->map(function (PostRepository $repository) use ($params, &$cachedUserQueryResult): QueryBuilder {
                 $query = $repository->selectUnionPostKey();
-                if ($fid !== null) {
-                    $query = $query->where('t.fid = :fid')->setParameter('fid', $fid);
-                }
                 foreach ($params->getAll() as $paramIndex => $param) {
                     // even when $cachedUserQueryResult[$param->name] is null
                     // it will still pass as a reference to the array item
@@ -131,7 +128,7 @@ readonly class Query extends BaseQuery
         };
         return match ($name) {
             // numeric
-            'tid', 'pid', 'spid',
+            'fid', 'tid', 'pid', 'spid',
             'authorUid', 'authorExpGrade', 'latestReplierUid',
             'threadViewCount', 'threadShareCount', 'threadReplyCount', 'replySubReplyCount' =>
                 // phpcs:disable Generic.WhiteSpace.ScopeIndent
