@@ -21,7 +21,7 @@ export const usePostsSEO = (
         title: computed(() => {
             const titleParts = ['帖子查询'];
             if (currentQueryType.value !== 'empty') {
-                if (['search', 'fid'].includes(currentQueryType.value) && firstPostPageForumName.value !== null)
+                if (['fid', 'postID'].includes(currentQueryType.value) && firstPostPageForumName.value !== null)
                     titleParts.unshift(`${firstPostPageForumName.value}吧`);
                 if (currentQueryType.value === 'postID' && firstThread.value?.title !== undefined)
                     titleParts.unshift(firstThread.value.title);

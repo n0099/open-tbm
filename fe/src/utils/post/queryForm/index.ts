@@ -67,9 +67,12 @@ export const getQueryFormDeps = () => {
                 }
             }
         }
+        const fidParams = getFidParams(clearedParams);
         if (isFidParamExists(clearedParams)
-            && _.isEmpty(_.omitBy(clearedParams, p => p.name === 'fid'))
-            && _.filter(clearedParams, p => p.name === 'fid').length === 1) { // fid route
+            && _.isEmpty(clearedParams.filter(p => p.name !== 'fid'))
+            && fidParams?.length === 1
+            // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+            && fidParams.filter(p => !(p.subParam?.not ?? false)).length === 1) { // fid route
             return { name: 'posts/fid', params: { fid: getFidParams(clearedParams)?.[0].value.toString() } };
         }
 
@@ -129,11 +132,9 @@ export const getQueryFormDeps = () => {
         params.value = [];
 
         ([...postID, 'fid'] as const).forEach((name: PostIDStr | 'fid') => {
-            if (routeName === `posts/${name}` && !_.isArray(route.params[name])) {
-                params.value = name === 'fid'
-                    ? [{ name, value: Number(route.params[name]), subParam: {} }]
-                    : [{ name, value: route.params[name], subParam: {} }];
-            }
+            const paramValue = route.params[name];
+            if (routeName === `posts/${name}` && !_.isArray(paramValue))
+                params.value = [{ name, value: Number(paramValue), subParam: {} }];
         });
         if (_.isArray(route.params.pathMatch))
             parseParamRoute(route.params.pathMatch.filter(i => i !== ''));

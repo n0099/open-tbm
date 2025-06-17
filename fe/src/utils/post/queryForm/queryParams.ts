@@ -58,7 +58,7 @@ export const paramNamesKeyByType = {
 
 export const numericParamSubParamRangeValues = ['<', '=', '>', 'BETWEEN', 'IN'] as const;
 export interface NamelessParamNumeric {
-    value: string, // support subParam.range === BETWEEN or IN
+    value: number | string, // support subParam.range === BETWEEN or IN
     subParam: { range: ArrayElement<typeof numericParamSubParamRangeValues> }
 }
 export const textParamSubParamMatchByValues = ['explicit', 'implicit', 'regex'] as const;
@@ -118,7 +118,13 @@ const paramMetadataKeyByType: Record<'array' | 'numeric' | 'text' | 'dateTime' |
                 param.value = param.value.split(',');
         }
     },
-    numeric: { default: { subParam: { range: '=' } } },
+    numeric: {
+        default: { subParam: { range: '=' } },
+        preprocessor(param) {
+            if (param.subParam.range === '=')
+                param.value = Number(param.value);
+        }
+    },
     text: {
         default: { subParam: { matchBy: 'explicit', spaceSplit: false } },
         preprocessor(param) {
@@ -161,8 +167,11 @@ const paramsDefaultValue = {
 const useQueryFormDependency: Parameters<typeof useQueryForm>[0] = {
     paramsDefaultValue,
     paramsPreprocessor: {
+        fid: paramMetadataKeyByType.numeric.preprocessor,
         postTypes: paramMetadataKeyByType.array.preprocessor,
         threadProperties: paramMetadataKeyByType.array.preprocessor,
+        ..._.mapValues(_.keyBy(paramNamesKeyByType.numeric), () =>
+            paramMetadataKeyByType.numeric.preprocessor),
         ..._.mapValues(_.keyBy(paramNamesKeyByType.text), () =>
             paramMetadataKeyByType.text.preprocessor),
         ..._.mapValues(_.keyBy(paramNamesKeyByType.dateTime), () =>
