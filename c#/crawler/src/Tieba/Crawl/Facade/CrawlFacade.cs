@@ -202,9 +202,11 @@ public abstract class CrawlFacade<TPostEntity, TParsedPost, TResponse, TPostProt
 
             if (e is TiebaException te)
             {
-                if (!te.ShouldSilent) Logger.LogWarning("TiebaException: {} {}",
-                    string.Join(' ', e.GetInnerExceptions().Select(ex => ex.Message)),
-                    SharedHelper.UnescapedJsonSerialize(e.Data));
+                RequesterTcs.Decrease();
+                if (!te.ShouldSilent)
+                    Logger.LogWarning("TiebaException: {} {}",
+                        string.Join(' ', e.GetInnerExceptions().Select(ex => ex.Message)),
+                        SharedHelper.UnescapedJsonSerialize(e.Data));
             }
             else
             {
@@ -212,10 +214,7 @@ public abstract class CrawlFacade<TPostEntity, TParsedPost, TResponse, TPostProt
             }
 
             if (e is not TiebaException {ShouldRetry: false})
-            {
                 locks.AcquireFailed(lockId, page, (FailureCount)(previousFailureCount + 1));
-                RequesterTcs.Decrease();
-            }
 
             try
             {

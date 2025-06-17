@@ -36,16 +36,20 @@ public class PushAllPostContentsIntoSonicWorker(
             var forumIndex = (index + 1) * 2; // counting from one, including both reply and sub reply
 
             _ = await pusher.Ingest.FlushBucketAsync($"{pusher.CollectionPrefix}replies_content", $"f{fid}");
-            var replyContents = from r in db.ReplyContents.AsNoTracking()
-                where db.Replies.Where(e => e.Fid == fid).Select(e => e.Pid).Contains(r.Pid) select r;
+            var replyContents =
+                from r in db.ReplyContents.AsNoTracking()
+                where db.Replies.Where(e => e.Fid == fid).Select(e => e.Pid).Contains(r.Pid)
+                select r;
             pushedPostCount += PushPostContentsWithTiming(fid, forumIndex - 1, forumCount, "replies",
                 replyCount, totalPostCount, pushedPostCount, replyContents,
                 r => pusher.PushPost(fid, "replies", r.Pid, Helper.ParseThenUnwrapPostContent(r.ProtoBufBytes)), stoppingToken);
             await TriggerConsolidate();
 
             _ = await pusher.Ingest.FlushBucketAsync($"{pusher.CollectionPrefix}subReplies_content", $"f{fid}");
-            var subReplyContents = from sr in db.SubReplyContents.AsNoTracking()
-                where db.SubReplies.Where(e => e.Fid == fid).Select(e => e.Spid).Contains(sr.Spid) select sr;
+            var subReplyContents =
+                from sr in db.SubReplyContents.AsNoTracking()
+                where db.SubReplies.Where(e => e.Fid == fid).Select(e => e.Spid).Contains(sr.Spid)
+                select sr;
             pushedPostCount += PushPostContentsWithTiming(fid, forumIndex, forumCount, "sub replies",
                 subReplyCount, totalPostCount, pushedPostCount, subReplyContents,
                 sr => pusher.PushPost(fid, "subReplies", sr.Spid, Helper.ParseThenUnwrapPostContent(sr.ProtoBufBytes)), stoppingToken);
