@@ -150,11 +150,10 @@ export const useQueryForm = <
             })
             .map(_.unary(fillParamDefaultValue))
             .each(param => {
+                param.subParam.not = boolStrToBool(param.subParam.not);
                 const preprocessor = deps.paramsPreprocessor[param.name];
-                if (preprocessor !== undefined) {
+                if (preprocessor !== undefined)
                     preprocessor(param);
-                    param.subParam.not = boolStrToBool(param.subParam.not);
-                }
                 const isUniqueParam = (p: UnknownParam): p is UniqueParam => p.name in uniqueParams.value;
                 if (isUniqueParam(param))
                     uniqueParams.value[param.name as keyof UniqueParams] = param;

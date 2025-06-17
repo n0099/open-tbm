@@ -134,7 +134,7 @@ watchDeep(() => [route.query, route.params], async (_discard, [oldQuery, oldPara
     const isNewQuery = compareRouteIsNewQuery(to, from);
     if (to.hash === '' && (isTriggeredByQueryForm || isNewQuery))
         void nextTick(() => { window.scrollTo({ top: 0 }) });
-    if (isNewQuery)
+    if (isTriggeredByQueryForm || isNewQuery)
         await parseRouteThenFetch(to, isTriggeredByQueryForm);
 
     /** must invoke {@link parseRouteThenFetch()} before {@link queryClient.resetQueries()} */

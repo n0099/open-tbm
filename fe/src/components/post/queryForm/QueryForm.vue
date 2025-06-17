@@ -28,9 +28,11 @@
                     </option>
                     <option value="postedAt">发帖时间</option>
                     <optgroup label="帖子ID">
-                        <option value="tid">主题帖tid</option>
-                        <option value="pid">回复帖pid</option>
-                        <option value="spid">楼中楼spid</option>
+                        <option
+                            v-for="(postID, index) in postID" :key="postID"
+                            :value="postID" :selected="postID === orderBy.value">
+                            {{ postTypeText[index] }}{{ postID }}
+                        </option>
                     </optgroup>
                 </select>
                 <select
