@@ -1,4 +1,7 @@
+import type { AnyNode } from 'domhandler';
 import type { DefaultProps, Instance, Props } from 'tippy.js';
+import { getChildren, getName, innerText } from 'domutils';
+import { ElementType, parseDocument } from 'htmlparser2';
 import tippy from 'tippy.js';
 import 'tippy.js/dist/tippy.css';
 import 'tippy.js/themes/light.css';
@@ -60,10 +63,18 @@ export default defineNuxtPlugin(nuxt => {
             instance.destroy();
             tippyInstances.delete(instance);
         },
-        getSSRProps: binding => ({
-            title: toValue(binding.value)
-                .replaceAll('<br>', '')
-                .replaceAll(/^ +/gmu, '')
-        })
+        getSSRProps(binding) {
+            const traverseInnerText = (node: AnyNode): string => {
+                const children = getChildren(node);
+                if (node.type === ElementType.Tag && getName(node) === 'br')
+                    return '\n';
+                if (children.length === 0)
+                    return innerText(node).trim();
+
+                return children.map(traverseInnerText).join('');
+            };
+
+            return { title: traverseInnerText(parseDocument(toValue(binding.value))) };
+        }
     });
 });
