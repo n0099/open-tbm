@@ -28,6 +28,7 @@
         "core-js": "^3.43.0",
         "dayjs": "^1.11.13",
         "echarts": "^5.6.0",
+        "htmlparser2": "^10.0.0",
         "lodash": "^4.17.21",
         "luxon": "^3.6.1",
         "noty": "^3.2.0-beta-deprecated",
