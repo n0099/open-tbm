@@ -4,11 +4,11 @@
         <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="10.0.0" />
         <PackageReference Include="CommunityToolkit.Diagnostics" Version="8.4.0" />
         <PackageReference Include="EFCore.NamingConventions" Version="9.0.0" />
-        <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.5" />
-        <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.5" />
-        <PackageReference Include="NLog.Extensions.Logging" Version="5.4.0" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.6" />
+        <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.6" />
+        <PackageReference Include="NLog.Extensions.Logging" Version="5.5.0" />
         <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.4" />
-        <PackageReference Include="SuperLinq" Version="6.3.0" />
+        <PackageReference Include="SuperLinq" Version="6.4.0" />
     </ItemGroup>
     <Choose>
         <When Condition="'$(Configuration)' == 'Release'">
@@ -23,7 +23,7 @@
                 <PackageReference ExcludeAssets="compile" Include="Microsoft.VisualStudio.Threading.Analyzers" Version="17.14.15" />
                 <PackageReference ExcludeAssets="compile" Include="Roslynator.Analyzers" Version="4.13.1" />
                 <PackageReference ExcludeAssets="compile" Include="SharpSource" Version="1.27.1" />
-                <PackageReference ExcludeAssets="compile" Include="SonarAnalyzer.CSharp" Version="10.10.0.116381" />
+                <PackageReference ExcludeAssets="compile" Include="SonarAnalyzer.CSharp" Version="10.11.0.117924" />
                 <PackageReference ExcludeAssets="compile" Include="StyleCop.Analyzers.Unstable" Version="1.2.0.556" />
             </ItemGroup>
         </When>

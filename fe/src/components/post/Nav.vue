@@ -1,6 +1,6 @@
 <template>
 <nav
-    class="post-nav col p-0 vh-100 sticky-top border-0"
+    class="post-nav col p-0 sticky-top border-0"
     :class="{ 'd-none': !isPostNavExpanded }" :aria-expanded="isPostNavExpanded">
     <AMenu
         v-model:selectedKeys="selectedThreads" v-model:openKeys="expandedPages" @click="selectThread($event)"
@@ -33,7 +33,7 @@
         'border-start': isPostNavExpanded,
         'border-end': !isPostNavExpanded
     }"
-    class="post-nav-expand col-auto align-items-center d-flex vh-100 sticky-top border-light-subtle">
+    class="post-nav-expand col-auto align-items-center d-flex sticky-top border-light-subtle">
     <a
         v-if="!hydrationStore.isHydratingOrSSR"
         @click="togglePostNavExpanded()" class="text-primary">
@@ -136,6 +136,8 @@ watchImmediate(() => [route.params.cursor, data.value?.pages], () => {
     // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     if (!(route.params.cursor === undefined || _.isString(route.params.cursor)))
         return;
+    if (!(data.value?.pages.some(page => page.pages.currentCursor === getRouteCursorParam(route)) ?? false))
+        return;
     expandedPages.value = [pageMenuKey(route.params.cursor)];
 });
 watch(viewportTopmostPost, async (to, from) => {
@@ -174,6 +176,9 @@ watch(viewportTopmostPost, async (to, from) => {
 
 .post-nav {
     overflow: hidden;
+}
+.post-nav, .post-nav-expand {
+    max-height: 100dvh;
 }
 .post-nav:hover {
     overflow-y: auto;

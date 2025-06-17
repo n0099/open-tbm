@@ -37,7 +37,8 @@ export default {
                     _.isString(to.params.idType) && _.isString(to.params.id)
                     && `/posts/${to.params.idType}id/${to.params.id}`
             },
-            postCursorRoute(':pathMatch(.*)*', 'posts/param')
+            postCursorRoute(':pathMatch(.*)*', 'posts/param'),
+            postCursorRoute('', 'posts/empty')
         ];
 
         const userCursorRoute = withCursorRoute(async () => import('@/pages/users.vue'));
@@ -50,14 +51,18 @@ export default {
         ];
 
         const post = _routes.find(p => p.path === '/posts');
+        if (post === undefined)
+            throw new Error('pages/posts.vue doesn\'t exists');
         const user = _routes.find(p => p.path === '/users');
+        if (user === undefined)
+            throw new Error('pages/users.vue doesn\'t exists');
 
         return [
             ..._routes,
             ...redirectRoute('/p', '/posts'),
-            _.merge(post, { children: postChildren }),
+            Object.assign(post, { children: postChildren }),
             ...redirectRoute('/u', '/users'),
-            _.merge(user, { children: userChildren })
+            Object.assign(user, { children: userChildren })
         ];
     },
     async scrollBehavior(to, from, savedPosition) {

@@ -1,16 +1,16 @@
 <template>
 <div class="btn-group" role="group">
     <button
-        v-if="user.uid === threadAuthorUid"
+        v-if="uid === threadAuthorUid"
         type="button" class="badge btn btn-success">
         楼主
     </button>
     <button
-        v-if="user.uid === replyAuthorUid"
+        v-if="uid === replyAuthorUid"
         type="button" class="badge btn btn-info">
         层主
     </button>
-    <template v-if="user.currentForumModerator !== null && user.currentForumModerator.moderatorTypes !== ''">
+    <template v-if="forumModerator !== null && forumModerator.moderatorTypes !== ''">
         <button
             v-for="[moderator, bootstrapColor] in Object.values(moderators)"
             :key="moderator" type="button"
@@ -18,13 +18,13 @@
             {{ moderator }}
         </button>
         <button v-if="_.isEmpty(moderators)" type="button" class="badge btn btn-info">
-            {{ user.currentForumModerator.moderatorTypes }}
+            {{ forumModerator.moderatorTypes }}
         </button>
     </template>
     <button
-        v-if="user.currentAuthorExpGrade !== null"
+        v-if="authorExpGrade !== null"
         type="button" class="badge btn btn-primary">
-        {{ user.currentAuthorExpGrade.authorExpGrade }}级
+        {{ authorExpGrade.authorExpGrade }}级
     </button>
 </div>
 </template>
@@ -37,6 +37,7 @@ const { user } = defineProps<{
     threadAuthorUid?: BaiduUserID,
     replyAuthorUid?: BaiduUserID
 }>();
+const { uid, forumSpecific: { authorExpGrade, forumModerator } } = user;
 const moderators = computed(() => _.pick(knownModeratorTypes,
-    user.currentForumModerator?.moderatorTypes.split(',') ?? []));
+    forumModerator?.moderatorTypes.split(',') ?? []));
 </script>

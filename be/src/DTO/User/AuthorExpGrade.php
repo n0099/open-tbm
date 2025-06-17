@@ -10,6 +10,8 @@ readonly class AuthorExpGrade
 {
     public function __construct(
         #[ORM\Column, ORM\Id, Ignore]
+        public int $fid,
+        #[ORM\Column, ORM\Id, Ignore]
         public int $uid,
         #[ORM\Column]
         public int $discoveredAt,

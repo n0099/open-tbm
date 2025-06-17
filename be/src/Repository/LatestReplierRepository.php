@@ -14,19 +14,19 @@ class LatestReplierRepository extends BaseRepository
         parent::__construct($registry, LatestReplier::class);
     }
 
-    public function getLatestRepliersWithoutNameWhenHasUid(array|\ArrayAccess $latestRepliersId): Collection
+    /** @return list<array{id: int, uid: int, createdAt: int, updatedAt: int}|LatestReplier> */
+    public function getLatestRepliersWithoutNameWhenHasUid(array|\ArrayAccess $latestRepliersId): array
     {
-        // removeSelect('t.name', 't.displayName')
-        return collect($this->getQueryResultWithParams(<<<'DQL'
+        return [ // removeSelect('t.name', 't.displayName')
+            ...$this->getQueryResultWithParams(<<<'DQL'
                 SELECT t.id, t.uid, t.createdAt, t.updatedAt
                 FROM App\Entity\LatestReplier t
                 WHERE t.id IN (:ids) AND t.uid IS NOT NULL
-                DQL, ['ids' => $latestRepliersId]))
-            ->concat(
-                $this->getQueryResultWithParams(<<<'DQL'
+                DQL, ['ids' => $latestRepliersId]),
+            ...$this->getQueryResultWithParams(<<<'DQL'
                 SELECT t FROM App\Entity\LatestReplier t
                 WHERE t.id IN (:ids) AND t.uid IS NULL
                 DQL, ['ids' => $latestRepliersId]),
-            );
+        ];
     }
 }

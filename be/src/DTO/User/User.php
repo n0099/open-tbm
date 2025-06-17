@@ -9,28 +9,17 @@ class User extends UserEntity
 {
     use TimestampedDTO { fromEntity as private fromTimestampedEntity; }
 
-    private ?ForumModerator $currentForumModerator;
-    private ?AuthorExpGrade $currentAuthorExpGrade;
+    /** @var array{int, array{forumModerator: ForumModerator, authorExpGrade: AuthorExpGrade}} */
+    private array $forumSpecific;
 
-    public function getCurrentForumModerator(): ?ForumModerator
+    public function getForumSpecific(): array
     {
-        return $this->currentForumModerator;
+        return $this->forumSpecific;
     }
 
-    public function setCurrentForumModerator(?ForumModerator $value): self
+    public function setForumSpecific(array $forumSpecific): User
     {
-        $this->currentForumModerator = $value;
-        return $this;
-    }
-
-    public function getCurrentAuthorExpGrade(): ?AuthorExpGrade
-    {
-        return $this->currentAuthorExpGrade;
-    }
-
-    public function setCurrentAuthorExpGrade(?AuthorExpGrade $value): self
-    {
-        $this->currentAuthorExpGrade = $value;
+        $this->forumSpecific = $forumSpecific;
         return $this;
     }
 

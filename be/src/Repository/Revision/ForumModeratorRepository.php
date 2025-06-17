@@ -2,11 +2,14 @@
 
 namespace App\Repository\Revision;
 
+use App\Doctrine\ConvertORMQueryBuilderToDBAL;
 use App\DTO\User\ForumModerator as ForumModeratorDTO;
 use App\Entity\Revision\ForumModerator;
 use App\Repository\BaseRepository;
-use Doctrine\ORM\Query\ResultSetMapping;
+use Doctrine\DBAL\Query\QueryBuilder as DBALQueryBuilder;
+use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
+use Illuminate\Support\Collection;
 
 /** @extends BaseRepository<ForumModerator> */
 class ForumModeratorRepository extends BaseRepository
@@ -16,25 +19,35 @@ class ForumModeratorRepository extends BaseRepository
         parent::__construct($registry, ForumModerator::class);
     }
 
-    public function getLatestOfUsers(int $fid, array|\ArrayAccess $portraits)
+    /**
+     * @param Collection<int, Collection<int, string>> $portraitsKeyByFid
+     * @return ForumModeratorDTO[]
+     */
+    public function getLatestOfUsers(Collection $portraitsKeyByFid): array
     {
-        $entityManager = $this->getEntityManager();
-        $tableName = $entityManager->getClassMetadata(ForumModerator::class)->getTableName();
+        $query = $this->createQueryBuilder('t')
+            ->select('t.fid', 't.portrait', 't.discoveredAt', 't.moderatorTypes')
+            ->addSelect('OVER(ROW_NUMBER(), PARTITION BY t.portrait ORDER BY t.discoveredAt DESC) AS rn');
+        /** @var QueryBuilder $query */
+        $query = $portraitsKeyByFid->reduce(
+            fn(QueryBuilder $query, Collection $portraits, int $fid) =>
+                $query->orWhere($query->expr()->andX(
+                    $query->expr()->eq('t.fid', ":fid_$fid"),
+                    $query->expr()->in('t.portrait', ":fid_{$fid}_portraits")
+                ))
+                    ->setParameter("fid_$fid", $fid)
+                    // doctrine cannot infer the right array type from its first element with laravel Collection
+                    ->setParameter("fid_{$fid}_portraits", $portraits->toArray()),
+            $query
+        );
 
-        // ResultSetMappingBuilder->addRootEntityFromClassMetadata() won't work due to case-sensitive quoting
-        $rsm = new ResultSetMapping();
-        $rsm->addEntityResult(ForumModeratorDTO::class, 't');
-        $rsm->addFieldResult('t', 'portrait', 'portrait');
-        $rsm->addFieldResult('t', 'discoveredAt', 'discoveredAt');
-        $rsm->addFieldResult('t', 'moderatorTypes', 'moderatorTypes');
-
-        return $entityManager->createNativeQuery(<<<"SQL"
-            SELECT portrait, "discoveredAt", "moderatorTypes" FROM (
-                SELECT portrait, "discoveredAt", "moderatorTypes",
-                    ROW_NUMBER() OVER (PARTITION BY portrait ORDER BY "discoveredAt" DESC) AS rn
-                FROM $tableName WHERE fid = :fid AND portrait IN (:portraits)
-            ) t WHERE t.rn = 1
-            SQL, $rsm)
-        ->setParameters(compact('fid', 'portraits'))->getResult();
+        return ConvertORMQueryBuilderToDBAL::getDenormalizedResult(
+            $this->getEntityManager()->getConnection(),
+            $query,
+            static fn(DBALQueryBuilder $query, array $fieldAliases) => $query
+                ->select('t.*')
+                ->where("t.{$fieldAliases['rn']} = 1"),
+            ForumModeratorDTO::class
+        );
     }
 }

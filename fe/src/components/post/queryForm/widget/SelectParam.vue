@@ -5,8 +5,8 @@
     <option :disabled="currentParam !== 'add'" :hidden="currentParam !== 'add'" value="add">New...</option>
     <optgroup v-for="(group, groupName) in paramsGroup" :key="groupName" :label="groupName">
         <option
-            v-for="(paramDescription, paramName) in group"
-            :key="paramName" :value="paramName">
+            v-for="(paramDescription, paramName) in group" :key="paramName"
+            :value="paramName" :selected="paramName === currentParam">
             {{ paramDescription }}
         </option>
     </optgroup>
@@ -15,6 +15,9 @@
 
 <script lang="ts">
 const paramsGroup = {
+    贴吧: {
+        fid: '吧名'
+    },
     帖子ID: {
         tid: 'tid（主题帖ID）',
         pid: 'pid（回复帖ID）',

@@ -4,17 +4,17 @@
     <div class="w-auto">
         <NuxtLink
             @click="$emit('click')"
-            :to="nextPageRoute" class="btn btn-secondary fs-5">
+            :to="getNextCursorRoute(route, nextCursor)" class="btn btn-secondary fs-5">
             下一页
         </NuxtLink>
     </div>
     <div class="col align-middle"><hr /></div>
+    <PageDecodedCursor v-if="nextCursor !== null" :encodedCursor="nextCursor" class="text-center mt-2 mb-0" />
 </nav>
 </template>
 
 <script setup lang="ts">
-import type { RouteLocationRaw } from 'vue-router';
-
-defineProps<{ nextPageRoute: RouteLocationRaw }>();
+defineProps<{ nextCursor: Cursor | null }>();
 defineEmits<{ click: [] }>();
+const route = useRoute();
 </script>

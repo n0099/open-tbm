@@ -218,7 +218,6 @@ public class ImageBatchConsumingWorker(
                 // try to know which fid owns current image batch
                 return imageKeysWithMatrix.IntersectBy(
                     from replyContentImage in db.ReplyContentImages.AsNoTracking()
-                    where replyContentImage.Fid == fid
                     where imageKeysWithMatrix
                         .Select(imageKeyWithMatrix => imageKeyWithMatrix.ImageId)
                         .Contains(replyContentImage.ImageId)

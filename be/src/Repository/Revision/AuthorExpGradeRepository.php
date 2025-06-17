@@ -2,11 +2,14 @@
 
 namespace App\Repository\Revision;
 
+use App\Doctrine\ConvertORMQueryBuilderToDBAL;
 use App\DTO\User\AuthorExpGrade as AuthorExpGradeDTO;
 use App\Entity\Revision\AuthorExpGrade;
 use App\Repository\BaseRepository;
-use Doctrine\ORM\Query\ResultSetMapping;
+use Doctrine\DBAL\Query\QueryBuilder as DBALQueryBuilder;
+use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
+use Illuminate\Support\Collection;
 
 /** @extends BaseRepository<AuthorExpGrade> */
 class AuthorExpGradeRepository extends BaseRepository
@@ -16,25 +19,35 @@ class AuthorExpGradeRepository extends BaseRepository
         parent::__construct($registry, AuthorExpGrade::class);
     }
 
-    public function getLatestOfUsers(int $fid, array|\ArrayAccess $usersId)
+    /**
+     * @param Collection<int, Collection<int, int>> $authorsIdKeyByFid
+     * @return AuthorExpGradeDTO[]
+     */
+    public function getLatestOfUsers(Collection $authorsIdKeyByFid): array
     {
-        $entityManager = $this->getEntityManager();
-        $tableName = $entityManager->getClassMetadata(AuthorExpGrade::class)->getTableName();
+        $query = $this->createQueryBuilder('t')
+            ->select('t.fid', 't.uid', 't.discoveredAt', 't.authorExpGrade')
+            ->addSelect('OVER(ROW_NUMBER(), PARTITION BY t.uid ORDER BY t.discoveredAt DESC) AS rn');
+        /** @var QueryBuilder $query */
+        $query = $authorsIdKeyByFid->reduce(
+            fn(QueryBuilder $query, Collection $uids, int $fid) =>
+                $query->orWhere($query->expr()->andX(
+                    $query->expr()->eq('t.fid', ":fid_$fid"),
+                    $query->expr()->in('t.uid', ":fid_{$fid}_uids")
+                ))
+                    ->setParameter("fid_$fid", $fid)
+                    // doctrine cannot infer the right array type from its first element with laravel Collection
+                    ->setParameter("fid_{$fid}_uids", $uids->toArray()),
+            $query
+        );
 
-        // ResultSetMappingBuilder->addRootEntityFromClassMetadata() won't work due to case-sensitive quoting
-        $rsm = new ResultSetMapping();
-        $rsm->addEntityResult(AuthorExpGradeDTO::class, 't');
-        $rsm->addFieldResult('t', 'uid', 'uid');
-        $rsm->addFieldResult('t', 'discoveredAt', 'discoveredAt');
-        $rsm->addFieldResult('t', 'authorExpGrade', 'authorExpGrade');
-
-        return $entityManager->createNativeQuery(<<<"SQL"
-            SELECT uid, "discoveredAt", "authorExpGrade" FROM (
-                SELECT uid, "discoveredAt", "authorExpGrade",
-                    ROW_NUMBER() OVER (PARTITION BY uid ORDER BY "discoveredAt" DESC) AS rn
-                FROM $tableName WHERE fid = :fid AND uid IN (:usersId)
-            ) t WHERE t.rn = 1
-            SQL, $rsm)
-        ->setParameters(compact('fid', 'usersId'))->getResult();
+        return ConvertORMQueryBuilderToDBAL::getDenormalizedResult(
+            $this->getEntityManager()->getConnection(),
+            $query,
+            static fn(DBALQueryBuilder $query, array $fieldAliases) => $query
+                ->select('t.*')
+                ->where("t.{$fieldAliases['rn']} = 1"),
+            AuthorExpGradeDTO::class
+        );
     }
 }

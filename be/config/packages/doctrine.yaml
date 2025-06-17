@@ -36,6 +36,8 @@ doctrine:
         dql:
             string_functions:
                 greatest: DoctrineExtensions\Query\Mysql\Greatest
+                over: DoctrineExtensions\Query\Mysql\Over
+                row_number: DoctrineExtensions\Query\Mysql\RowNumber
 
 when@test:
     doctrine:

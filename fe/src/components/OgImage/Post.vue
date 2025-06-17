@@ -2,7 +2,7 @@
 <div class="flex flex-row justify-between size-screen">
     <div class="flex-1 flex-col basis-1/2 m-6">
         <p>{{ useSiteConfig().name }} {{ routePath }}</p>
-        <h2>{{ firstPostPageForum?.name }}吧</h2>
+        <h2 v-if="firstPostPageForumName !== undefined">{{ firstPostPageForumName }}吧</h2>
         <template v-if="currentQueryType !== 'postID'">
             <p class="m-0">右侧为查询结果中第一张图片（不一定来自第一条帖子）</p>
             <p class="m-0">下方为查询结果中第一条主题帖/回复帖/楼中楼</p>
@@ -30,7 +30,7 @@ import type { UnwrapRef } from 'vue';
 const { firstThread, firstPostPage } = defineProps<{
     routePath: string,
     firstPostPage?: ApiPosts['response'],
-    firstPostPageForum?: ApiPosts['response']['forum'],
+    firstPostPageForumName?: string,
     firstThread?: ArrayElement<ApiPosts['response']['threads']>,
     currentQueryType: UnwrapRef<QueryFormDeps['currentQueryType']>
 }>();

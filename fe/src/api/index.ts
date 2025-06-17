@@ -1,4 +1,5 @@
 import type { PublicRuntimeConfig } from 'nuxt/schema';
+import type { UnwrapRef } from 'vue';
 import type { Enabled, InfiniteData, Query, UseInfiniteQueryOptions, UseQueryOptions } from '@tanstack/vue-query';
 import { QueryObserver } from '@tanstack/vue-query';
 import { FetchError } from 'ofetch';
@@ -12,6 +13,7 @@ export class ApiResponseError extends Error {
         public readonly fetchError?: FetchError
     ) {
         super(JSON.stringify({ fetchError, errorCode, errorInfo }));
+        this.name = 'ApiResponseError';
     }
 }
 
@@ -50,7 +52,8 @@ export const queryFunction = async <TResponse>
                     Accept: 'application/json',
                     ...requestHeaders
                 },
-                signal
+                signal,
+                retry: 0
             }
         ) as TResponse;
     } catch (e: unknown) {
@@ -110,11 +113,11 @@ const useApiWithCursor = <
 (endpoint: string) => {
     type Data = InfiniteData<TResponse, Cursor>;
     type QueryKey = [string, TQueryParam | undefined];
-    type QueryOptions = UseInfiniteQueryOptions<TResponse, ApiErrorClass, Data, TResponse, QueryKey, Cursor>;
+    type QueryOptions = UseInfiniteQueryOptions<TResponse, ApiErrorClass, Data, QueryKey, Cursor>;
     type PartialMaybeRef<TMaybeRef> = TMaybeRef extends ComputedRef
-        ? ComputedRef<Partial<TMaybeRef['value']>>
+        ? ComputedRef<Partial<UnwrapRef<TMaybeRef>>>
         : TMaybeRef extends Ref
-            ? Ref<Partial<TMaybeRef['value']>>
+            ? Ref<Partial<UnwrapRef<TMaybeRef>>>
             : Partial<TMaybeRef>;
 
     return (

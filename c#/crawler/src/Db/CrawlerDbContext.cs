@@ -21,6 +21,7 @@ public class CrawlerDbContext(ILogger<CrawlerDbContext> logger)
     public DbSet<ReplyPost> Replies => Set<ReplyPost>();
     public DbSet<ReplySignature> ReplySignatures => Set<ReplySignature>();
     public DbSet<ReplyContent> ReplyContents => Set<ReplyContent>();
+    public DbSet<SubReplyPost> SubReplies => Set<SubReplyPost>();
     public DbSet<SubReplyContent> SubReplyContents => Set<SubReplyContent>();
     public DbSet<Forum> Forums => Set<Forum>();
 

@@ -9,7 +9,7 @@
     </NuxtLink>
 </span>
 <PostBadgeUser
-    v-if="authorUser.currentForumModerator !== null"
+    v-if="authorUser.forumSpecific.forumModerator !== null"
     :user="authorUser" class="ms-1 user-badge" />
 <DefineLatestReplier v-slot="{ users }">
     <span class="ms-2">
@@ -26,7 +26,7 @@
 <template v-else-if="latestReplier.uid !== null && latestReplier.uid !== authorUid">
     <ReuseLatestReplier :users="[{ name: renderUsername(latestReplier.uid), route: toUserRoute(latestReplier.uid) }]" />
     <PostBadgeUser
-        v-if="!_.isNil(latestReplierUser?.currentForumModerator)"
+        v-if="!_.isNil(latestReplierUser?.forumSpecific.forumModerator)"
         :user="latestReplierUser" class="ms-1 user-badge" />
 </template>
 </template>

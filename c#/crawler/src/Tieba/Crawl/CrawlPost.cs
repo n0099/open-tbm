@@ -7,6 +7,7 @@ using SavedRepliesKeyByTid = ConcurrentDictionary<Tid, SaverChangeSet<ReplyPost,
 using SavedThreadsList = IReadOnlyCollection<SaverChangeSet<ThreadPost, ThreadPost.Parsed>>;
 
 public class CrawlPost(
+    IConfiguration config,
     Func<Owned<CrawlerDbContext.New>> dbContextFactory,
     Func<Owned<ThreadLateCrawlFacade.New>> threadLateCrawlFacadeFactory,
     Func<Owned<ThreadCrawlFacade.New>> threadCrawlFacadeFactory,
@@ -20,10 +21,6 @@ public class CrawlPost(
         (string forumName, Fid fid, CancellationToken stoppingToken = default)
     {
         stoppingToken.ThrowIfCancellationRequested();
-        var savedThreads = new List<SaverChangeSet<ThreadPost, ThreadPost.Parsed>>();
-        Time minLatestReplyPostedAt;
-        Page crawlingPage = 0;
-
         if (!_latestReplyPostedAtCheckpoints.TryGetValue(fid, out var maxLatestReplyPostedAtOccurInPreviousCrawl))
         { // get the largest value of field latestReplyPostedAt in all stored threads of this forum
             // this approach is not as accurate as extracting the last thread in the response list
@@ -34,6 +31,11 @@ public class CrawlPost(
                 .Where(t => t.Fid == fid)
                 .Max(th => (Time?)th.LatestReplyPostedAt) ?? Time.MaxValue;
         }
+        var savedThreads = new List<SaverChangeSet<ThreadPost, ThreadPost.Parsed>>();
+        var minLatestReplyPostedAt = Time.MaxValue;
+        Page crawlingPage = 0;
+        FailureCount failureCount = 0;
+        var maxRetry = config.GetSection("CrawlerLocks:Thread").GetValue("MaxRetryTimes", 5);
         do
         {
             crawlingPage++;
@@ -47,13 +49,19 @@ public class CrawlPost(
                 var threadsLatestReplyPostedAt = currentPageChangeSet.AllParsed
                     .Select(th => th.LatestReplyPostedAt).ToList();
                 minLatestReplyPostedAt = threadsLatestReplyPostedAt.Min();
-                if (crawlingPage == 1)
-                    _latestReplyPostedAtCheckpoints[fid] = threadsLatestReplyPostedAt.Max();
+                var maxLatestReplyPostedAt = threadsLatestReplyPostedAt.Max();
+                if (!_latestReplyPostedAtCheckpoints.TryGetValue(fid, out var checkpoint)
+                    || checkpoint < maxLatestReplyPostedAt)
+                    _latestReplyPostedAtCheckpoints[fid] = maxLatestReplyPostedAt;
             }
-            else
+            else if (failureCount < maxRetry)
             { // retry this page
                 crawlingPage--;
-                minLatestReplyPostedAt = Time.MaxValue;
+                failureCount++;
+            }
+            else if (failureCount >= maxRetry)
+            {
+                minLatestReplyPostedAt = Time.MinValue;
             }
         } while (minLatestReplyPostedAt > maxLatestReplyPostedAtOccurInPreviousCrawl);
 

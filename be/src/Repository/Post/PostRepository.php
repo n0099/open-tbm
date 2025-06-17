@@ -14,5 +14,5 @@ abstract class PostRepository extends BaseRepository
 {
     abstract public function selectUnionPostKey(): QueryBuilder;
 
-    abstract public function getPosts(int $fid, array|\ArrayAccess $postsId): array;
+    abstract public function getPosts(array|\ArrayAccess $postsId): array;
 }

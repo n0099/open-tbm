@@ -18,8 +18,8 @@ public partial class ReplySaver(
             posts => posts.Where(r => Posts.Keys.Contains(r.Pid)));
 
         db.ReplyContents.AddRange(changeSet.NewlyAdded // https://github.com/dotnet/efcore/issues/33945
-            .Select(r => new ReplyContent {Fid = Fid, Pid = r.Pid, ProtoBufBytes = r.Content}));
-        PostSaveHandlers += replyContentImageSaver.Save(db, Fid, changeSet.NewlyAdded);
+            .Select(r => new ReplyContent {Pid = r.Pid, ProtoBufBytes = r.Content}));
+        PostSaveHandlers += replyContentImageSaver.Save(db, changeSet.NewlyAdded);
         PostSaveHandlers += replySignatureSaver.Save(db, changeSet.AllParsed);
 
         return changeSet;

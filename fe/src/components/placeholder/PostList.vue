@@ -1,5 +1,5 @@
 <template>
-<div class="row align-items-center">
+<div class="row align-items-center overflow-hidden">
     <template v-if="isLoading">
         <div class="col"><hr /></div>
         <div class="w-auto">

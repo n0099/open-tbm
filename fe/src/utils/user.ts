@@ -11,7 +11,7 @@ export const toUserRoute = (uid: BaiduUserID): LocationAsRelativeRaw =>
     ({ name: 'users/uid', params: { uid } });
 
 export const baseGetUser = (users: User[]) => {
-    const usersKeyByUid = _.mapKeys(users, 'uid');
+    const usersKeyByUid = _.mapKeys(users, user => user.uid);
 
     return (uid: BaiduUserID): User => (usersKeyByUid[uid] as User | undefined) ?? {
         uid: 0,
@@ -25,12 +25,14 @@ export const baseGetUser = (users: User[]) => {
         ipGeolocation: null,
         createdAt: 0,
         updatedAt: 0,
-        currentForumModerator: null,
-        currentAuthorExpGrade: null
+        forumSpecific: {
+            authorExpGrade: null,
+            forumModerator: null
+        }
     };
 };
 export const baseGetLatestReplier = (latestRepliers: LatestReplier[]) => {
-    const latestRepliersKeyById = _.mapKeys(latestRepliers, 'id');
+    const latestRepliersKeyById = _.mapKeys(latestRepliers, latestReplier => latestReplier.id);
 
     return (id: LatestReplierId | null): LatestReplier | undefined =>
         (id === null ? undefined : latestRepliersKeyById[id]);

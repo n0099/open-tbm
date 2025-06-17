@@ -1,39 +1,16 @@
 <template>
 <form @submit.prevent="queryFormSubmit()" class="mt-3">
     <div class="row">
-        <label class="col-1 col-form-label" for="paramFid">贴吧</label>
-        <div class="col-3">
-            <div class="input-group">
-                <span class="input-group-text"><FontAwesome :icon="faFilter" /></span>
-                <WidgetSelectForum
-                    v-model.number="uniqueParams.fid.value"
-                    id="paramFid" :class="{ 'is-invalid': isFidInvalid }">
-                    <template #indicators="{ renderer }">
-                        <span class="input-group-text"><RenderFunction :renderer="renderer" /></span>
-                    </template>
-                </WidgetSelectForum>
-            </div>
-        </div>
         <label class="col-1 col-form-label text-center">帖子类型</label>
         <div class="col my-auto">
             <div class="input-group">
-                <div class="form-check form-check-inline">
+                <div v-for="(postType, index) in postType" :key="postType" class="form-check form-check-inline">
                     <input
-                        v-model="uniqueParams.postTypes.value" id="paramPostTypesThread"
-                        type="checkbox" value="thread" class="form-check-input" />
-                    <label class="form-check-label" for="paramPostTypesThread">主题帖</label>
-                </div>
-                <div class="form-check form-check-inline">
-                    <input
-                        v-model="uniqueParams.postTypes.value" id="paramPostTypesReply"
-                        type="checkbox" value="reply" class="form-check-input" />
-                    <label class="form-check-label" for="paramPostTypesReply">回复帖</label>
-                </div>
-                <div class="form-check form-check-inline">
-                    <input
-                        v-model="uniqueParams.postTypes.value" id="paramPostTypesSubReply"
-                        type="checkbox" value="subReply" class="form-check-input" />
-                    <label class="form-check-label" for="paramPostTypesSubReply">楼中楼</label>
+                        v-model="uniqueParams.postTypes.value" :id="`paramPostTypes${_.upperFirst(postType)}`"
+                        type="checkbox" :value="postType" class="form-check-input" />
+                    <label class="form-check-label" :for="`paramPostTypes${_.upperFirst(postType)}`">
+                        {{ postTypeText[index] }}
+                    </label>
                 </div>
             </div>
         </div>
@@ -51,9 +28,11 @@
                     </option>
                     <option value="postedAt">发帖时间</option>
                     <optgroup label="帖子ID">
-                        <option value="tid">主题帖tid</option>
-                        <option value="pid">回复帖pid</option>
-                        <option value="spid">楼中楼spid</option>
+                        <option
+                            v-for="(postID, index) in postID" :key="postID"
+                            :value="postID" :selected="postID === orderBy.value">
+                            {{ postTypeText[index] }}{{ postID }}
+                        </option>
                     </optgroup>
                 </select>
                 <select
@@ -70,13 +49,25 @@
             </div>
         </div>
     </div>
+    <DefineSuspenseLoading v-slot="{ $slots }">
+        <Suspense :timeout="0">
+            <template #fallback>
+                <div class="input-group-text">
+                    <div class="spinner-border" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            </template>
+            <component :is="$slots.default" />
+        </Suspense>
+    </DefineSuspenseLoading>
     <div class="query-params">
         <div v-for="(p, pI) in params" :key="pI" class="input-group">
             <button @click="deleteParam(pI)" class="btn btn-link" type="button">
                 <FontAwesome :icon="faTimes" />
             </button>
             <PostQueryFormWidgetSelectParam
-                @paramChange="changeParam(pI)" :currentParam="p.name"
+                @paramChange="changeParam(pI, $event)" :currentParam="p.name"
                 class="select-param" :class="{ 'is-invalid': invalidParamsIndex.includes(pI) }" />
             <div class="input-group-text">
                 <div class="form-check">
@@ -88,63 +79,86 @@
                         class="text-secondary fw-bold form-check-label">非</label>
                 </div>
             </div>
+            <template v-if="p.name === 'fid'">
+                <ReuseSuspenseLoading>
+                    <LazyWidgetSelectForum v-model.number="p.value" class="flex-grow-0 w-50">
+                        <template #indicators="{ renderer }">
+                            <div class="input-group-text"><RenderFunction :renderer="renderer" /></div>
+                        </template>
+                    </LazyWidgetSelectForum>
+                </ReuseSuspenseLoading>
+            </template>
             <template v-if="isPostIDParam(p)">
-                <LazyPostQueryFormWidgetSelectRange v-model="p.subParam.range" />
-                <LazyPostQueryFormWidgetInputNumericParam
-                    @update:modelValue="onParamUpdate(pI)"
-                    :modelValue="params[pI] as KnownNumericParams"
-                    :placeholders="getPostIDParamPlaceholders(p)" />
+                <ReuseSuspenseLoading>
+                    <LazyPostQueryFormWidgetSelectRange v-model="p.subParam.range" />
+                </ReuseSuspenseLoading>
+                <ReuseSuspenseLoading>
+                    <LazyPostQueryFormWidgetInputNumericParam
+                        @update:modelValue="onParamUpdate(pI, $event)"
+                        :modelValue="params[pI] as KnownNumericParams"
+                        :placeholders="getPostIDParamPlaceholders(p)" />
+                </ReuseSuspenseLoading>
             </template>
             <template v-if="isDateTimeParam(p)">
-                <LazyARangePicker
-                    v-model:value="p.subParam.range" showTime
-                    format="YYYY-MM-DD HH:mm" valueFormat="YYYY-MM-DDTHH:mm" size="large" />
+                <ReuseSuspenseLoading>
+                    <LazyARangePicker
+                        v-model:value="p.subParam.range" showTime
+                        format="YYYY-MM-DD HH:mm" valueFormat="YYYY-MM-DDTHH:mm" size="large" />
+                </ReuseSuspenseLoading>
             </template>
             <template v-if="isTextParam(p)">
                 <input
-                    v-model="p.value" :placeholder="inputTextMatchParamPlaceholder(p)"
+                    v-model="p.value" :placeholder="inputTextParamPlaceholder(p)"
                     type="text" class="form-control" required />
-                <PostQueryFormWidgetInputTextMatchParam
-                    @update:modelValue="onParamUpdate(pI)"
-                    :modelValue="params[pI] as KnownTextParams"
-                    :paramIndex="pI" />
+                <ReuseSuspenseLoading>
+                    <LazyPostQueryFormWidgetInputTextParam
+                        @update:modelValue="onParamUpdate(pI, $event)"
+                        :modelValue="params[pI] as KnownTextParams"
+                        :paramIndex="pI" />
+                </ReuseSuspenseLoading>
             </template>
-            <template v-if="['threadViewCount', 'threadShareCount', 'threadReplyCount', 'replySubReplyCount'].includes(p.name)">
-                <LazyPostQueryFormWidgetSelectRange v-model="p.subParam.range" />
-                <LazyPostQueryFormWidgetInputNumericParam
-                    @update:modelValue="onParamUpdate(pI)"
-                    :modelValue="params[pI] as KnownNumericParams"
-                    :paramIndex="pI"
-                    :placeholders="{ IN: '100,101,102,...', BETWEEN: '100,200', equals: '100' }" />
+            <template
+                v-if=" // https://github.com/microsoft/TypeScript/issues/51678
+                    p.name === 'threadViewCount'
+                        || p.name === 'threadShareCount'
+                        || p.name === 'threadReplyCount'
+                        || p.name === 'replySubReplyCount'">
+                <ReuseSuspenseLoading>
+                    <LazyPostQueryFormWidgetSelectRange v-model="p.subParam.range" />
+                </ReuseSuspenseLoading>
+                <ReuseSuspenseLoading>
+                    <LazyPostQueryFormWidgetInputNumericParam
+                        @update:modelValue="onParamUpdate(pI, $event)"
+                        :modelValue="params[pI] as KnownNumericParams"
+                        :paramIndex="pI"
+                        :placeholders="{ IN: '100,101,102,...', BETWEEN: '100,200', equals: '100' }" />
+                </ReuseSuspenseLoading>
             </template>
             <template v-if="p.name === 'threadProperties'">
-                <div class="input-group-text">
+                <div v-for="property in ['good', 'sticky']" :key="property" class="input-group-text">
                     <div class="form-check">
                         <input
-                            v-model="p.value" :id="`paramThreadPropertiesGood-${pI}`"
-                            type="checkbox" value="good" class="form-check-input" />
+                            v-model="p.value" :id="`paramThreadProperties${_.upperFirst(property)}-${pI}`"
+                            type="checkbox" :value="property" class="form-check-input" />
                         <label
-                            :for="`paramThreadPropertiesGood-${pI}`"
-                            class="text-danger fw-normal form-check-label">精品</label>
-                    </div>
-                </div>
-                <div class="input-group-text">
-                    <div class="form-check">
-                        <input
-                            v-model="p.value" :id="`paramThreadPropertiesSticky-${pI}`"
-                            type="checkbox" value="sticky" class="form-check-input" />
-                        <label
-                            :for="`paramThreadPropertiesSticky-${pI}`"
-                            class="text-primary fw-normal form-check-label">置顶</label>
+                            :for="`paramThreadProperties${_.upperFirst(property)}-${pI}`"
+                            class="text-danger fw-normal form-check-label">
+                            <template v-if="property === 'good'">精品</template>
+                            <template v-else-if="property === 'sticky'">置顶</template>
+                        </label>
                     </div>
                 </div>
             </template>
-            <template v-if="['authorUid', 'latestReplierUid'].includes(p.name)">
-                <LazyPostQueryFormWidgetSelectRange v-model="p.subParam.range" />
-                <LazyPostQueryFormWidgetInputNumericParam
-                    @update:modelValue="onParamUpdate(pI)"
-                    :modelValue="params[pI] as KnownNumericParams"
-                    :placeholders="uidParamsPlaceholder" />
+            <template v-if="p.name === 'authorUid' || p.name === 'latestReplierUid'">
+                <ReuseSuspenseLoading>
+                    <LazyPostQueryFormWidgetSelectRange v-model="p.subParam.range" />
+                </ReuseSuspenseLoading>
+                <ReuseSuspenseLoading>
+                    <LazyPostQueryFormWidgetInputNumericParam
+                        @update:modelValue="onParamUpdate(pI, $event)"
+                        :modelValue="params[pI] as KnownNumericParams"
+                        :placeholders="uidParamsPlaceholder" />
+                </ReuseSuspenseLoading>
             </template>
             <template v-if="p.name === 'authorManagerType'">
                 <select v-model="p.value" class="form-control flex-grow-0 w-25">
@@ -157,7 +171,7 @@
                     </option>
                 </select>
             </template>
-            <template v-if="p.name === 'authorGender' || p.name === 'latestReplierGender'">
+            <template v-if="['authorGender', 'latestReplierGender'].includes(p.name)">
                 <select v-model="p.value" class="form-control flex-grow-0 w-25">
                     <option value="0">未设置（显示为男）</option>
                     <option value="1">男 ♂</option>
@@ -165,11 +179,15 @@
                 </select>
             </template>
             <template v-if="p.name === 'authorExpGrade'">
-                <LazyPostQueryFormWidgetSelectRange v-model="p.subParam.range" />
-                <LazyPostQueryFormWidgetInputNumericParam
-                    @update:modelValue="onParamUpdate(pI)"
-                    :modelValue="params[pI] as KnownNumericParams"
-                    :placeholders="{ IN: '9,10,11,...', BETWEEN: '9,18', equals: '18' }" />
+                <ReuseSuspenseLoading>
+                    <LazyPostQueryFormWidgetSelectRange v-model="p.subParam.range" />
+                </ReuseSuspenseLoading>
+                <ReuseSuspenseLoading>
+                    <LazyPostQueryFormWidgetInputNumericParam
+                        @update:modelValue="onParamUpdate(pI, $event)"
+                        :modelValue="params[pI] as KnownNumericParams"
+                        :placeholders="{ IN: '9,10,11,...', BETWEEN: '9,18', equals: '18' }" />
+                </ReuseSuspenseLoading>
             </template>
         </div>
     </div>
@@ -195,17 +213,16 @@
 </template>
 
 <script setup lang="ts">
-import { inputTextMatchParamPlaceholder } from '@/components/post/queryForm/widget/InputTextMatchParam.vue';
-import { faFilter, faPlus, faSortAmountDown, faTimes } from '@fortawesome/free-solid-svg-icons';
+import { inputTextParamPlaceholder } from '@/components/post/queryForm/widget/InputTextParam.vue';
+import { faPlus, faSortAmountDown, faTimes } from '@fortawesome/free-solid-svg-icons';
 import _ from 'lodash';
 
 const { queryFormDeps } = defineProps<{
     isLoading: boolean,
     queryFormDeps: QueryFormDeps
 }>();
-const {
+const { // https://github.com/orgs/vuejs/discussions/6147
     isOrderByInvalid,
-    isFidInvalid,
     currentQueryType,
     generateRoute,
     uniqueParams,
@@ -215,14 +232,14 @@ const {
     changeParam,
     deleteParam
 } = queryFormDeps;
+const [DefineSuspenseLoading, ReuseSuspenseLoading] = createReusableTemplate();
 
 const getPostIDParamPlaceholders = (p: Param) => ({
     IN: p.name === 'tid' ? '5000000000,5000000001,5000000002,...' : '15000000000,15000000001,15000000002,...',
     BETWEEN: p.name === 'tid' ? '5000000000,6000000000' : '15000000000,16000000000',
     equals: p.name === 'tid' ? '5000000000' : '15000000000'
 });
-const onParamUpdate = (index: number) =>
-    (e: KnownTextParams | KnownNumericParams) => { params.value[index] = e };
+const onParamUpdate = (index: number, event: KnownTextParams | KnownNumericParams) => { params.value[index] = event };
 const uidParamsPlaceholder = {
     IN: '4000000000,4000000001,4000000002,...',
     BETWEEN: '4000000000,5000000000',
@@ -292,5 +309,9 @@ watch(() => uniqueParams.value.postTypes.value, (to, from) => {
 .add-param-button { /* fa-plus is wider than fa-times 3px */
     padding-inline-start: 22px;
     padding-inline-end: 10px;
+}
+.spinner-border {
+    height: 1.5rem;
+    width: 1.5rem;
 }
 </style>

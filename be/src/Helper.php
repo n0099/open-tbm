@@ -60,7 +60,6 @@ class Helper
         // httpStatusCode => [ errorCode => errorInfo ]
         400 => [
             // 40000 => App\Exceptions\Handler::convertValidationExceptionToResponse()
-            40001 => '帖子查询类型必须为索引或搜索查询',
             40003 => '部分查询参数与查询帖子类型要求不匹配',
             40004 => '排序方式与查询帖子类型要求不匹配',
             40005 => '提供了多个唯一查询参数',

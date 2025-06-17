@@ -41,7 +41,7 @@ import { faClock } from '@fortawesome/free-regular-svg-icons';
 import { faArrowUpRightFromSquare, faHashtag, faLink } from '@fortawesome/free-solid-svg-icons';
 import { DateTime } from 'luxon';
 
-const props = defineProps<{
+const { post, postIDKey, postTypeText } = defineProps<{
     post: TPost,
     postIDKey: TPostIDKey,
     postTypeText: PostTypeTextOf<TPost>
@@ -64,7 +64,7 @@ const formatTime = (time: UnixTimestamp) => {
 };
 
 const tippyContent = () => `
-首次收录时间：${formatTime(props.post.createdAt)}<br>
-最后更新时间：${formatTime(props.post.updatedAt ?? props.post.createdAt)}<br>
-最后发现时间：${formatTime(props.post.lastSeenAt ?? props.post.updatedAt ?? props.post.createdAt)}`;
+首次收录时间：${formatTime(post.createdAt)}<br>
+最后更新时间：${formatTime(post.updatedAt ?? post.createdAt)}<br>
+最后发现时间：${formatTime(post.lastSeenAt ?? post.updatedAt ?? post.createdAt)}`;
 </script>

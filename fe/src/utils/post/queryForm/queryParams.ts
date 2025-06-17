@@ -25,7 +25,7 @@ export const orderByRequiredPostTypes: RequiredPostTypes = {
     spid: ['subReply']
 };
 
-export const paramsNameKeyByType = {
+export const paramNamesKeyByType = {
     numeric: [
         'tid',
         'pid',
@@ -49,12 +49,16 @@ export const paramsNameKeyByType = {
     dateTime: [
         'postedAt',
         'latestReplyPostedAt'
+    ],
+    gender: [
+        'authorGender',
+        'latestReplierGender'
     ]
 } as const;
 
 export const numericParamSubParamRangeValues = ['<', '=', '>', 'BETWEEN', 'IN'] as const;
 export interface NamelessParamNumeric {
-    value: string,
+    value: number | string, // support subParam.range === BETWEEN or IN
     subParam: { range: ArrayElement<typeof numericParamSubParamRangeValues> }
 }
 export const textParamSubParamMatchByValues = ['explicit', 'implicit', 'regex'] as const;
@@ -68,21 +72,33 @@ export interface NamelessParamText {
 interface NamelessParamDateTime { value: string, subParam: { range: undefined } }
 interface NamelessParamGender { value: '0' | '1' | '2' }
 interface NamelessParamsOther {
+    fid: { value: Fid },
     threadProperties: { value: Array<'good' | 'sticky'> },
     authorManagerType: { value: ForumModeratorType | 'NULL' }
 }
 
-export type AddNameToParam<Name, NamelessParam> = NamelessParam & { name: Name, value: unknown, subParam: ObjEmpty };
-export type KnownParams = { [P in 'authorGender' | 'latestReplierGender']: AddNameToParam<P, NamelessParamGender> }
-& { [P in keyof NamelessParamsOther]: AddNameToParam<P, NamelessParamsOther[P]> }
-& { [P in ArrayElement<typeof paramsNameKeyByType.dateTime>]: AddNameToParam<P, NamelessParamDateTime> }
-& { [P in ArrayElement<typeof paramsNameKeyByType.numeric>]: AddNameToParam<P, NamelessParamNumeric> }
-& { [P in ArrayElement<typeof paramsNameKeyByType.text>]: AddNameToParam<P, NamelessParamText> };
-export type KnownDateTimeParams = KnownParams[ArrayElement<typeof paramsNameKeyByType.dateTime>];
-export type KnownNumericParams = KnownParams[ArrayElement<typeof paramsNameKeyByType.numeric>];
-export type KnownTextParams = KnownParams[ArrayElement<typeof paramsNameKeyByType.text>];
+export type AddNameToParam<Name extends UnknownParam['name'], NamelessParam extends Partial<UnknownParam>> =
+Omit<NamelessParam, 'subParam'>
+    & {
+        name: Name,
+        value: unknown,
+        subParam: ObjEmpty
+        | { not?: boolean }
+
+            // https://stackoverflow.com/questions/68232762/check-if-type-is-the-unknown-type
+            & (unknown extends NamelessParam['subParam']
+                ? ObjEmpty
+                : NamelessParam['subParam'])
+    };
+export type KnownParams = { [P in keyof NamelessParamsOther]: AddNameToParam<P, NamelessParamsOther[P]> }
+    & { [P in ArrayElement<typeof paramNamesKeyByType.numeric>]: AddNameToParam<P, NamelessParamNumeric> }
+    & { [P in ArrayElement<typeof paramNamesKeyByType.text>]: AddNameToParam<P, NamelessParamText> }
+    & { [P in ArrayElement<typeof paramNamesKeyByType.dateTime>]: AddNameToParam<P, NamelessParamDateTime> }
+    & { [P in ArrayElement<typeof paramNamesKeyByType.gender>]: AddNameToParam<P, NamelessParamGender> };
+export type KnownNumericParams = KnownParams[ArrayElement<typeof paramNamesKeyByType.numeric>];
+export type KnownTextParams = KnownParams[ArrayElement<typeof paramNamesKeyByType.text>];
+export type KnownDateTimeParams = KnownParams[ArrayElement<typeof paramNamesKeyByType.dateTime>];
 export interface KnownUniqueParams extends Record<string, UnknownParam> {
-    fid: { name: 'fid', value: Fid, subParam: ObjEmpty },
     postTypes: { name: 'postTypes', value: PostType[], subParam: ObjEmpty },
     orderBy: {
         name: 'orderBy',
@@ -91,7 +107,7 @@ export interface KnownUniqueParams extends Record<string, UnknownParam> {
     }
 }
 
-const paramsMetadataKeyByType: Record<'array' | 'dateTimeRange' | 'numeric' | 'textMatch', {
+const paramMetadataKeyByType: Record<'array' | 'numeric' | 'text' | 'dateTime' | 'gender', {
     default?: NamelessUnknownParam,
     preprocessor?: ParamPreprocessorOrWatcher,
     watcher?: ParamPreprocessorOrWatcher
@@ -102,8 +118,14 @@ const paramsMetadataKeyByType: Record<'array' | 'dateTimeRange' | 'numeric' | 't
                 param.value = param.value.split(',');
         }
     },
-    numeric: { default: { subParam: { range: '=' } } },
-    textMatch: {
+    numeric: {
+        default: { subParam: { range: '=' } },
+        preprocessor(param) {
+            if (param.subParam.range === '=')
+                param.value = Number(param.value);
+        }
+    },
+    text: {
         default: { subParam: { matchBy: 'explicit', spaceSplit: false } },
         preprocessor(param) {
             param.subParam.spaceSplit = boolStrToBool(param.subParam.spaceSplit);
@@ -113,7 +135,7 @@ const paramsMetadataKeyByType: Record<'array' | 'dateTimeRange' | 'numeric' | 't
                 param.subParam.spaceSplit = false;
         }
     },
-    dateTimeRange: {
+    dateTime: {
         default: { subParam: { range: undefined } },
         preprocessor(param) {
             if (!_.isString(param.value))
@@ -124,7 +146,8 @@ const paramsMetadataKeyByType: Record<'array' | 'dateTimeRange' | 'numeric' | 't
             // combine datetime range into root param's value
             param.value = _.isArray(param.subParam.range) ? param.subParam.range.join(',') : '';
         }
-    }
+    },
+    gender: { default: { value: '0' } }
 };
 const paramsDefaultValue = {
     fid: { value: 0, subParam: {} },
@@ -132,30 +155,33 @@ const paramsDefaultValue = {
     orderBy: { value: 'default', subParam: { direction: 'default' } },
     threadProperties: { value: [] },
     authorManagerType: { value: 'NULL' },
-    authorGender: { value: '0' },
-    latestReplierGender: { value: '0' },
-    ..._.mapValues(_.keyBy(paramsNameKeyByType.numeric), () =>
-        paramsMetadataKeyByType.numeric.default),
-    ..._.mapValues(_.keyBy(paramsNameKeyByType.text), () =>
-        paramsMetadataKeyByType.textMatch.default),
-    ..._.mapValues(_.keyBy(paramsNameKeyByType.dateTime), () =>
-        paramsMetadataKeyByType.dateTimeRange.default)
+    ..._.mapValues(_.keyBy(paramNamesKeyByType.numeric), () =>
+        paramMetadataKeyByType.numeric.default),
+    ..._.mapValues(_.keyBy(paramNamesKeyByType.text), () =>
+        paramMetadataKeyByType.text.default),
+    ..._.mapValues(_.keyBy(paramNamesKeyByType.dateTime), () =>
+        paramMetadataKeyByType.dateTime.default),
+    ..._.mapValues(_.keyBy(paramNamesKeyByType.gender), () =>
+        paramMetadataKeyByType.gender.default)
 } as const;
 const useQueryFormDependency: Parameters<typeof useQueryForm>[0] = {
     paramsDefaultValue,
     paramsPreprocessor: {
-        postTypes: paramsMetadataKeyByType.array.preprocessor,
-        threadProperties: paramsMetadataKeyByType.array.preprocessor,
-        ..._.mapValues(_.keyBy(paramsNameKeyByType.text), () =>
-            paramsMetadataKeyByType.textMatch.preprocessor),
-        ..._.mapValues(_.keyBy(paramsNameKeyByType.dateTime), () =>
-            paramsMetadataKeyByType.dateTimeRange.preprocessor)
+        fid: paramMetadataKeyByType.numeric.preprocessor,
+        postTypes: paramMetadataKeyByType.array.preprocessor,
+        threadProperties: paramMetadataKeyByType.array.preprocessor,
+        ..._.mapValues(_.keyBy(paramNamesKeyByType.numeric), () =>
+            paramMetadataKeyByType.numeric.preprocessor),
+        ..._.mapValues(_.keyBy(paramNamesKeyByType.text), () =>
+            paramMetadataKeyByType.text.preprocessor),
+        ..._.mapValues(_.keyBy(paramNamesKeyByType.dateTime), () =>
+            paramMetadataKeyByType.dateTime.preprocessor)
     },
     paramsWatcher: {
-        ..._.mapValues(_.keyBy(paramsNameKeyByType.text), () =>
-            paramsMetadataKeyByType.textMatch.watcher),
-        ..._.mapValues(_.keyBy(paramsNameKeyByType.dateTime), () =>
-            paramsMetadataKeyByType.dateTimeRange.watcher),
+        ..._.mapValues(_.keyBy(paramNamesKeyByType.text), () =>
+            paramMetadataKeyByType.text.watcher),
+        ..._.mapValues(_.keyBy(paramNamesKeyByType.dateTime), () =>
+            paramMetadataKeyByType.dateTime.watcher),
         orderBy(param) {
             if (param.value === 'default' && param.subParam.direction !== 'default') { // reset to default
                 param.subParam = { ...param.subParam, direction: 'default' };
@@ -168,7 +194,6 @@ const useQueryFormDependency: Parameters<typeof useQueryForm>[0] = {
 export const useQueryFormWithUniqueParams = () => {
     const ret = useQueryForm<KnownUniqueParams, KnownParams>(useQueryFormDependency);
     ret.uniqueParams.value = {
-        fid: { name: 'fid', ...paramsDefaultValue.fid },
         postTypes: {
             name: 'postTypes',
             ...paramsDefaultValue.postTypes as DeepWritable<typeof paramsDefaultValue.postTypes>

@@ -22,10 +22,10 @@ class ThreadRepository extends PostRepository
             ->select("'thread' AS postType", 't.tid AS postId', 't.fid', 't.tid', '0 AS pid');
     }
 
-    public function getPosts(int $fid, array|\ArrayAccess $postsId): array
+    public function getPosts(array|\ArrayAccess $postsId): array
     {
-        $dql = 'SELECT t FROM App\Entity\Post\Thread t WHERE t.fid = :fid AND t.tid IN (:tid)';
-        return $this->getQueryResultWithParams($dql, ['fid' => $fid, 'tid' => $postsId]);
+        $dql = 'SELECT t FROM App\Entity\Post\Thread t WHERE t.tid IN (:tid)';
+        return $this->getQueryResultWithParams($dql, ['tid' => $postsId]);
     }
 
     public function getThreadsIdByChunks(int $chunkSize): array

@@ -10,6 +10,8 @@ readonly class ForumModerator
 {
     public function __construct(
         #[ORM\Column, ORM\Id, Ignore]
+        public int $fid,
+        #[ORM\Column, ORM\Id, Ignore]
         public string $portrait,
         #[ORM\Column]
         public int $discoveredAt,

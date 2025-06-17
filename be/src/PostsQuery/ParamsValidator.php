@@ -26,7 +26,6 @@ class ParamsValidator
     {
         array_map($this->validateParamValue(...), $value);
         $this->params = new QueryParams($value);
-        $this->validate40001();
         $this->validate40005();
         return $this;
     }
@@ -41,7 +40,7 @@ class ParamsValidator
         $this->validate40004($newPostTypes);
     }
 
-    public function setRequiredPostTypesByParams(): array
+    private function setRequiredPostTypesByParams(): array
     {
         $currentPostTypes = $this->params->getUniqueParamValue('postTypes');
         $requiredPostTypes = array_intersect(Helper::POST_TYPES, ...array_values(Arr::only(
@@ -86,12 +85,6 @@ class ParamsValidator
             'matchBy' => new Assert\Choice(['implicit', 'explicit', 'regex']),
             'spaceSplit' => new Assert\Type('boolean'),
         ], allowMissingFields: true));
-    }
-
-    private function validate40001(): void
-    {
-        // only fill postTypes and/or orderBy uniqueParam doesn't query anything
-        Helper::abortAPIIf(40001, $this->params->count() === \count($this->params->pick('postTypes', 'orderBy')));
     }
 
     private function validate40005(): void

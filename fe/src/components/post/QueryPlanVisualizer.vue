@@ -13,9 +13,14 @@
             </select>
         </div>
         <DefinePlan v-slot="{ query }">
-            <LazyPlan
-                v-if="query !== undefined" :planQuery="query.query"
-                :planSource="JSON.stringify(query.plan, null, 4)" class="pev2" />
+            <Suspense :timeout="0">
+                <template #fallback>
+                    <PlaceholderPostList isLoading class="loading-placeholder w-100" />
+                </template>
+                <LazyPlan
+                    v-if="query !== undefined" :planQuery="query.query"
+                    :planSource="JSON.stringify(query.plan, null, 4)" class="pev2" />
+            </Suspense>
         </DefinePlan>
         <ReusePlan
             :key="selectedPage" v-if="selectedPage !== undefined"
@@ -49,8 +54,10 @@ select {
 }
 
 .pev2 {
-    height: 53rem;
     resize: block;
     contain: content;
+}
+.pev2, .loading-placeholder {
+    height: 53rem;
 }
 </style>
