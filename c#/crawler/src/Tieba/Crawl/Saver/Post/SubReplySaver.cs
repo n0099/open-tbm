@@ -16,7 +16,7 @@ public partial class SubReplySaver(
             posts => posts.Where(sr => Posts.Keys.Contains(sr.Spid)));
 
         db.SubReplyContents.AddRange(changeSet.NewlyAdded.Select(sr => // https://github.com/dotnet/efcore/issues/33945
-            new SubReplyContent {Fid = Fid, Spid = sr.Spid, ProtoBufBytes = sr.Content}));
+            new SubReplyContent {Spid = sr.Spid, ProtoBufBytes = sr.Content}));
 
         return changeSet;
     }

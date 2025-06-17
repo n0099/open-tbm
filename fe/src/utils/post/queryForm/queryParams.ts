@@ -58,7 +58,7 @@ export const paramNamesKeyByType = {
 
 export const numericParamSubParamRangeValues = ['<', '=', '>', 'BETWEEN', 'IN'] as const;
 export interface NamelessParamNumeric {
-    value: string,
+    value: number | string, // support subParam.range === BETWEEN or IN
     subParam: { range: ArrayElement<typeof numericParamSubParamRangeValues> }
 }
 export const textParamSubParamMatchByValues = ['explicit', 'implicit', 'regex'] as const;
@@ -72,21 +72,33 @@ export interface NamelessParamText {
 interface NamelessParamDateTime { value: string, subParam: { range: undefined } }
 interface NamelessParamGender { value: '0' | '1' | '2' }
 interface NamelessParamsOther {
+    fid: { value: Fid },
     threadProperties: { value: Array<'good' | 'sticky'> },
     authorManagerType: { value: ForumModeratorType | 'NULL' }
 }
 
-export type AddNameToParam<Name, NamelessParam> = NamelessParam & { name: Name, value: unknown, subParam: ObjEmpty };
+export type AddNameToParam<Name extends UnknownParam['name'], NamelessParam extends Partial<UnknownParam>> =
+Omit<NamelessParam, 'subParam'>
+    & {
+        name: Name,
+        value: unknown,
+        subParam: ObjEmpty
+        | { not?: boolean }
+
+            // https://stackoverflow.com/questions/68232762/check-if-type-is-the-unknown-type
+            & (unknown extends NamelessParam['subParam']
+                ? ObjEmpty
+                : NamelessParam['subParam'])
+    };
 export type KnownParams = { [P in keyof NamelessParamsOther]: AddNameToParam<P, NamelessParamsOther[P]> }
-& { [P in ArrayElement<typeof paramNamesKeyByType.numeric>]: AddNameToParam<P, NamelessParamNumeric> }
-& { [P in ArrayElement<typeof paramNamesKeyByType.text>]: AddNameToParam<P, NamelessParamText> }
-& { [P in ArrayElement<typeof paramNamesKeyByType.dateTime>]: AddNameToParam<P, NamelessParamDateTime> }
-& { [P in ArrayElement<typeof paramNamesKeyByType.gender>]: AddNameToParam<P, NamelessParamGender> };
+    & { [P in ArrayElement<typeof paramNamesKeyByType.numeric>]: AddNameToParam<P, NamelessParamNumeric> }
+    & { [P in ArrayElement<typeof paramNamesKeyByType.text>]: AddNameToParam<P, NamelessParamText> }
+    & { [P in ArrayElement<typeof paramNamesKeyByType.dateTime>]: AddNameToParam<P, NamelessParamDateTime> }
+    & { [P in ArrayElement<typeof paramNamesKeyByType.gender>]: AddNameToParam<P, NamelessParamGender> };
 export type KnownNumericParams = KnownParams[ArrayElement<typeof paramNamesKeyByType.numeric>];
 export type KnownTextParams = KnownParams[ArrayElement<typeof paramNamesKeyByType.text>];
 export type KnownDateTimeParams = KnownParams[ArrayElement<typeof paramNamesKeyByType.dateTime>];
 export interface KnownUniqueParams extends Record<string, UnknownParam> {
-    fid: { name: 'fid', value: Fid, subParam: ObjEmpty },
     postTypes: { name: 'postTypes', value: PostType[], subParam: ObjEmpty },
     orderBy: {
         name: 'orderBy',
@@ -106,7 +118,13 @@ const paramMetadataKeyByType: Record<'array' | 'numeric' | 'text' | 'dateTime' |
                 param.value = param.value.split(',');
         }
     },
-    numeric: { default: { subParam: { range: '=' } } },
+    numeric: {
+        default: { subParam: { range: '=' } },
+        preprocessor(param) {
+            if (param.subParam.range === '=')
+                param.value = Number(param.value);
+        }
+    },
     text: {
         default: { subParam: { matchBy: 'explicit', spaceSplit: false } },
         preprocessor(param) {
@@ -149,8 +167,11 @@ const paramsDefaultValue = {
 const useQueryFormDependency: Parameters<typeof useQueryForm>[0] = {
     paramsDefaultValue,
     paramsPreprocessor: {
+        fid: paramMetadataKeyByType.numeric.preprocessor,
         postTypes: paramMetadataKeyByType.array.preprocessor,
         threadProperties: paramMetadataKeyByType.array.preprocessor,
+        ..._.mapValues(_.keyBy(paramNamesKeyByType.numeric), () =>
+            paramMetadataKeyByType.numeric.preprocessor),
         ..._.mapValues(_.keyBy(paramNamesKeyByType.text), () =>
             paramMetadataKeyByType.text.preprocessor),
         ..._.mapValues(_.keyBy(paramNamesKeyByType.dateTime), () =>
@@ -173,7 +194,6 @@ const useQueryFormDependency: Parameters<typeof useQueryForm>[0] = {
 export const useQueryFormWithUniqueParams = () => {
     const ret = useQueryForm<KnownUniqueParams, KnownParams>(useQueryFormDependency);
     ret.uniqueParams.value = {
-        fid: { name: 'fid', ...paramsDefaultValue.fid },
         postTypes: {
             name: 'postTypes',
             ...paramsDefaultValue.postTypes as DeepWritable<typeof paramsDefaultValue.postTypes>

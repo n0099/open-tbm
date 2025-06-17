@@ -105,6 +105,7 @@ class QueryParams
 
     public const array PARAM_NAME_KEY_BY_TYPE = [
         'numeric' => [
+            'fid',
             'tid',
             'pid',
             'spid',

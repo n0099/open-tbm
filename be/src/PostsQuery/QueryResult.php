@@ -23,8 +23,6 @@ use Symfony\Component\Stopwatch\Stopwatch;
 /** @psalm-import-type PostsKeyByTypePluralName from CursorCodec */
 readonly class QueryResult
 {
-    public int $fid;
-
     /** @var Collection<int, ThreadKey> */
     public Collection $threads;
 
@@ -125,9 +123,6 @@ readonly class QueryResult
         $this->threads = $postsKeyByTypePluralName->get('threads', collect());
         $this->replies = $postsKeyByTypePluralName->get('replies', collect());
         $this->subReplies = $postsKeyByTypePluralName->get('subReplies', collect());
-        $this->fid = $this->threads->first()->fid
-            ?? $this->replies->first()->fid
-            ?? $this->subReplies->first()->fid;
         $this->currentCursor = $cursorParamValue ?? '';
         $this->nextCursor = $hasMorePages
             ? $this->cursorCodec->encodeNextCursor($postsKeyByTypePluralName->except(

@@ -45,7 +45,6 @@ readonly class PostsTree
      */
     public function fillWithParentPost(QueryResult $result): array
     {
-        $fid = $result->fid;
         /** @var Collection<int> $tids */
         $tids = $result->threads->map(fn(ThreadKey $postKey) => $postKey->postId);
         /** @var Collection<int> $pids */
@@ -60,7 +59,7 @@ readonly class PostsTree
             ->map(fn(ReplyKey $postKey) => $postKey->parentPostId)
             ->concat($result->subReplies->map(fn(SubReplyKey $postKey) => $postKey->tid))
             ->unique();
-        $this->threads = collect($postModels['thread']->getPosts($fid, $parentThreadsID->concat($tids)))
+        $this->threads = collect($postModels['thread']->getPosts($parentThreadsID->concat($tids)))
             ->map(fn(\App\Entity\Post\Thread $entity) => Thread::fromEntity($entity))
             ->each(static fn(Thread $thread) =>
                 $thread->setIsMatchQuery($tids->contains($thread->getTid())));
@@ -70,25 +69,25 @@ readonly class PostsTree
         /** @var Collection<int, int> $parentRepliesID parent pid of all sub replies */
         $parentRepliesID = $result->subReplies->map(fn(SubReplyKey $postKey) => $postKey->parentPostId)->unique();
         $allRepliesId = $parentRepliesID->concat($pids);
-        $this->replies = collect($postModels['reply']->getPosts($fid, $allRepliesId))
+        $this->replies = collect($postModels['reply']->getPosts($allRepliesId))
             ->map(fn(\App\Entity\Post\Reply $entity) => Reply::fromEntity($entity))
             ->each(static fn(Reply $reply) =>
                 $reply->setIsMatchQuery($pids->contains($reply->getPid())));
         $this->stopwatch->stop('fillWithRepliesFields');
 
         $this->stopwatch->start('fillWithSubRepliesFields');
-        $this->subReplies = collect($postModels['subReply']->getPosts($fid, $spids))
+        $this->subReplies = collect($postModels['subReply']->getPosts($spids))
             ->map(fn(\App\Entity\Post\SubReply $entity) => SubReply::fromEntity($entity));
         $this->stopwatch->stop('fillWithSubRepliesFields');
 
         $this->stopwatch->start('parsePostContentProtoBufBytes');
         // not using one-to-one association due to relying on PostRepository->getTableNameSuffix()
-        $replyContents = collect($this->replyContentRepository->getPostsContent($fid, $allRepliesId))
+        $replyContents = collect($this->replyContentRepository->getPostsContent($allRepliesId))
             ->mapWithKeys(fn(ReplyContent $content) => [$content->getPid() => $content->getContent()]);
         $this->replies->each(fn(Reply $reply) =>
             $reply->setContent($replyContents->get($reply->getPid())));
 
-        $subReplyContents = collect($this->subReplyContentRepository->getPostsContent($fid, $spids))
+        $subReplyContents = collect($this->subReplyContentRepository->getPostsContent($spids))
             ->mapWithKeys(fn(SubReplyContent $content) => [$content->getSpid() => $content->getContent()]);
         $this->subReplies->each(fn(SubReply $subReply) =>
             $subReply->setContent($subReplyContents->get($subReply->getSpid())));

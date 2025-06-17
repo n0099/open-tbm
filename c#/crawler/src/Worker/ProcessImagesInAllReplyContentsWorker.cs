@@ -28,7 +28,6 @@ public class ProcessImagesInAllReplyContentsWorker(
                 readingEntity => readingEntity.Pid,
                 readingEntity => new()
                 {
-                    Fid = fid,
                     Pid = readingEntity.Pid,
                     ProtoBufBytes = readingEntity.ProtoBufBytes,
                     Version = readingEntity.Version
@@ -54,10 +53,9 @@ public class ProcessImagesInAllReplyContentsWorker(
                         var p = ee.Property(e => e.ProtoBufBytes);
                         p.IsModified = !ByteArrayEqualityComparer.Instance.Equals(p.OriginalValue, p.CurrentValue);
                     });
-                    _ = replyContentImageSaver.Save(writingDb, fid,
+                    _ = replyContentImageSaver.Save(writingDb,
                         replyContentsKeyByPid.Select(pair => new ReplyPost.Parsed
                         {
-                            Fid = fid,
                             Pid = pair.Key,
                             Content = null!,
                             ContentsProtoBuf = pair.Value

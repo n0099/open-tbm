@@ -9,7 +9,7 @@
         "ext-iconv": "*",
         "ext-intl": "*",
         "ext-mbstring": "*",
-        "beberlei/doctrineextensions": "^1.5",
+        "beberlei/doctrineextensions": "dev-master",
         "doctrine/doctrine-bundle": "^2.14.0",
         "doctrine/orm": "^3.3.3",
         "google/protobuf": "^4.31.1",
@@ -54,6 +54,12 @@
         "thecodingmachine/phpstan-safe-rule": "^1.2.0",
         "vimeo/psalm": "^6.7"
     },
+    "repositories": [
+        {
+            "url": "https://github.com/n0099/DoctrineExtensions",
+            "type": "git"
+        }
+    ],
     "config": {
         "allow-plugins": {
             "php-http/discovery": true,

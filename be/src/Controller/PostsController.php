@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\DTO\User\AuthorExpGrade;
 use App\DTO\User\ForumModerator;
 use App\DTO\User\User;
+use App\Entity\LatestReplier;
 use App\Entity\Post\Post;
 use App\Entity\Post\Thread;
 use App\PostsQuery\ParamsValidator;
@@ -62,29 +63,61 @@ class PostsController extends AbstractController
         $this->stopwatch->stop('fillWithParentPost');
 
         $this->stopwatch->start('queryUsers');
-        $latestRepliers = $this->latestReplierRepository->getLatestRepliersWithoutNameWhenHasUid(
-            $this->query->postsTree->threads->map(fn(Thread $thread) => $thread->getLatestReplierId()),
-        );
-        $uids = collect([$this->query->postsTree->threads, $this->query->postsTree->replies, $this->query->postsTree->subReplies])
-            ->flatMap(static fn(Collection $posts) =>
-                $posts->map(fn(Post $post) => $post->getAuthorUid()))
-            ->concat($latestRepliers->pluck('uid')
-                ->filter(static fn(?int $uid) => $uid !== null))
+        $latestRepliersIdKeyByFid = $this->query->postsTree->threads
+            ->map(fn(Thread $thread) => ['fid' => $thread->getFid(), 'latestReplierId' => $thread->getLatestReplierId()])
+            ->filter(fn(array $fidAndLatestReplierId) => $fidAndLatestReplierId['latestReplierId'] !== null)
+            ->groupBy(fn(array $fidAndLatestReplierId) => $fidAndLatestReplierId['fid'])
+            ->map(fn(Collection $fidAndLatestRepliersUid) => $fidAndLatestRepliersUid->pluck('latestReplierId'));
+        $latestRepliers = $this->latestReplierRepository->getLatestRepliersWithoutNameWhenHasUid($latestRepliersIdKeyByFid->flatten());
+        $posts = collect([
+            $this->query->postsTree->threads,
+            $this->query->postsTree->replies,
+            $this->query->postsTree->subReplies
+        ])->flatten();
+        $latestRepliersUidKeyById = collect($latestRepliers)
+            ->mapWithKeys(fn(array|LatestReplier $latestReplier) => [
+                is_array($latestReplier) ? $latestReplier['id'] : $latestReplier->getId() =>
+                    is_array($latestReplier) ? $latestReplier['uid'] : $latestReplier->getUid()
+            ])
+            ->filter(static fn(?int $uid) => $uid !== null);
+        $uids = $posts
+            ->map(fn(Post $post) => $post->getAuthorUid())
+            ->concat($latestRepliersUidKeyById)
             ->unique();
         $users = collect($this->userRepository->getUsers($uids))
-            ->map(fn(\App\Entity\User $entity) => User::fromEntity($entity));
+            ->mapWithKeys(fn(\App\Entity\User $entity) => [$entity->getUid() => User::fromEntity($entity)]);
         $this->stopwatch->stop('queryUsers');
 
         $this->stopwatch->start('queryUserRelated');
-        $fid = $this->query->queryResult->fid;
-        $authorExpGrades = collect($this->authorExpGradeRepository->getLatestOfUsers($fid, $uids))
+        $authorsUidKeyByFid = $posts
+            ->map(fn(Post $post) => ['fid' => $post->getFid(), 'authorUid' => $post->getAuthorUid()])
+            ->groupBy(fn(array $fidAndAuthorId) => $fidAndAuthorId['fid'])
+            ->map(fn(Collection $fidAndAuthorsUid) => $fidAndAuthorsUid->pluck('authorUid'));
+        $authorExpGrades = collect($this->authorExpGradeRepository->getLatestOfUsers($authorsUidKeyByFid))
             ->keyBy(fn(AuthorExpGrade $authorExpGrade) => $authorExpGrade->uid);
-        $users->each(fn(User $user) => $user->setCurrentAuthorExpGrade($authorExpGrades[$user->getUid()] ?? null));
 
-        $forumModerators = collect($this->forumModeratorRepository
-                ->getLatestOfUsers($fid, $users->map(fn(User $user) => $user->getPortrait())))
-            ->keyBy(fn(ForumModerator $forumModerator) => $forumModerator->portrait);
-        $users->each(fn(User $user) => $user->setCurrentForumModerator($forumModerators->get($user->getPortrait())));
+        /** @var Collection<int, int> $intersectedFidInUsersId */
+        /** @var Collection<int, int> $uniqueFidInAuthorsUid */
+        [$intersectedFidInUsersId, $uniqueFidInAuthorsUid] = $authorsUidKeyByFid->keys()
+            ->partition(fn(int $fid) => $latestRepliersIdKeyByFid->keys()->contains($fid));
+        $usersIdKeyByFid = $intersectedFidInUsersId
+            ->mapWithKeys(fn(int $fid) => [$fid =>
+                $latestRepliersIdKeyByFid[$fid]
+                    ->map(fn(int $latestReplierId) => $latestRepliersUidKeyById->get($latestReplierId))
+                    ->filter(fn(?int $latestReplierUid) => $latestReplierUid !== null)
+                    ->merge($authorsUidKeyByFid[$fid])
+                    ->unique()])
+            ->merge($authorsUidKeyByFid->only($uniqueFidInAuthorsUid));
+        $forumModerators = collect($this->forumModeratorRepository->getLatestOfUsers($usersIdKeyByFid
+            ->map(fn(Collection $usersId) => $usersId
+                ->map(fn(int $uid) => $users->get($uid)?->getPortrait())
+                ->filter(fn(?string $portrait) => $portrait !== null))
+        ))->keyBy(fn(ForumModerator $forumModerator) => $forumModerator->portrait);
+
+        $users = $users->each(fn(User $user) => $user->setForumSpecific([
+            'authorExpGrade' => $authorExpGrades->get($user->getUid()),
+            'forumModerator' => $forumModerators->get($user->getPortrait())
+        ]));
         $this->stopwatch->stop('queryUserRelated');
 
         return [
@@ -93,13 +126,15 @@ class PostsController extends AbstractController
                 'nextCursor' => $this->query->queryResult->nextCursor,
                 ...$matchQueryPostCounts,
             ],
-            'forum' => $this->forumRepository->getForum($fid),
+            'forums' => collect($this->forumRepository
+                ->getForums($posts->map(fn(Post $post) => $post->getFid())->unique())
+            )->mapWithKeys(fn(array $forum) => [$forum['fid'] => $forum['name']]),
             'threads' => $this->query->postsTree->reOrderNestedPosts(
                 $this->query->postsTree->nestPostsWithParent(),
                 $this->query->getOrderByField(),
                 $this->query->isOrderByDesc(),
             ),
-            'users' => $users,
+            'users' => $users->values(),
             'latestRepliers' => $latestRepliers,
             'query' => $this->query->queryResult->query,
         ];
