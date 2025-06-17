@@ -49,6 +49,18 @@
             </div>
         </div>
     </div>
+    <DefineSuspenseLoading v-slot="{ $slots }">
+        <Suspense :timeout="0">
+            <template #fallback>
+                <div class="input-group-text">
+                    <div class="spinner-border" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            </template>
+            <component :is="$slots.default" />
+        </Suspense>
+    </DefineSuspenseLoading>
     <div class="query-params">
         <div v-for="(p, pI) in params" :key="pI" class="input-group">
             <button @click="deleteParam(pI)" class="btn btn-link" type="button">
@@ -68,32 +80,42 @@
                 </div>
             </div>
             <template v-if="p.name === 'fid'">
-                <WidgetSelectForum v-model.number="p.value" class="flex-grow-0 w-50">
-                    <template #indicators="{ renderer }">
-                        <span class="input-group-text"><RenderFunction :renderer="renderer" /></span>
-                    </template>
-                </WidgetSelectForum>
+                <ReuseSuspenseLoading>
+                    <LazyWidgetSelectForum v-model.number="p.value" class="flex-grow-0 w-50">
+                        <template #indicators="{ renderer }">
+                            <div class="input-group-text"><RenderFunction :renderer="renderer" /></div>
+                        </template>
+                    </LazyWidgetSelectForum>
+                </ReuseSuspenseLoading>
             </template>
             <template v-if="isPostIDParam(p)">
-                <LazyPostQueryFormWidgetSelectRange v-model="p.subParam.range" />
-                <LazyPostQueryFormWidgetInputNumericParam
-                    @update:modelValue="onParamUpdate(pI, $event)"
-                    :modelValue="params[pI] as KnownNumericParams"
-                    :placeholders="getPostIDParamPlaceholders(p)" />
+                <ReuseSuspenseLoading>
+                    <LazyPostQueryFormWidgetSelectRange v-model="p.subParam.range" />
+                </ReuseSuspenseLoading>
+                <ReuseSuspenseLoading>
+                    <LazyPostQueryFormWidgetInputNumericParam
+                        @update:modelValue="onParamUpdate(pI, $event)"
+                        :modelValue="params[pI] as KnownNumericParams"
+                        :placeholders="getPostIDParamPlaceholders(p)" />
+                </ReuseSuspenseLoading>
             </template>
             <template v-if="isDateTimeParam(p)">
-                <LazyARangePicker
-                    v-model:value="p.subParam.range" showTime
-                    format="YYYY-MM-DD HH:mm" valueFormat="YYYY-MM-DDTHH:mm" size="large" />
+                <ReuseSuspenseLoading>
+                    <LazyARangePicker
+                        v-model:value="p.subParam.range" showTime
+                        format="YYYY-MM-DD HH:mm" valueFormat="YYYY-MM-DDTHH:mm" size="large" />
+                </ReuseSuspenseLoading>
             </template>
             <template v-if="isTextParam(p)">
                 <input
                     v-model="p.value" :placeholder="inputTextParamPlaceholder(p)"
                     type="text" class="form-control" required />
-                <PostQueryFormWidgetInputTextParam
-                    @update:modelValue="onParamUpdate(pI, $event)"
-                    :modelValue="params[pI] as KnownTextParams"
-                    :paramIndex="pI" />
+                <ReuseSuspenseLoading>
+                    <LazyPostQueryFormWidgetInputTextParam
+                        @update:modelValue="onParamUpdate(pI, $event)"
+                        :modelValue="params[pI] as KnownTextParams"
+                        :paramIndex="pI" />
+                </ReuseSuspenseLoading>
             </template>
             <template
                 v-if=" // https://github.com/microsoft/TypeScript/issues/51678
@@ -101,12 +123,16 @@
                         || p.name === 'threadShareCount'
                         || p.name === 'threadReplyCount'
                         || p.name === 'replySubReplyCount'">
-                <LazyPostQueryFormWidgetSelectRange v-model="p.subParam.range" />
-                <LazyPostQueryFormWidgetInputNumericParam
-                    @update:modelValue="onParamUpdate(pI, $event)"
-                    :modelValue="params[pI] as KnownNumericParams"
-                    :paramIndex="pI"
-                    :placeholders="{ IN: '100,101,102,...', BETWEEN: '100,200', equals: '100' }" />
+                <ReuseSuspenseLoading>
+                    <LazyPostQueryFormWidgetSelectRange v-model="p.subParam.range" />
+                </ReuseSuspenseLoading>
+                <ReuseSuspenseLoading>
+                    <LazyPostQueryFormWidgetInputNumericParam
+                        @update:modelValue="onParamUpdate(pI, $event)"
+                        :modelValue="params[pI] as KnownNumericParams"
+                        :paramIndex="pI"
+                        :placeholders="{ IN: '100,101,102,...', BETWEEN: '100,200', equals: '100' }" />
+                </ReuseSuspenseLoading>
             </template>
             <template v-if="p.name === 'threadProperties'">
                 <div v-for="property in ['good', 'sticky']" :key="property" class="input-group-text">
@@ -124,11 +150,15 @@
                 </div>
             </template>
             <template v-if="p.name === 'authorUid' || p.name === 'latestReplierUid'">
-                <LazyPostQueryFormWidgetSelectRange v-model="p.subParam.range" />
-                <LazyPostQueryFormWidgetInputNumericParam
-                    @update:modelValue="onParamUpdate(pI, $event)"
-                    :modelValue="params[pI] as KnownNumericParams"
-                    :placeholders="uidParamsPlaceholder" />
+                <ReuseSuspenseLoading>
+                    <LazyPostQueryFormWidgetSelectRange v-model="p.subParam.range" />
+                </ReuseSuspenseLoading>
+                <ReuseSuspenseLoading>
+                    <LazyPostQueryFormWidgetInputNumericParam
+                        @update:modelValue="onParamUpdate(pI, $event)"
+                        :modelValue="params[pI] as KnownNumericParams"
+                        :placeholders="uidParamsPlaceholder" />
+                </ReuseSuspenseLoading>
             </template>
             <template v-if="p.name === 'authorManagerType'">
                 <select v-model="p.value" class="form-control flex-grow-0 w-25">
@@ -149,11 +179,15 @@
                 </select>
             </template>
             <template v-if="p.name === 'authorExpGrade'">
-                <LazyPostQueryFormWidgetSelectRange v-model="p.subParam.range" />
-                <LazyPostQueryFormWidgetInputNumericParam
-                    @update:modelValue="onParamUpdate(pI, $event)"
-                    :modelValue="params[pI] as KnownNumericParams"
-                    :placeholders="{ IN: '9,10,11,...', BETWEEN: '9,18', equals: '18' }" />
+                <ReuseSuspenseLoading>
+                    <LazyPostQueryFormWidgetSelectRange v-model="p.subParam.range" />
+                </ReuseSuspenseLoading>
+                <ReuseSuspenseLoading>
+                    <LazyPostQueryFormWidgetInputNumericParam
+                        @update:modelValue="onParamUpdate(pI, $event)"
+                        :modelValue="params[pI] as KnownNumericParams"
+                        :placeholders="{ IN: '9,10,11,...', BETWEEN: '9,18', equals: '18' }" />
+                </ReuseSuspenseLoading>
             </template>
         </div>
     </div>
@@ -198,6 +232,7 @@ const { // https://github.com/orgs/vuejs/discussions/6147
     changeParam,
     deleteParam
 } = queryFormDeps;
+const [DefineSuspenseLoading, ReuseSuspenseLoading] = createReusableTemplate();
 
 const getPostIDParamPlaceholders = (p: Param) => ({
     IN: p.name === 'tid' ? '5000000000,5000000001,5000000002,...' : '15000000000,15000000001,15000000002,...',
@@ -274,5 +309,9 @@ watch(() => uniqueParams.value.postTypes.value, (to, from) => {
 .add-param-button { /* fa-plus is wider than fa-times 3px */
     padding-inline-start: 22px;
     padding-inline-end: 10px;
+}
+.spinner-border {
+    height: 1.5rem;
+    width: 1.5rem;
 }
 </style>

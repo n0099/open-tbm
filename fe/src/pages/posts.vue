@@ -1,7 +1,7 @@
 <template>
 <div>
     <aside class="container">
-        <LazyPostQueryForm :isLoading="isFetching" :queryFormDeps="queryFormDeps" />
+        <PostQueryForm :isLoading="isFetching" :queryFormDeps="queryFormDeps" />
     </aside>
     <PostQueryPlanVisualizer v-if="data !== undefined" :data="data" class="border-bottom" />
     <aside class="container">
@@ -12,7 +12,7 @@
     </aside>
     <div v-if="!(data === undefined || _.isEmpty(data.pages))" class="container-fluid">
         <div class="row flex-nowrap">
-            <LazyPostNav v-if="renderType === 'list'" :queryParam="queryParam" />
+            <PostNav v-if="renderType === 'list'" :queryParam="queryParam" />
             <div class="post-page col mx-auto ps-0" :class="{ 'renderer-list': renderType === 'list' }">
                 <PostPage
                     v-for="(page, pageIndex) in data.pages"
