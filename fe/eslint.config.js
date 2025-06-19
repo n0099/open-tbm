@@ -607,7 +607,7 @@ export default withNuxt(defineConfigWithVueTs(
         },
     },
     {
-        files: ['eslint.config.js'],
+        files: ['eslint.config.js', 'stylelint.config.ts'],
         plugins: { '@stylistic': pluginStylistic },
         rules: {
             '@stylistic/comma-dangle': ['warn', 'always-multiline'],

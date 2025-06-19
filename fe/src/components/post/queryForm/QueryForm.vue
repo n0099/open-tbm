@@ -292,7 +292,7 @@ watch(() => uniqueParams.value.postTypes.value, (to, from) => {
 .query-params > :first-child:not(:only-child) > :last-child {
     border-end-end-radius: 0;
 }
-.query-params > :not(:first-child):not(:last-child) > :last-child {
+.query-params > :not(:first-child, :last-child) > :last-child {
     border-end-end-radius: 0;
     border-start-end-radius: 0;
 }
@@ -305,8 +305,7 @@ watch(() => uniqueParams.value.postTypes.value, (to, from) => {
 }
 
 .add-param-button { /* fa-plus is wider than fa-times 3px */
-    padding-inline-start: 22px;
-    padding-inline-end: 10px;
+    padding-inline: 22px 10px;
 }
 .spinner-border {
     height: 1.5rem;

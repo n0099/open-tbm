@@ -347,7 +347,7 @@ const chartsInitialOption: {
                 label: {
                     show: true,
                     position: 'right',
-                    color: '#999999',
+                    color: '#999',
                     formatter: (p: VoteCountSeriesLabelFormatterParams) => (isCandidatesDetailData(p.data)
                         ? voteCountSeriesLabelFormatter(
                             top10CandidatesTimelineVotes.invalid,

@@ -5,7 +5,7 @@
 </template>
 
 <style scoped>
-@media (max-width: 720px) {
+@media (width <= 720px) {
     div {
         display: block !important;
     }

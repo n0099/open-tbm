@@ -63,7 +63,7 @@ if (import.meta.client) {
     background-color: #2196f3;
 }
 #footer-lower {
-    background-color: rgba(0, 0, 0, .2);
+    background-color: rgb(0 0 0 / 20%);
 }
 
 #global-loading-spinner {

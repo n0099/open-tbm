@@ -195,15 +195,15 @@ watch(viewportTopmostPost, async (to, from) => {
     border-radius: var(--bs-border-radius) !important;
 }
 
-@media (min-width: 900px) {
+@media (width >= 900px) {
     .post-nav:hover + .post-nav-expand {
         display: none !important;
     }
 }
-@media (min-width: 900px) and (max-width: 1250px) {
+@media (width >= 900px) and (width <= 1250px) {
     /* keeping .post-nav:hover to replace .post-nav-expand with scrollbar
        without shifting when the inline-size of .post-nav excess 30% */
-    .post-nav[aria-expanded=true] {
+    .post-nav[aria-expanded="true"] {
         flex: 0 1 30%;
         max-inline-size: calc(30% + v-bind(scrollBarWidth));
     }
@@ -211,19 +211,19 @@ watch(viewportTopmostPost, async (to, from) => {
         flex-grow: 1 !important;
     }
 }
-@media (max-width: 900px) {
+@media (width <= 900px) {
     .post-nav {
         display: v-bind(postNavDisplay);
     }
-    .post-nav[aria-expanded=true], .post-nav[aria-expanded=true] + .post-nav-expand {
+    .post-nav[aria-expanded="true"], .post-nav[aria-expanded="true"] + .post-nav-expand {
         position: fixed;
         z-index: 1040;
     }
-    .post-nav[aria-expanded=true] {
+    .post-nav[aria-expanded="true"] {
         /* linear regression of {dvw,inline-size}: {{456,456},{768,384(50%)}} https://www.wolframalpha.com/input?i=linear+regression+%7B%7B456%2C456%7D%2C%7B768%2C384%7D%7D */
         inline-size: calc(-0.2308 * 100dvw + 561.2px - v-bind(scrollBarWidth));
     }
-    .post-nav[aria-expanded=true] + .post-nav-expand {
+    .post-nav[aria-expanded="true"] + .post-nav-expand {
         /* merge .post-nav-expand into the scrollbar of .post-nav */
         inset-inline-start: min(-0.2308 * 100dvw + 561.2px - v-bind(scrollBarWidth) * 2, 100dvw - v-bind(scrollBarWidth) * 2);
         /* after merge narrow the block-size from 100dvh to fit-content for interactive with the scrollbar */

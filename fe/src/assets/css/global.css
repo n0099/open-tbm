@@ -31,7 +31,7 @@ address {
     text-spacing-trim: normal;
 }
 
-@media (max-width: 991.98px) {
+@media (width <= 991.98px) {
     .container { /* let all .container be like .container-fluid when 100dvw is less than the md breakpoint */
         max-width: 100% !important;
     }
