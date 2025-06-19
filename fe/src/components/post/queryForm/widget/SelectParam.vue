@@ -4,9 +4,7 @@
     :value="currentParam" class="form-select form-control flex-grow-0">
     <option :disabled="currentParam !== 'add'" :hidden="currentParam !== 'add'" value="add">New...</option>
     <optgroup v-for="(group, groupName) in paramsGroup" :key="groupName" :label="groupName">
-        <option
-            v-for="(paramDescription, paramName) in group" :key="paramName"
-            :value="paramName" :selected="paramName === currentParam">
+        <option v-for="(paramDescription, paramName) in group" :key="paramName" :value="paramName">
             {{ paramDescription }}
         </option>
     </optgroup>

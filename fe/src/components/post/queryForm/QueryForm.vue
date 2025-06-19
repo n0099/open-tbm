@@ -28,9 +28,7 @@
                     </option>
                     <option value="postedAt">发帖时间</option>
                     <optgroup label="帖子ID">
-                        <option
-                            v-for="(postID, index) in postID" :key="postID"
-                            :value="postID" :selected="postID === orderBy.value">
+                        <option v-for="(postID, index) in postID" :key="postID" :value="postID">
                             {{ postTypeText[index] }}{{ postID }}
                         </option>
                     </optgroup>
