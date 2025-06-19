@@ -2,7 +2,11 @@
 <article :id="`tid/${thread.tid}`" class="mt-3 card">
     <header
         ref="stickyTitleEl"
+        :key="highlightPostStore.highlightingPost?.postId"
         :class="{
+            'viewport-topmost-post': !supportScrollState
+                && viewportTopmostPostStore.viewportTopmostPost?.cursor === currentCursor
+                && viewportTopmostPostStore.viewportTopmostPost.tid === thread.tid,
             'highlight-post': highlightPostStore.isHighlightingPost(thread, 'tid'),
             'not-match-query-thread': !thread.isMatchQuery
         }"
@@ -74,6 +78,7 @@
 </template>
 
 <script setup lang="ts">
+import { supportScrollState } from '@/stores/viewportTopmostPost';
 import type { TemplateRefsList } from '@vueuse/core';
 import { faCommentAlt, faEye, faLocationArrow, faShareAlt, faThumbsDown, faThumbsUp } from '@fortawesome/free-solid-svg-icons';
 import { DateTime } from 'luxon';
@@ -87,8 +92,8 @@ const { thread } = defineProps<{
 }>();
 const highlightPostStore = useHighlightPostStore();
 const { currentCursor } = usePostPageProvision().inject();
-const { stickyTitleEl } = await useViewportTopmostPostStore()
-    .observe({ cursor: currentCursor.value, tid: thread.tid });
+const viewportTopmostPostStore = useViewportTopmostPostStore();
+const { stickyTitleEl } = await viewportTopmostPostStore.observe({ cursor: currentCursor.value, tid: thread.tid });
 
 // todo: fetch users info in zan.userIdList
 const zanTippyContent = (zan: NonNullable<Thread['zan']>) => () => {
@@ -150,7 +155,7 @@ const zanTippyContent = (zan: NonNullable<Thread['zan']>) => () => {
 .not-match-query-thread > * {
     opacity: .5;
 }
-.not-match-query-thread:hover > * {
+:is(.not-match-query-thread:hover, .not-match-query-thread.viewport-topmost-post) > * {
     opacity: unset;
 }
 @media (prefers-reduced-transparency) {

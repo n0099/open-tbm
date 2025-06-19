@@ -2,7 +2,13 @@
 <article :id="`pid/${reply.pid}`" :class="{ 'not-match-query-reply': !reply.isMatchQuery }">
     <header
         ref="stickyTitleEl"
-        :class="{ 'highlight-post': highlightPostStore.isHighlightingPost(reply, 'pid') }"
+        :class="{
+            'viewport-topmost-post': !supportScrollState
+                && viewportTopmostPostStore.viewportTopmostPost?.cursor === currentCursor
+                && viewportTopmostPostStore.viewportTopmostPost.tid === reply.tid
+                && viewportTopmostPostStore.viewportTopmostPost.pid === reply.pid,
+            'highlight-post': highlightPostStore.isHighlightingPost(reply, 'pid')
+        }"
         class="reply-title sticky-top card-header">
         <div class="sticky-stuck-indicator" :data-cursor="currentCursor" :data-tid="reply.tid" :data-pid="reply.pid" />
         <div class="d-inline-flex gap-1 fs-5">
@@ -54,6 +60,7 @@
 </template>
 
 <script setup lang="ts">
+import { supportScrollState } from '@/stores/viewportTopmostPost';
 import 'assets/css/bootstrapCallout.css';
 import type { TemplateRefsList } from '@vueuse/core';
 import { faCommentDots } from '@fortawesome/free-solid-svg-icons';
@@ -68,7 +75,8 @@ const { reply } = defineProps<{
 }>();
 const highlightPostStore = useHighlightPostStore();
 const { getUser, currentCursor } = usePostPageProvision().inject();
-const { stickyTitleEl } = await useViewportTopmostPostStore().observe(
+const viewportTopmostPostStore = useViewportTopmostPostStore();
+const { stickyTitleEl } = await viewportTopmostPostStore.observe(
     { cursor: currentCursor.value, tid: reply.tid, pid: reply.pid },
     replyTitleStyle.insetBlockStart.px
 );
@@ -120,7 +128,7 @@ const { stickyTitleEl } = await useViewportTopmostPostStore().observe(
 .not-match-query-reply :is(.reply-title > *, .reply-author, .reply-content) {
     opacity: .5;
 }
-.not-match-query-reply:hover :is(.reply-title > *, .reply-author, .reply-content) {
+:is(.not-match-query-reply:hover, .not-match-query-reply.viewport-topmost-post) :is(.reply-title > *, .reply-author, .reply-content) {
     opacity: unset;
 }
 @media (prefers-reduced-transparency) {
