@@ -9,9 +9,12 @@
         class="thread-title shadow-sm card-header sticky-top">
         <div class="sticky-stuck-indicator" :data-cursor="currentCursor" :data-tid="thread.tid" />
         <div class="thread-title-inline-start row flex-nowrap">
-            <div class="thread-title-inline-start-title-wrapper col-auto flex-shrink-1 w-100 h-100 d-flex">
+            <div class="thread-title-inline-start-title-wrapper col-auto flex-shrink-1 w-100 h-100 d-flex align-items-baseline">
+                <NuxtLink :to="{ name: 'posts/fid', params: { fid: thread.fid } }" class="badge btn btn-primary">
+                    {{ forums[thread.fid] }}吧
+                </NuxtLink>
                 <PostBadgeThread :thread="thread" />
-                <h6 class="thread-title-inline-start-title overflow-hidden text-nowrap">{{ thread.title }}</h6>
+                <h6 class="thread-title-inline-start-title overflow-hidden text-nowrap ms-1">{{ thread.title }}</h6>
             </div>
             <div class="col-auto badge bg-light fs-6 p-1 pt-0 pe-2" role="group">
                 <PostBadgeCommon :post="thread" postIDKey="tid" postTypeText="主题帖" />
@@ -79,6 +82,7 @@ const { thread } = defineProps<{
     previousThread?: ThreadWithGroupedSubReplies,
     thread: ThreadWithGroupedSubReplies,
     nextThread?: ThreadWithGroupedSubReplies,
+    forums: ApiPosts['response']['forums'],
     replyElementRefs: TemplateRefsList<HTMLElement | null>
 }>();
 const highlightPostStore = useHighlightPostStore();

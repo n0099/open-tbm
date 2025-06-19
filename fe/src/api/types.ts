@@ -32,6 +32,7 @@ export type ApiPosts = Api<CursorPagination & {
     },
     forums: Record<Fid, string>,
     threads: Array<Thread & {
+        fid: Fid,
         replies: Array<Reply & {
             subReplies: SubReply[]
         }>
