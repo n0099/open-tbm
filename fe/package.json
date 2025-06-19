@@ -73,7 +73,7 @@
         "stats.js": "^0.17.0",
         "stylelint": "^16.20.0",
         "stylelint-actions-formatters": "^16.3.1",
-        "stylelint-config-recommended-vue": "^1.6.0",
+        "stylelint-config-standard-vue": "^1.0.0",
         "type-coverage": "^2.29.7",
         "typescript": "^5.8.3",
         "typescript-eslint-parser-for-extra-files": "^0.9.0",
