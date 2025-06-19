@@ -89,7 +89,8 @@ const { stickyTitleEl } = await viewportTopmostPostStore.observe(
     margin-block-start: v-bind('replyTitleStyle.marginBlockStart.remString');
     border-block-start: 1px solid #ededed;
     border-block-end: 0;
-    background: linear-gradient(rgba(237, 237, 237, 1), rgba(237, 237, 237, .1));
+    background-color: #0000;
+    background-image: linear-gradient(rgba(237, 237, 237, 1), rgba(237, 237, 237, .1));
     /* https://stackoverflow.com/questions/25308823/targeting-positionsticky-elements-that-are-currently-in-a-stuck-state/79471060#79471060 */
     container: reply-title / scroll-state;
 }

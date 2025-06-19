@@ -18,7 +18,7 @@
                         <template v-for="reply in thread.replies" :key="reply.pid">
                             <NuxtLink
                                 @click.prevent="navigate(cursor, reply)" :to="routeHash(reply)"
-                                :class="menuReplyClasses(reply)" class="post-nav-reply btn ms-0 px-2">
+                                :class="menuReplyClasses(cursor, reply)" class="post-nav-reply btn ms-0 px-2">
                                 {{ reply.floor }}L
                             </NuxtLink>
                         </template>
@@ -116,12 +116,14 @@ const menuThreadClasses = (thread: Thread) => {
     };
     /* eslint-enable @typescript-eslint/naming-convention */
 };
-const menuReplyClasses = (reply: Reply) => {
+const menuReplyClasses = (cursor: Cursor, reply: Reply) => {
     if (hydrationStore.isHydrating)
         return 'btn-light text-body-secondary';
     const isRouteHash = route.hash === routeHash(reply);
     const isHighlighting = highlightPostStore.isHighlightingPost(reply, 'pid');
-    const isTopmost = reply.pid === viewportTopmostPost.value?.pid;
+    const isTopmost = viewportTopmostPost.value?.cursor === cursor
+        && viewportTopmostPost.value.tid === reply.tid
+        && viewportTopmostPost.value.pid === reply.pid;
 
     return { /* eslint-disable @typescript-eslint/naming-convention */
         ...keysWithSameValue(['rounded-3', 'btn-info', 'text-white'], isTopmost),

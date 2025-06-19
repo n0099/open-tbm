@@ -601,7 +601,7 @@ const chartLoadder = {
         const originalTimelineOptions = structuredClone(options.at(-1));
         if (originalTimelineOptions === undefined || !_.isArray(originalTimelineOptions.series))
             return;
-        _.remove(originalTimelineOptions.series, serie => serie.id === 'totalVotesValidation');
+        _.remove(originalTimelineOptions.series, series => series.id === 'totalVotesValidation');
         options.push(_.merge(originalTimelineOptions, { // deep merge
             dataset: {
                 source: _.chain(json.top50CandidatesOfficialValidVoteCount)

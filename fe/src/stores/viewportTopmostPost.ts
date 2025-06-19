@@ -81,16 +81,18 @@ export const useViewportTopmostPostStore = defineStore('viewportTopmostPost', ()
                     } else {
                         stopExistingWindowHeightWatcher();
                         let stopExistingObserver = noop;
-                        stopExistingWindowHeightWatcher = watchDebounced(windowHeight, () => {
+                        const reObserve = () => {
                             stopExistingObserver();
 
                             // bottom: additional +topOffset and not using -100% to fix https://bugzilla.mozilla.org/show_bug.cgi?id=1918017
                             // top: -topOffset will move down the trigger line below the top border to match with its offset
-                            const rootMargin = `${-topOffset}px 0px ${-windowHeight.value + topOffset}px 0px`;
+                            const rootMargin = `${-topOffset}px 0px ${-windowHeight.value + topOffset + 1}px 0px`;
                             observerForNonZeroTopOffset = new IntersectionObserver(onIntersect, { rootMargin });
                             observerForNonZeroTopOffset.observe(currentTarget);
                             stopExistingObserver = () => { observerForNonZeroTopOffset.disconnect() };
-                        }, { debounce: 5000, immediate: true });
+                        };
+                        reObserve(); // `{ immediate: true }` option will trigger the callback immediate after the value of `debounce` ms passed
+                        stopExistingWindowHeightWatcher = watchDebounced(windowHeight, reObserve, { debounce: 5000 });
                     }
                 };
             }, { flush: 'post' });
