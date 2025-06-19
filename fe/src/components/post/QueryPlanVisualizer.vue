@@ -23,7 +23,7 @@
             </Suspense>
         </DefinePlan>
         <ReusePlan
-            :key="selectedPage" v-if="selectedPage !== undefined"
+            :key="`${route.path}/cursor/${selectedPage}`" v-if="selectedPage !== undefined"
             :query="data.pages
                 .find(page => page.pages.currentCursor === selectedPage)
                 ?.query" />
@@ -35,6 +35,7 @@
 import type { InfiniteData } from '@tanstack/vue-query';
 
 const { data } = defineProps<{ data: InfiniteData<ApiPosts['response']> }>();
+const route = useRoute();
 const selectedPage = ref<Cursor>();
 const [DefinePlan, ReusePlan] = createReusableTemplate<{ query?: ApiPosts['response']['query'] }>();
 const LazyPlan = defineAsyncComponent(async () => {

@@ -1,8 +1,8 @@
 import _ from 'lodash';
 
+type Thread = ArrayElement<ApiPosts['response']['threads']>;
 export type ThreadWithGroupedSubReplies<AdditionalSubReply extends SubReply = never> =
-    Thread & { replies: Array<Reply & { subReplies: Array<AdditionalSubReply | SubReply[]> }> };
-
+    Modify<Thread, { replies: Array<Modify<ArrayElement<Thread['replies']>, { subReplies: Array<AdditionalSubReply | SubReply[]> }>> }>;
 const remWithPixels = (rem: number) => ({
     rem,
     get remString() { return `${this.rem}rem` },

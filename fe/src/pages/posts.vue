@@ -150,12 +150,12 @@ await parseRouteThenFetch(route, false);
     /* minus the inline-size of .post-nav-expand in <PostNav> to prevent overflow */
     inline-size: calc(100% - v-bind(scrollBarWidth));
 }
-@media (max-width: 575.98px) {
+@media (width <= 575.98px) {
     .post-page {
         padding-inline-end: 0;
     }
 }
-@media (min-width: 1250px) {
+@media (width >= 1250px) {
     .renderer-list {
         flex: 1 0 auto;
         max-inline-size: 1000px;

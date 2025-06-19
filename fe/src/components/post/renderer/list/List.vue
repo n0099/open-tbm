@@ -3,7 +3,8 @@
     <PostRendererListThread
         v-for="(thread, index) in nestedPosts.threads" :key="thread.tid"
         :previousThread="nestedPosts.threads[index - 1]" :thread="thread"
-        :nextThread="nestedPosts.threads[index + 1]" :replyElementRefs="replyElementRefs" />
+        :nextThread="nestedPosts.threads[index + 1]" :forums="nestedPosts.forums"
+        :replyElementRefs="replyElementRefs" />
 </div>
 </template>
 

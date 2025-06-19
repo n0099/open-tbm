@@ -22,7 +22,6 @@ defineProps<{ currentCursor: Cursor }>();
     position: relative;
     inset-block-start: -1.5rem;
     margin-block-end: -1rem;
-    padding-block-end: .25rem;
-    padding-block-start: .25rem;
+    padding-block: .25rem;
 }
 </style>

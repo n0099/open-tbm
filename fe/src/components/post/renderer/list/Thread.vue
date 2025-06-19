@@ -2,16 +2,23 @@
 <article :id="`tid/${thread.tid}`" class="mt-3 card">
     <header
         ref="stickyTitleEl"
+        :key="highlightPostStore.highlightingPost?.postId"
         :class="{
+            'viewport-topmost-post': !supportScrollState
+                && viewportTopmostPostStore.viewportTopmostPost?.cursor === currentCursor
+                && viewportTopmostPostStore.viewportTopmostPost.tid === thread.tid,
             'highlight-post': highlightPostStore.isHighlightingPost(thread, 'tid'),
             'not-match-query-thread': !thread.isMatchQuery
         }"
         class="thread-title shadow-sm card-header sticky-top">
         <div class="sticky-stuck-indicator" :data-cursor="currentCursor" :data-tid="thread.tid" />
         <div class="thread-title-inline-start row flex-nowrap">
-            <div class="thread-title-inline-start-title-wrapper col-auto flex-shrink-1 w-100 h-100 d-flex">
+            <div class="thread-title-inline-start-title-wrapper col-auto flex-shrink-1 w-100 h-100 d-flex align-items-baseline">
+                <NuxtLink :to="{ name: 'posts/fid', params: { fid: thread.fid } }" class="badge btn btn-primary">
+                    {{ forums[thread.fid] }}吧
+                </NuxtLink>
                 <PostBadgeThread :thread="thread" />
-                <h6 class="thread-title-inline-start-title overflow-hidden text-nowrap">{{ thread.title }}</h6>
+                <h6 class="thread-title-inline-start-title overflow-hidden text-nowrap ms-1">{{ thread.title }}</h6>
             </div>
             <div class="col-auto badge bg-light fs-6 p-1 pt-0 pe-2" role="group">
                 <PostBadgeCommon :post="thread" postIDKey="tid" postTypeText="主题帖" />
@@ -71,6 +78,7 @@
 </template>
 
 <script setup lang="ts">
+import { supportScrollState } from '@/stores/viewportTopmostPost';
 import type { TemplateRefsList } from '@vueuse/core';
 import { faCommentAlt, faEye, faLocationArrow, faShareAlt, faThumbsDown, faThumbsUp } from '@fortawesome/free-solid-svg-icons';
 import { DateTime } from 'luxon';
@@ -79,12 +87,13 @@ const { thread } = defineProps<{
     previousThread?: ThreadWithGroupedSubReplies,
     thread: ThreadWithGroupedSubReplies,
     nextThread?: ThreadWithGroupedSubReplies,
+    forums: ApiPosts['response']['forums'],
     replyElementRefs: TemplateRefsList<HTMLElement | null>
 }>();
 const highlightPostStore = useHighlightPostStore();
 const { currentCursor } = usePostPageProvision().inject();
-const { stickyTitleEl } = await useViewportTopmostPostStore()
-    .observe({ cursor: currentCursor.value, tid: thread.tid });
+const viewportTopmostPostStore = useViewportTopmostPostStore();
+const { stickyTitleEl } = await viewportTopmostPostStore.observe({ cursor: currentCursor.value, tid: thread.tid });
 
 // todo: fetch users info in zan.userIdList
 const zanTippyContent = (zan: NonNullable<Thread['zan']>) => () => {
@@ -121,7 +130,7 @@ const zanTippyContent = (zan: NonNullable<Thread['zan']>) => () => {
 
 .thread-title {
     block-size: v-bind('replyTitleStyle.insetBlockStart.remString');
-    padding: .75rem 1rem .5rem 1rem;
+    padding: .75rem 1rem .5rem;
     background-color: #f2f2f2;
     /* https://stackoverflow.com/questions/25308823/targeting-positionsticky-elements-that-are-currently-in-a-stuck-state/79471060#79471060 */
     container: thread-title / scroll-state;
@@ -146,7 +155,7 @@ const zanTippyContent = (zan: NonNullable<Thread['zan']>) => () => {
 .not-match-query-thread > * {
     opacity: .5;
 }
-.not-match-query-thread:hover > * {
+:is(.not-match-query-thread:hover, .not-match-query-thread.viewport-topmost-post) > * {
     opacity: unset;
 }
 @media (prefers-reduced-transparency) {

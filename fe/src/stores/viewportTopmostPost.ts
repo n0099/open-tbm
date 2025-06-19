@@ -1,6 +1,7 @@
 import type { StyleObserver } from 'style-observer';
 import _ from 'lodash';
 
+export const supportScrollState = import.meta.client && CSS.supports('container-type', 'scroll-state');
 export const useViewportTopmostPostStore = defineStore('viewportTopmostPost', () => {
     interface TopmostPost { cursor: Cursor, tid: Tid, pid?: Pid }
     const viewportTopmostPost = ref<TopmostPost>();
@@ -80,16 +81,18 @@ export const useViewportTopmostPostStore = defineStore('viewportTopmostPost', ()
                     } else {
                         stopExistingWindowHeightWatcher();
                         let stopExistingObserver = noop;
-                        stopExistingWindowHeightWatcher = watchDebounced(windowHeight, () => {
+                        const reObserve = () => {
                             stopExistingObserver();
 
                             // bottom: additional +topOffset and not using -100% to fix https://bugzilla.mozilla.org/show_bug.cgi?id=1918017
                             // top: -topOffset will move down the trigger line below the top border to match with its offset
-                            const rootMargin = `${-topOffset}px 0px ${-windowHeight.value + topOffset}px 0px`;
+                            const rootMargin = `${-topOffset}px 0px ${-windowHeight.value + topOffset + 1}px 0px`;
                             observerForNonZeroTopOffset = new IntersectionObserver(onIntersect, { rootMargin });
                             observerForNonZeroTopOffset.observe(currentTarget);
                             stopExistingObserver = () => { observerForNonZeroTopOffset.disconnect() };
-                        }, { debounce: 5000, immediate: true });
+                        };
+                        reObserve(); // `{ immediate: true }` option will trigger the callback immediate after the value of `debounce` ms passed
+                        stopExistingWindowHeightWatcher = watchDebounced(windowHeight, reObserve, { debounce: 5000 });
                     }
                 };
             }, { flush: 'post' });
@@ -98,7 +101,7 @@ export const useViewportTopmostPostStore = defineStore('viewportTopmostPost', ()
     const implement = (async (): UsingImplement => {
         /** {@link StyleObserver} is still slower than {@link IntersectionObserver} */
         // try out https://github.com/w3c/csswg-drafts/issues/6205#issuecomment-2677234279
-        // if (import.meta.client && CSS.supports('container-type', 'scroll-state'))
+        // if (supportScrollState)
         //     return usingScrollState();
         if ('IntersectionObserver' in globalThis)
             return usingIntersectionObserver();
