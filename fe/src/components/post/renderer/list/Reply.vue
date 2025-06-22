@@ -60,7 +60,6 @@
 </template>
 
 <script setup lang="ts">
-import { supportScrollState } from '@/stores/viewportTopmostPost';
 import 'assets/css/bootstrapCallout.css';
 import type { TemplateRefsList } from '@vueuse/core';
 import { faCommentDots } from '@fortawesome/free-solid-svg-icons';

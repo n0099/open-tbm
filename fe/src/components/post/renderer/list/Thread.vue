@@ -78,7 +78,6 @@
 </template>
 
 <script setup lang="ts">
-import { supportScrollState } from '@/stores/viewportTopmostPost';
 import type { TemplateRefsList } from '@vueuse/core';
 import { faCommentAlt, faEye, faLocationArrow, faShareAlt, faThumbsDown, faThumbsUp } from '@fortawesome/free-solid-svg-icons';
 import { DateTime } from 'luxon';

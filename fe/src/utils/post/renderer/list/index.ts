@@ -27,7 +27,6 @@ export const guessReplyContainIntrinsicBlockSize = (replyElements: HTMLElement[]
         // https://github.com/surma/ishoudinireadyyet.com
         // https://github.com/tylergaw/css-typed-om/
         // https://gist.github.com/paulirish/5d52fb081b3570c81e3a?permalink_comment_id=5299116#gistcomment-5299116
-        const isCSMSupported = 'computedStyleMap' in el;
         const pixelStringToNumber = (s: string) => {
             if (!s.endsWith('px'))
                 throw new Error(`Unit of '${s}' is not in pixels`);
@@ -35,7 +34,7 @@ export const guessReplyContainIntrinsicBlockSize = (replyElements: HTMLElement[]
             return Number(removeEnd(s, 'px')); /** {@link parseInt()} will also remove any suffix */
         };
 
-        const getCSSPropertyInPixels = (el: HTMLElement, property: string) => (isCSMSupported
+        const getCSSPropertyInPixels = (el: HTMLElement, property: string) => (supportCSM.value
             ? (el.computedStyleMap().get(property) as CSSNumericValue).to('px').value
             : pixelStringToNumber(getComputedStyle(el).getPropertyValue(property)));
         const getInnerWidth = (el: HTMLElement | null) => (el === null
@@ -46,7 +45,7 @@ export const guessReplyContainIntrinsicBlockSize = (replyElements: HTMLElement[]
         const convertRemUnitValueToPixels = (unitValue: CSSUnitValue) => (unitValue.unit === 'number'
             ? convertRemToPixels(unitValue.value)
             : unitValue.to('px').value);
-        const lineHeight = isCSMSupported
+        const lineHeight = supportCSM.value
             ? convertRemUnitValueToPixels(el.computedStyleMap().get('line-height') as CSSUnitValue)
             : convertRemToPixels(pixelStringToNumber(getComputedStyle(el).lineHeight));
 
