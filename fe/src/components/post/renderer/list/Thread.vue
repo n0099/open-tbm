@@ -1,5 +1,5 @@
 <template>
-<article :id="`tid/${thread.tid}`" class="mt-3 card">
+<article :id="`tid/${thread.tid}`" class="card w-100">
     <header
         ref="stickyTitleEl"
         :class="{
@@ -11,61 +11,63 @@
         }"
         class="thread-title shadow-sm card-header sticky-top">
         <div class="sticky-stuck-indicator" :data-cursor="currentCursor" :data-tid="thread.tid" />
-        <div class="thread-title-inline-start row flex-nowrap">
-            <div class="thread-title-inline-start-title-wrapper col-auto flex-shrink-1 w-100 h-100 d-flex gap-1 align-items-baseline">
-                <NuxtLink :to="{ name: 'posts/fid', params: { fid: thread.fid } }" class="badge btn btn-primary">
-                    {{ forums[thread.fid] }}吧
-                </NuxtLink>
-                <PostBadgeThread :thread="thread" />
-                <h6 class="thread-title-inline-start-title overflow-hidden text-nowrap">{{ thread.title }}</h6>
+        <div class="d-flex flex-wrap gap-2">
+            <div class="thread-title-inline-start w-100 d-flex flex-nowrap align-items-baseline">
+                <div class="thread-title-inline-start-title-wrapper col-auto flex-shrink-1 w-100 h-100 d-flex gap-1">
+                    <NuxtLink :to="{ name: 'posts/fid', params: { fid: thread.fid } }" class="badge btn btn-primary">
+                        {{ forums[thread.fid] }}吧
+                    </NuxtLink>
+                    <PostBadgeThread :thread="thread" />
+                    <h6 class="thread-title-inline-start-title overflow-hidden text-nowrap">{{ thread.title }}</h6>
+                </div>
+                <div class="col-auto d-inline-flex align-items-center gap-1 badge bg-light fs-6 p-1 pt-0 pe-2" role="group">
+                    <PostBadgeCommon :post="thread" postIDKey="tid" postTypeText="主题帖" />
+                    <PostBadgeTime
+                        postType="主题帖" currentPostIDKey="tid"
+                        postTimeKey="postedAt" timestampType="发帖时间"
+                        :previousPost="previousThread" :currentPost="thread" :nextPost="nextThread"
+                        class="bg-success" />
+                </div>
             </div>
-            <div class="col-auto d-inline-flex align-items-center gap-1badge bg-light fs-6 p-1 pt-0 pe-2" role="group">
-                <PostBadgeCommon :post="thread" postIDKey="tid" postTypeText="主题帖" />
-                <PostBadgeTime
-                    postType="主题帖" currentPostIDKey="tid"
-                    postTimeKey="postedAt" timestampType="发帖时间"
-                    :previousPost="previousThread" :currentPost="thread" :nextPost="nextThread"
-                    class="bg-success" />
-            </div>
-        </div>
-        <div class="row justify-content-between mt-2">
-            <div class="col-auto d-flex gap-1 align-items-center">
-                <span v-tippy="'回复量'" class="badge bg-secondary user-select-all">
-                    <FontAwesome :icon="faCommentAlt" class="me-1" />{{ thread.replyCount }}
-                </span>
-                <span v-tippy="'浏览量'" class="badge bg-info user-select-all">
-                    <FontAwesome :icon="faEye" class="me-1" />{{ thread.viewCount }}
-                </span>
-                <span
-                    v-if="thread.shareCount !== 0"
-                    v-tippy="'分享量'" class="badge bg-info user-select-all">
-                    <FontAwesome :icon="faShareAlt" class="me-1" /> {{ thread.shareCount }}
-                </span>
-                <span v-tippy="'赞踩量'" class="badge bg-info user-select-all">
-                    <FontAwesome :icon="faThumbsUp" class="me-1" /> {{ thread.agreeCount }}
-                    <FontAwesome :icon="faThumbsDown" class="me-1" /> {{ thread.disagreeCount }}
-                </span>
-                <span
-                    v-if="thread.zan !== null"
-                    v-tippy="zanTippyContent(thread.zan)" class="badge bg-info user-select-all">
-                    <FontAwesome :icon="faThumbsUp" class="me-1" /> 旧版客户端赞
-                </span>
-                <span
-                    v-if="thread.geolocation !== null"
-                    v-tippy="'发帖位置'" class="badge bg-info user-select-all">
-                    <FontAwesome :icon="faLocationArrow" class="me-1" /> {{ thread.geolocation }}
-                    <!-- todo: unknown json struct -->
-                </span>
-            </div>
-            <div class="col-auto d-inline-flex align-items-center gap-1 badge bg-light fs-6 p-1 pe-2" role="group">
-                <address class="d-inline-flex gap-2 fs-.75">
-                    <PostBadgeThreadAuthorAndLatestReplier :thread="thread" />
-                </address>
-                <PostBadgeTime
-                    postType="主题帖" currentPostIDKey="tid"
-                    postTimeKey="latestReplyPostedAt" timestampType="最后回复时间"
-                    :previousPost="previousThread" :currentPost="thread" :nextPost="nextThread"
-                    class="bg-secondary" />
+            <div class="d-flex justify-content-between w-100">
+                <div class="col-auto d-flex gap-1 align-items-center">
+                    <span v-tippy="'回复量'" class="badge bg-secondary user-select-all">
+                        <FontAwesome :icon="faCommentAlt" class="me-1" />{{ thread.replyCount }}
+                    </span>
+                    <span v-tippy="'浏览量'" class="badge bg-info user-select-all">
+                        <FontAwesome :icon="faEye" class="me-1" />{{ thread.viewCount }}
+                    </span>
+                    <span
+                        v-if="thread.shareCount !== 0"
+                        v-tippy="'分享量'" class="badge bg-info user-select-all">
+                        <FontAwesome :icon="faShareAlt" class="me-1" /> {{ thread.shareCount }}
+                    </span>
+                    <span v-tippy="'赞踩量'" class="badge bg-info user-select-all">
+                        <FontAwesome :icon="faThumbsUp" class="me-1" /> {{ thread.agreeCount }}
+                        <FontAwesome :icon="faThumbsDown" class="me-1" /> {{ thread.disagreeCount }}
+                    </span>
+                    <span
+                        v-if="thread.zan !== null"
+                        v-tippy="zanTippyContent(thread.zan)" class="badge bg-info user-select-all">
+                        <FontAwesome :icon="faThumbsUp" class="me-1" /> 旧版客户端赞
+                    </span>
+                    <span
+                        v-if="thread.geolocation !== null"
+                        v-tippy="'发帖位置'" class="badge bg-info user-select-all">
+                        <FontAwesome :icon="faLocationArrow" class="me-1" /> {{ thread.geolocation }}
+                        <!-- todo: unknown json struct -->
+                    </span>
+                </div>
+                <div class="col-auto d-inline-flex align-items-center gap-1 badge bg-light fs-6 p-1 pe-2" role="group">
+                    <address class="d-inline-flex gap-2 fs-.75">
+                        <PostBadgeThreadAuthorAndLatestReplier :thread="thread" />
+                    </address>
+                    <PostBadgeTime
+                        postType="主题帖" currentPostIDKey="tid"
+                        postTimeKey="latestReplyPostedAt" timestampType="最后回复时间"
+                        :previousPost="previousThread" :currentPost="thread" :nextPost="nextThread"
+                        class="bg-secondary" />
+                </div>
             </div>
         </div>
     </header>

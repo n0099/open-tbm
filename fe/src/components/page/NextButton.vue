@@ -1,5 +1,5 @@
 <template>
-<nav class="row align-items-center p-4">
+<nav class="row align-items-center gap-2 p-4">
     <div class="col align-middle"><hr /></div>
     <div class="w-auto">
         <NuxtLink
@@ -9,7 +9,7 @@
         </NuxtLink>
     </div>
     <div class="col align-middle"><hr /></div>
-    <PageDecodedCursor v-if="nextCursor !== null" :encodedCursor="nextCursor" class="text-center mt-2 mb-0" />
+    <PageDecodedCursor v-if="nextCursor !== null" :encodedCursor="nextCursor" class="text-center" />
 </nav>
 </template>
 

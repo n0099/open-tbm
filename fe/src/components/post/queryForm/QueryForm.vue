@@ -1,5 +1,5 @@
 <template>
-<form @submit.prevent="queryFormSubmit()" class="mt-3">
+<form @submit.prevent="queryFormSubmit()" class="row gap-3">
     <div class="row">
         <label class="col-1 col-form-label text-center">帖子类型</label>
         <div class="col">
@@ -15,7 +15,7 @@
             </div>
         </div>
     </div>
-    <div class="row mt-2 mb-3">
+    <div class="row">
         <label class="col-1 col-form-label" for="paramOrder">排序方式</label>
         <div class="col-8">
             <div v-for="orderBy in [uniqueParams.orderBy]" :key="orderBy.value" class="input-group">
@@ -189,13 +189,13 @@
             </template>
         </div>
     </div>
-    <div class="row mt-2">
+    <div class="row">
         <button class="add-param-button col-auto btn btn-link disabled" type="button">
             <FontAwesome :icon="faPlus" />
         </button>
         <PostQueryFormWidgetSelectParam :key="params.length" @paramChange="addParam($event)" currentParam="add" />
     </div>
-    <div class="row align-items-center gap-3 mt-3">
+    <div class="row align-items-center gap-3">
         <button :disabled="isLoading" class="col-auto btn btn-primary" type="submit">
             查询
             <span v-show="isLoading" class="spinner-grow spinner-grow-sm" role="status" aria-hidden="true">

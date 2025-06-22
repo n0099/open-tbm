@@ -1,5 +1,5 @@
 <template>
-<div class="container mt-2">
+<div class="container">
     <small>本页上所有时间均为UTC+8时区</small>
     <p>有效票定义：</p>
     <ul>

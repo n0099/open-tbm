@@ -10,9 +10,9 @@
                     <NuxtLink
                         v-if="subReplyGroup[subReplyGroupIndex - 1] === undefined"
                         :to="toUserRoute(author.uid)" noPrefetch
-                        class="sub-reply-author text-wrap badge bg-light">
+                        class="sub-reply-author text-wrap badge bg-light d-inline-flex align-items-center gap-2">
                         <UserPortrait :user="author" size="small" />
-                        <span class="mx-2 align-middle link-dark">
+                        <span class="align-middle link-dark">
                             {{ renderUsername(subReply.authorUid) }}
                         </span>
                         <PostBadgeUser
