@@ -13,7 +13,7 @@
         <div class="sticky-stuck-indicator" :data-cursor="currentCursor" :data-tid="thread.tid" />
         <div class="d-flex flex-wrap gap-2">
             <div class="thread-title-inline-start w-100 d-flex flex-nowrap align-items-baseline">
-                <div class="thread-title-inline-start-title-wrapper col-auto flex-shrink-1 w-100 h-100 d-flex gap-1">
+                <div class="thread-title-inline-start-title-wrapper col-auto flex-shrink-1 w-100 h-100 d-flex gap-1 align-items-start">
                     <NuxtLink :to="{ name: 'posts/fid', params: { fid: thread.fid } }" class="badge btn btn-primary">
                         {{ forums[thread.fid] }}吧
                     </NuxtLink>

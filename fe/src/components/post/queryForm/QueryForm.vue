@@ -1,6 +1,6 @@
 <template>
 <form @submit.prevent="queryFormSubmit()" class="row gap-3">
-    <div class="row">
+    <div class="row align-items-baseline">
         <label class="col-1 col-form-label text-center">帖子类型</label>
         <div class="col">
             <div class="input-group">
@@ -16,7 +16,7 @@
         </div>
     </div>
     <div class="row">
-        <label class="col-1 col-form-label" for="paramOrder">排序方式</label>
+        <label class="col-1 col-form-label text-center" for="paramOrder">排序方式</label>
         <div class="col-8">
             <div v-for="orderBy in [uniqueParams.orderBy]" :key="orderBy.value" class="input-group">
                 <span class="input-group-text"><FontAwesome :icon="faSortAmountDown" /></span>

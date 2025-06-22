@@ -2,7 +2,7 @@ import type { RouterConfig } from 'nuxt/schema';
 import type { RouteLocation, RouteRecordRaw, RouteRecordRedirect, RouteRecordSingleViewWithChildren, RouterScrollBehavior } from 'vue-router';
 import _ from 'lodash';
 
-const withCursorRoute = (component: () => Promise<Component>) =>
+const withCursorRoute = (component: RouteRecordSingleViewWithChildren['component']) =>
     (path: string, name: string): RouteRecordSingleViewWithChildren =>
         ({
             path,
@@ -37,8 +37,7 @@ export default {
                     _.isString(to.params.idType) && _.isString(to.params.id)
                     && `/posts/${to.params.idType}id/${to.params.id}`
             },
-            postCursorRoute(':pathMatch(.*)*', 'posts/param'),
-            postCursorRoute('', 'posts/empty')
+            postCursorRoute(':pathMatch(.*)*', 'posts/param')
         ];
 
         const userCursorRoute = withCursorRoute(async () => import('@/pages/users.vue'));
@@ -56,11 +55,12 @@ export default {
         const user = _routes.find(p => p.path === '/users');
         if (user === undefined)
             throw new Error('pages/users.vue doesn\'t exists');
+        const postRootCursor = withCursorRoute(post.component)('', 'posts').children;
 
         return [
             ..._routes,
             ...redirectRoute('/p', '/posts'),
-            Object.assign(post, { children: postChildren }),
+            Object.assign(post, { children: [...postChildren, ...postRootCursor] }),
             ...redirectRoute('/u', '/users'),
             Object.assign(user, { children: userChildren })
         ];
