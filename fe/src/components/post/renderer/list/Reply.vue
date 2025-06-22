@@ -23,7 +23,7 @@
                 <span>{{ reply.tail }}</span>
             -->
         </div>
-        <div class="float-end badge bg-light fs-6 p-1 pe-2" role="group">
+        <div class="float-end d-inline-flex align-items-center gap-1 badge bg-light fs-6 p-1 pe-2" role="group">
             <PostBadgeCommon :post="reply" postIDKey="pid" postTypeText="回复帖" />
             <PostBadgeTime
                 postType="回复帖"
@@ -35,7 +35,7 @@
     </header>
     <div
         :ref="replyElementRefs.set"
-        class="reply row shadow-sm bs-callout bs-callout-info">
+        class="reply row pe-0 shadow-sm bs-callout bs-callout-info">
         <address
             v-for="author in [getUser(reply.authorUid)]" :key="author.uid"
             class="reply-author col-auto h-100 text-center sticky-top shadow-sm badge bg-light">
@@ -46,8 +46,8 @@
             </NuxtLink>
             <PostBadgeUser :user="getUser(reply.authorUid)" :threadAuthorUid="thread.authorUid" />
         </address>
-        <div class="col me-2 px-1 border-start overflow-auto">
-            <PostRendererContent :content="reply.content" class="reply-content p-2" />
+        <div class="col border-start overflow-auto">
+            <PostRendererContent :content="reply.content" class="reply-content" />
             <template v-if="reply.subReplies.length > 0">
                 <PostRendererListSubReply
                     v-for="(subReplyGroup, index) in reply.subReplies" :key="index"

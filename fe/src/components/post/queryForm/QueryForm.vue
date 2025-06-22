@@ -2,7 +2,7 @@
 <form @submit.prevent="queryFormSubmit()" class="mt-3">
     <div class="row">
         <label class="col-1 col-form-label text-center">帖子类型</label>
-        <div class="col my-auto">
+        <div class="col">
             <div class="input-group">
                 <div v-for="(postType, index) in postType" :key="postType" class="form-check form-check-inline">
                     <input
@@ -195,15 +195,15 @@
         </button>
         <PostQueryFormWidgetSelectParam :key="params.length" @paramChange="addParam($event)" currentParam="add" />
     </div>
-    <div class="row mt-3">
+    <div class="row align-items-center gap-3 mt-3">
         <button :disabled="isLoading" class="col-auto btn btn-primary" type="submit">
             查询
             <span v-show="isLoading" class="spinner-grow spinner-grow-sm" role="status" aria-hidden="true">
                 <span class="visually-hidden">Loading...</span>
             </span>
         </button>
-        <span class="col-auto ms-3 my-auto text-muted">{{ currentQueryTypeDescription }}</span>
-        <span v-if="useHydrationStore().isHydratingOrSSR" class="col-auto ms-3 my-auto">
+        <span class="col-auto text-muted">{{ currentQueryTypeDescription }}</span>
+        <span v-if="useHydrationStore().isHydratingOrSSR" class="col-auto">
             提交查询表单需要使用 JavaScript
         </span>
     </div>

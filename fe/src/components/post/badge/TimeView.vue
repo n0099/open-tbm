@@ -1,7 +1,7 @@
 <template>
 <time
     v-tippy="tippyContent" :datetime="currentInShanghai.toISO() ?? undefined"
-    class="ms-1 fw-normal badge rounded-pill user-select-all">
+    class="d-inline-flex gap-1 fw-normal badge rounded-pill user-select-all">
     <component :is="$slots.default" />
     <RelativeTime :dateTime="current" :relativeTo="relativeTo" />
 </time>

@@ -1,22 +1,24 @@
 <template>
 <DefineUser v-slot="{ user, threadAuthorUid, replyAuthorUid }">
-    <NuxtLink :to="toUserProfileUrl(user)" noPrefetch>
-        <UserPortrait :user="user" size="small" />
-        {{ renderUsername(user.uid) }}
-    </NuxtLink>
-    <PostBadgeUser
-        :user="user" class="ms-1"
-        :threadAuthorUid="threadAuthorUid"
-        :replyAuthorUid="replyAuthorUid" />
+    <span class="d-inline-flex align-items-center gap-1">
+        <NuxtLink :to="toUserProfileUrl(user)" noPrefetch>
+            <UserPortrait :user="user" size="small" />
+            {{ renderUsername(user.uid) }}
+        </NuxtLink>
+        <PostBadgeUser
+            :user="user"
+            :threadAuthorUid="threadAuthorUid"
+            :replyAuthorUid="replyAuthorUid" />
+    </span>
 </DefineUser>
 <DefineLatestReplier v-slot="{ latestReplier }">
-    <template v-if="latestReplier !== undefined">
-        <PostBadgeThreadLatestReplier
+    <span v-if="latestReplier !== undefined" class="d-inline-flex align-items-center gap-1">
+        <PostBadgeThreadLatestReplierLink
             v-if="latestReplier.uid === null
                 && !(latestReplier.name === null && latestReplier.displayName === null)"
             :users="expandLatestReplierToRoutes(latestReplier)" />
         <ReuseUser v-else-if="latestReplier.uid !== null" :user="getUser(latestReplier.uid)" />
-    </template>
+    </span>
 </DefineLatestReplier>
 <ATable
     :dataSource="posts.threads" :columns="threadColumns" rowKey="tid"
