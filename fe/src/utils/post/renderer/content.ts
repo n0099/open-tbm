@@ -1,5 +1,25 @@
 export const extractContentTexts = (content?: PostContent | null) => content
-    ?.reduce((acc, i) => acc + ('text' in i ? i.text ?? '' : ''), '') ?? '';
+    ?.reduce((acc, i) => {
+        return acc + (((): string | undefined => {
+            // eslint-disable-next-line @typescript-eslint/switch-exhaustiveness-check
+            switch (i.type) {
+                case undefined:
+                case 1:
+                case 7:
+                case 9:
+                case 18:
+                case 40:
+                    return i.text;
+                case 2:
+                case 11:
+                    return `[${i.c}]`;
+                case 4:
+                    return `@${i.text}`;
+                default:
+                    return undefined;
+            }
+        })() ?? '');
+    }, '') ?? '';
 export const toHTTPS = (url?: string) => url?.replace('http://', 'https://');
 const config = useRuntimeConfig().public;
 export const toTiebaImageUrl = (originSrc?: string) => {

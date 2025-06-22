@@ -8,7 +8,7 @@
             <p class="m-0">下方为查询结果中第一条主题帖/回复帖/楼中楼</p>
         </template>
         <h1>{{ firstThread?.title }}</h1>
-        <h3 class="h-auto">{{ firstPostContentTexts }}</h3>
+        <NewlineToBr is="h3" :text="firstPostContentTexts" wrapInSpan class="h-auto" />
         <template v-for="author in [firstPostAuthor]">
             <div :key="author.uid" v-if="author !== undefined" class="m-auto">
                 <UserPortrait :user="author" class="size-24" />

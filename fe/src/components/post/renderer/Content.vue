@@ -16,7 +16,7 @@
             loading="lazy" class="tieba-ugc-image" v-bind="attrs" />
     </DefineUGCImage>
     <div v-for="(i, index) in content" :key="index" class="post-content-item">
-        <NewlineToBr is="span" v-if="i.type === undefined" :text="i.text" />
+        <NewlineToBr is="span" v-if="i.type === undefined || i.type === 40" :text="i.text" />
         <NuxtLink
             v-if="i.type === 1 || i.type === 18"
             :to="tryExtractTiebaOutboundUrl(i.link)" target="_blank">
