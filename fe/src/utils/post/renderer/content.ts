@@ -1,8 +1,28 @@
 export const extractContentTexts = (content?: PostContent | null) => content
-    ?.reduce((acc, i) => acc + ('text' in i ? i.text ?? '' : ''), '') ?? '';
+    ?.reduce((acc, i) => {
+        return acc + (((): string | undefined => {
+            // eslint-disable-next-line @typescript-eslint/switch-exhaustiveness-check
+            switch (i.type) {
+                case undefined:
+                case 1:
+                case 7:
+                case 9:
+                case 18:
+                case 40:
+                    return i.text;
+                case 2:
+                case 11:
+                    return `[${i.c}]`;
+                case 4:
+                    return `@${i.text}`;
+                default:
+                    return undefined;
+            }
+        })() ?? '');
+    }, '') ?? '';
 export const toHTTPS = (url?: string) => url?.replace('http://', 'https://');
 const config = useRuntimeConfig().public;
-export const imageUrl = (originSrc?: string) => {
+export const toTiebaImageUrl = (originSrc?: string) => {
     if (originSrc === undefined || !/^(?:[0-9a-f]{40}|[0-9a-f]{24})$/u.test(originSrc))
         return originSrc;
     if (config.tiebaImageProxy !== '')
@@ -17,7 +37,7 @@ export const tryExtractTiebaOutboundUrl = (rawURL?: string) => {
 
     return rawURL;
 };
-export const emoticonUrl = (text?: string) => {
+export const toTiebaEmoticonUrl = (text?: string) => {
     if (text === undefined)
         return '';
     const regexMatches = /(.+?)(\d+|$)/u.exec(text);

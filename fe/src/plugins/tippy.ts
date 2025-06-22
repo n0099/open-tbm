@@ -18,6 +18,8 @@ if (import.meta.client) {
 const tippyInstances = new Set<Instance>(); // https://stackoverflow.com/questions/20508628/why-are-weakmaps-not-enumerable
 const enableAnimation = useMediaQuery('(prefers-reduced-motion: no-preference)');
 watchImmediate(enableAnimation, async () => {
+    if (!import.meta.client)
+        return;
     if (enableAnimation.value)
         await import('tippy.js/animations/perspective.css');
     const prop: Partial<DefaultProps> = { animation: enableAnimation.value ? 'perspective' : false };

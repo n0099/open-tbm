@@ -13,7 +13,7 @@
     <div v-if="!(data === undefined || _.isEmpty(data.pages))" class="container-fluid">
         <div class="row flex-nowrap">
             <PostNav v-if="renderType === 'list'" :queryParam="queryParam" />
-            <div class="post-page col mx-auto ps-0" :class="{ 'renderer-list': renderType === 'list' }">
+            <div class="post-page col ps-0" :class="{ 'renderer-list': renderType === 'list' }">
                 <PostPage
                     v-for="(page, pageIndex) in data.pages"
                     :key="`${queryParam?.query}/cursor/${page.pages.currentCursor}`"

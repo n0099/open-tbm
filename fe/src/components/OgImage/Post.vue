@@ -1,6 +1,6 @@
 <template>
-<div class="flex flex-row justify-between size-screen">
-    <div class="flex-1 flex-col basis-1/2 m-6">
+<div class="flex flex-row gap-6 justify-between size-screen">
+    <div class="flex-1 flex-col basis-1/2">
         <p>{{ useSiteConfig().name }} {{ routePath }}</p>
         <h2 v-if="firstPostPageForumName !== undefined">{{ firstPostPageForumName }}吧</h2>
         <template v-if="currentQueryType !== 'postID'">
@@ -8,7 +8,7 @@
             <p class="m-0">下方为查询结果中第一条主题帖/回复帖/楼中楼</p>
         </template>
         <h1>{{ firstThread?.title }}</h1>
-        <h3 class="h-auto">{{ firstPostContentTexts }}</h3>
+        <NewlineToBr is="h3" :text="firstPostContentTexts" wrapInSpan class="h-auto" />
         <template v-for="author in [firstPostAuthor]">
             <div :key="author.uid" v-if="author !== undefined" class="m-auto">
                 <UserPortrait :user="author" class="size-24" />
@@ -19,7 +19,7 @@
         </template>
     </div>
     <div v-if="firstImage !== undefined" class="flex-auto basis-1/4">
-        <img :src="imageUrl(firstImage?.originSrc)" class="h-screen object-contain" />
+        <img :src="toTiebaImageUrl(firstImage?.originSrc)" class="h-screen object-contain" />
     </div>
 </div>
 </template>

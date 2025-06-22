@@ -1,5 +1,5 @@
 <template>
-<div class="container mt-2">
+<div class="container">
     <small>本页上所有时间均为UTC+8时区</small>
     <p>有效票定义：</p>
     <ul>
@@ -19,11 +19,11 @@
     <p><NuxtLink to="https://www.bilibili.com/video/av46507371" target="_blank">【数据可视化】一分钟看完bilibili吧吧主公投</NuxtLink></p>
     <hr />
     <div
-        ref="top50CandidateCountRef" id="top50CandidateCount"
+        ref="top50CandidateCountRef" id="top50-candidate-count"
         :class="{ 'loading-huaji': isChartLoading.top50CandidateCount }" class="echarts" />
     <hr />
     <div
-        ref="top10CandidatesTimelineRef" id="top10CandidatesTimeline"
+        ref="top10CandidatesTimelineRef" id="top10-candidates-timeline"
         :class="{ 'loading-huaji': isChartLoading.top10CandidatesTimeline }" class="echarts" />
     <hr />
     <div class="row justify-content-end">
@@ -39,7 +39,7 @@
         </div>
     </div>
     <div
-        ref="top5CandidateCountGroupByTimeRef" id="top5CandidateCountGroupByTime"
+        ref="top5CandidateCountGroupByTimeRef" id="top5-candidate-count-group-by-time"
         :class="{ 'loading-huaji': isChartLoading.top5CandidateCountGroupByTime }" class="echarts" />
     <hr />
     <div class="row justify-content-end">
@@ -55,7 +55,7 @@
         </div>
     </div>
     <div
-        ref="allVoteCountGroupByTimeRef" id="allVoteCountGroupByTime"
+        ref="allVoteCountGroupByTimeRef" id="all-vote-count-group-by-time"
         :class="{ 'loading-huaji': isChartLoading.allVoteCountGroupByTime }" class="echarts" />
     <hr />
     <Suspense :timeout="0">
@@ -752,16 +752,16 @@ onMounted(() => {
 .echarts {
     margin-block-start: .5rem;
 }
-#top50CandidateCount {
+#top50-candidate-count {
     block-size: 32rem;
 }
-#top10CandidatesTimeline {
+#top10-candidates-timeline {
     block-size: 40rem;
 }
-#top5CandidateCountGroupByTime {
+#top5-candidate-count-group-by-time {
     block-size: 40rem;
 }
-#allVoteCountGroupByTime {
+#all-vote-count-group-by-time {
     block-size: 20rem;
 }
 </style>

@@ -16,16 +16,16 @@
             loading="lazy" class="tieba-ugc-image" v-bind="attrs" />
     </DefineUGCImage>
     <div v-for="(i, index) in content" :key="index" class="post-content-item">
-        <NewlineToBr is="span" v-if="i.type === undefined" :text="i.text" />
+        <NewlineToBr is="span" v-if="i.type === undefined || i.type === 40" :text="i.text" />
         <NuxtLink
             v-if="i.type === 1 || i.type === 18"
             :to="tryExtractTiebaOutboundUrl(i.link)" target="_blank">
             {{ i.text }}
         </NuxtLink>
         <img
-            v-if="i.type === 2" :src="emoticonUrl(i.text)" :alt="i.c"
+            v-if="i.type === 2" :src="toTiebaEmoticonUrl(i.text)" :alt="i.c"
             :referrerpolicy="tiebaImageReferrerPolicy" loading="lazy" />
-        <ReuseUGCImage v-if="i.type === 3" :src="imageUrl(i.originSrc)" />
+        <ReuseUGCImage v-if="i.type === 3" :src="toTiebaImageUrl(i.originSrc)" />
         <NuxtLink
             v-if="i.type === 4"
             :to="toUserProfileUrl({ name: _.trimStart(i.text, '@') })"

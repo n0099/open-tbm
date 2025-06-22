@@ -202,4 +202,18 @@ export type PostContent = Array<
             height: UInt,
             detailLink: string
         }
+    }>
+
+    // https://github.com/lumina37/aiotieba/issues/192
+    // {
+    //     "type": 40,
+    //     "text": "test",
+    //     "link": "https://tieba.baidu.com/mo/q/hybrid-usergrow-search/searchGlobal?pageType=result&keyword=test&customfullscreen=1&nonavigationbar=1",
+    //     "src": "https://tieba-ares.cdn.bcebos.com/mis/2023-11/1700620182255/378a4ca359a9.webp"
+    // }
+    //
+    | HasType<40, {
+        text: string,
+        link: string,
+        src: string
     }>>;

@@ -43,7 +43,7 @@ export const usePostsSchemaOrg = (data: Ref<InfiniteData<ApiPosts['response']> |
 
     const extractContentImagesUrl = (content: PostContent | null) =>
         undefinedWhenEmpty(content?.filter(i => i.type === 3)
-            .map(i => imageUrl(i.originSrc))
+            .map(i => toTiebaImageUrl(i.originSrc))
             .filter(i => i !== undefined));
     const extractContentUserMentions = (content: PostContent | null) =>
         undefinedWhenEmpty(content?.filter(i => i.type === 4)
@@ -75,7 +75,7 @@ export const usePostsSchemaOrg = (data: Ref<InfiniteData<ApiPosts['response']> |
         ...definePostAuthorPerson(thread, postPageProvision),
         ...definePostContentComment(firstReplyContent ?? null),
         '@type': 'DiscussionForumPosting',
-        sameAs: tiebaPostLink(thread.tid),
+        sameAs: toTiebaPostLink(thread.tid),
         headline: thread.title,
         commentCount: thread.replyCount,
         interactionStatistic: [
@@ -89,7 +89,7 @@ export const usePostsSchemaOrg = (data: Ref<InfiniteData<ApiPosts['response']> |
         ...definePostComment(reply, 'pid'),
         ...definePostAuthorPerson(reply, postPageProvision),
         ...definePostContentComment(reply.content),
-        sameAs: tiebaPostLink(reply.tid, reply.pid),
+        sameAs: toTiebaPostLink(reply.tid, reply.pid),
         parentItem: { '@type': 'Comment', '@id': reply.tid.toString() },
         commentCount: reply.subReplyCount,
         interactionStatistic: [
@@ -102,7 +102,7 @@ export const usePostsSchemaOrg = (data: Ref<InfiniteData<ApiPosts['response']> |
             ...definePostComment(subReply, 'spid'),
             ...definePostAuthorPerson(subReply, postPageProvision),
             ...definePostContentComment(subReply.content),
-            sameAs: tiebaPostLink(subReply.tid, subReply.pid, subReply.spid),
+            sameAs: toTiebaPostLink(subReply.tid, subReply.pid, subReply.spid),
             parentItem: { '@type': 'Comment', '@id': subReply.pid.toString() },
             /* eslint-enable @typescript-eslint/naming-convention */
             interactionStatistic: definePostInteractionCounters(subReply)

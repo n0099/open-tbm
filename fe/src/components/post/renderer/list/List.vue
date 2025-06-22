@@ -1,5 +1,5 @@
 <template>
-<div :data-cursor="currentCursor" class="post-render-list pb-3">
+<div :data-cursor="currentCursor" class="post-render-list pb-3 d-flex flex-wrap gap-3">
     <PostRendererListThread
         v-for="(thread, index) in nestedPosts.threads" :key="thread.tid"
         :previousThread="nestedPosts.threads[index - 1]" :thread="thread"

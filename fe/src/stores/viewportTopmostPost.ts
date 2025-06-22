@@ -1,7 +1,6 @@
 import type { StyleObserver } from 'style-observer';
 import _ from 'lodash';
 
-export const supportScrollState = import.meta.client && CSS.supports('container-type', 'scroll-state');
 export const useViewportTopmostPostStore = defineStore('viewportTopmostPost', () => {
     interface TopmostPost { cursor: Cursor, tid: Tid, pid?: Pid }
     const viewportTopmostPost = ref<TopmostPost>();
@@ -101,9 +100,9 @@ export const useViewportTopmostPostStore = defineStore('viewportTopmostPost', ()
     const implement = (async (): UsingImplement => {
         /** {@link StyleObserver} is still slower than {@link IntersectionObserver} */
         // try out https://github.com/w3c/csswg-drafts/issues/6205#issuecomment-2677234279
-        // if (supportScrollState)
+        // if (supportScrollState.value)
         //     return usingScrollState();
-        if ('IntersectionObserver' in globalThis)
+        if (supportIntersectionObserver.value)
             return usingIntersectionObserver();
 
         return noop;

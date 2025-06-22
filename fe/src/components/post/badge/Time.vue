@@ -8,7 +8,7 @@
         :current="currentDateTime" :relativeTo="previousDateTime"
         :relativeToText="`相对于上一${postType}${timestampType}`"
         :postType="postType" :timestampType="timestampType" v-bind="$attrs">
-        <FontAwesome :icon="faChevronUp" class="me-1 align-bottom" />
+        <FontAwesome :icon="faChevronUp" class="align-bottom" />
     </PostBadgeTimeView>
     <PostBadgeTimeView
         v-else-if="nextTime !== undefined && nextTime < currentTime"
@@ -18,7 +18,7 @@
         :current="currentDateTime" :relativeTo="nextDateTime"
         :relativeToText="`相对于下一${postType}${timestampType}`"
         :postType="postType" :timestampType="timestampType" v-bind="$attrs">
-        <FontAwesome :icon="faChevronDown" class="me-1 align-bottom" />
+        <FontAwesome :icon="faChevronDown" class="align-bottom" />
     </PostBadgeTimeView>
     <PostBadgeTimeView
         v-else-if="parentTime !== undefined && parentTime !== currentTime"
@@ -29,7 +29,7 @@
         :current="currentDateTime" :relativeTo="parentDateTime"
         :relativeToText="`相对于所属${postTypeText[postTypeText.indexOf(postType) - 1]}${timestampType}`"
         :postType="postType" :timestampType="timestampType" v-bind="$attrs">
-        <FontAwesome :icon="faAnglesUp" class="me-1 align-bottom" />
+        <FontAwesome :icon="faAnglesUp" class="align-bottom" />
     </PostBadgeTimeView>
 </ClientOnly>
 <PostBadgeTimeView

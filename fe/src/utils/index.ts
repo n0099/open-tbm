@@ -46,7 +46,7 @@ export type Spid = UInt;
 export type PostID = Tid | Pid | Spid;
 
 export const cursorTemplate = (cursor: Cursor) => (cursor === '' ? '起始页' : `页游标 ${cursor}`);
-export const tiebaPostLink = (tid: Tid, pid?: Pid, spid?: Spid) => {
+export const toTiebaPostLink = (tid: Tid, pid?: Pid, spid?: Spid) => {
     if (pid !== undefined && spid !== undefined)
         return `https://tieba.baidu.com/p/${tid}?pid=${pid}&cid=${spid}#${spid}`;
     if (pid !== undefined)

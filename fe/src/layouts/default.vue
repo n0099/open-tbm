@@ -1,6 +1,6 @@
 <template>
 <div
-    id="app-wrapper" class="d-flex flex-column"
+    id="app-wrapper" class="d-flex flex-column gap-3"
     :class="{ 'is-hydrating-or-ssr': useHydrationStore().isHydratingOrSSR }">
     <header>
         <GlobalNavBar />

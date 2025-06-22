@@ -10,11 +10,11 @@
 </span>
 <PostBadgeUser
     v-if="authorUser.forumSpecific.forumModerator !== null"
-    :user="authorUser" class="ms-1 user-badge" />
+    :user="authorUser" class="user-badge" />
 <DefineLatestReplier v-slot="{ users }">
-    <span class="ms-2">
+    <span>
         <span class="fw-normal link-secondary">最后回复：</span>
-        <PostBadgeThreadLatestReplier v-if="users !== undefined" :users="users" />
+        <PostBadgeThreadLatestReplierLink v-if="users !== undefined" :users="users" />
         <span v-else class="fw-bold link-dark">未知用户</span>
     </span>
 </DefineLatestReplier>
@@ -27,13 +27,13 @@
     <ReuseLatestReplier :users="[{ name: renderUsername(latestReplier.uid), route: toUserRoute(latestReplier.uid) }]" />
     <PostBadgeUser
         v-if="!_.isNil(latestReplierUser?.forumSpecific.forumModerator)"
-        :user="latestReplierUser" class="ms-1 user-badge" />
+        :user="latestReplierUser" class="user-badge" />
 </template>
 </template>
 
 <script setup lang="ts">
-import type ThreadLatestReplier from '@/components/post/badge/ThreadLatestReplier.vue';
-import { expandLatestReplierToRoutes } from '@/components/post/badge/ThreadLatestReplier.vue';
+import type ThreadLatestReplier from '@/components/post/badge/ThreadLatestReplierLink.vue';
+import { expandLatestReplierToRoutes } from '@/components/post/badge/ThreadLatestReplierLink.vue';
 import _ from 'lodash';
 
 const { thread } = defineProps<{ thread: Thread }>();
