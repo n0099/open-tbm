@@ -30,10 +30,11 @@
         </NuxtLink>
         <template v-if="i.type === 5">
             <template v-if="i.src !== undefined">
-                <!--
-                    todo: fix anti hotlinking on domain https://tiebapic.baidu.com and http://tb-video.bdstatic.com/tieba-smallvideo-transcode
-                    <video controls :poster="i.src" :src="i.link" />
-                -->
+                <!-- todo: fix anti hotlinking on `i.link`: http://tb-video.bdstatic.com/tieba-smallvideo-transcode-crf -->
+                <video
+                    :poster="toTiebaImageUrl(extractTiebaImageFilename(i.src))" :src="toHTTPS(i.link)"
+                    preload="metadata" controls class="tieba-ugc-media" />
+                <br />
                 <NuxtLink :to="i.text" target="_blank">贴吧视频播放页</NuxtLink>
             </template>
             <template v-else>

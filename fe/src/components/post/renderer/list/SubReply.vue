@@ -21,7 +21,7 @@
                             :replyAuthorUid="reply.authorUid" />
                     </NuxtLink>
                 </address>
-                <aside class="float-end badge bg-light fs-6 p-1 pe-2" role="group">
+                <aside class="float-end d-inline-flex align-items-center gap-1 badge bg-light fs-6 p-1 pe-2" role="group">
                     <PostBadgeCommon :post="subReply" postIDKey="spid" postTypeText="楼中楼" />
                     <PostBadgeTime
                         postType="楼中楼"

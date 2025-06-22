@@ -134,15 +134,20 @@ const menuReplyClasses = (cursor: Cursor, reply: Reply) => {
     /* eslint-enable @typescript-eslint/naming-convention */
 };
 
-watchImmediate(() => [route.params.cursor, data.value?.pages], () => {
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-    if (!(route.params.cursor === undefined || _.isString(route.params.cursor)))
+const expandSiblingPagesByCursor = (cursor: Cursor) => {
+    const pages = data.value?.pages;
+    const pageIndex = pages?.findIndex(page => page.pages.currentCursor === cursor);
+    if (pageIndex === undefined || pageIndex === -1)
         return;
-    if (!(data.value?.pages.some(page => page.pages.currentCursor === getRouteCursorParam(route)) ?? false))
-        return;
-    expandedPages.value = [pageMenuKey(route.params.cursor)];
+    expandedPages.value = [pages?.[pageIndex - 1], pages?.[pageIndex], pages?.[pageIndex + 1]]
+        .filter(page => page !== undefined)
+        .map(page => page.pages.currentCursor)
+        .map(pageMenuKey);
+};
+watchImmediate(() => data.value?.pages, () => {
+    expandSiblingPagesByCursor(getRouteCursorParam(route));
 });
-watch(viewportTopmostPost, async (to, from) => {
+watch(viewportTopmostPost, (to, from) => {
     if (to === undefined)
         return;
     const { cursor, tid } = to;
@@ -153,10 +158,11 @@ watch(viewportTopmostPost, async (to, from) => {
 
     if (!import.meta.client)
         return;
-    expandedPages.value = [pageMenuKey(cursor)];
-    await nextTick(); // wait for expand
-    const threadEl = (threadMenuItemsRef.value?.find(i => i?.$.vnode.key === menuKey)
-        ?.$el as Element | null)?.previousElementSibling ?? null;
+    expandSiblingPagesByCursor(cursor);
+    const threadEl = (threadMenuItemsRef.value
+        ?.find(i => i?.$.vnode.key === menuKey)
+        ?.$el as Element | null)
+        ?.nextElementSibling ?? null;
     if (threadEl !== null)
         scrollIntoView(threadEl, { scrollMode: 'if-needed', boundary: document.querySelector('.post-nav') });
 });
