@@ -19,7 +19,7 @@
         </template>
     </div>
     <div v-if="firstImage !== undefined" class="flex-auto basis-1/4">
-        <img :src="imageUrl(firstImage?.originSrc)" class="h-screen object-contain" />
+        <img :src="toTiebaImageUrl(firstImage?.originSrc)" class="h-screen object-contain" />
     </div>
 </div>
 </template>

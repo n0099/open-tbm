@@ -23,9 +23,9 @@
             {{ i.text }}
         </NuxtLink>
         <img
-            v-if="i.type === 2" :src="emoticonUrl(i.text)" :alt="i.c"
+            v-if="i.type === 2" :src="toTiebaEmoticonUrl(i.text)" :alt="i.c"
             :referrerpolicy="tiebaImageReferrerPolicy" loading="lazy" />
-        <ReuseUGCImage v-if="i.type === 3" :src="imageUrl(i.originSrc)" />
+        <ReuseUGCImage v-if="i.type === 3" :src="toTiebaImageUrl(i.originSrc)" />
         <NuxtLink
             v-if="i.type === 4"
             :to="toUserProfileUrl({ name: _.trimStart(i.text, '@') })"

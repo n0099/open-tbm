@@ -23,9 +23,9 @@
 </NuxtLink>
 <NuxtLink
     v-tippy="'在贴吧中查看'"
-    :to="tiebaPostLink(post.tid,
-                       (post as Reply | SubReply).pid,
-                       (post as SubReply).spid)"
+    :to="toTiebaPostLink(post.tid,
+                         (post as Reply | SubReply).pid,
+                         (post as SubReply).spid)"
     class="badge bg-light rounded-pill link-dark" target="_blank">
     <FontAwesome :icon="faArrowUpRightFromSquare" size="lg" class="align-bottom" />
 </NuxtLink>
