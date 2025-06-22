@@ -14,7 +14,7 @@
 <DefineLatestReplier v-slot="{ users }">
     <span class="ms-2">
         <span class="fw-normal link-secondary">最后回复：</span>
-        <PostBadgeThreadLatestReplier v-if="users !== undefined" :users="users" />
+        <PostBadgeThreadLatestReplierLink v-if="users !== undefined" :users="users" />
         <span v-else class="fw-bold link-dark">未知用户</span>
     </span>
 </DefineLatestReplier>
@@ -32,8 +32,8 @@
 </template>
 
 <script setup lang="ts">
-import type ThreadLatestReplier from '@/components/post/badge/ThreadLatestReplier.vue';
-import { expandLatestReplierToRoutes } from '@/components/post/badge/ThreadLatestReplier.vue';
+import type ThreadLatestReplier from '@/components/post/badge/ThreadLatestReplierLink.vue';
+import { expandLatestReplierToRoutes } from '@/components/post/badge/ThreadLatestReplierLink.vue';
 import _ from 'lodash';
 
 const { thread } = defineProps<{ thread: Thread }>();

@@ -82,7 +82,7 @@
 </template>
 
 <script setup lang="ts">
-import { expandLatestReplierToRoutes } from '@/components/post/badge/ThreadLatestReplier.vue';
+import { expandLatestReplierToRoutes } from '@/components/post/badge/ThreadLatestReplierLink.vue';
 import type User from '@/components/post/badge/User.vue';
 import type { ColumnType } from 'ant-design-vue/es/table/interface';
 import _ from 'lodash';

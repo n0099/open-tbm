@@ -2,7 +2,6 @@
 <article :id="`tid/${thread.tid}`" class="mt-3 card">
     <header
         ref="stickyTitleEl"
-        :key="highlightPostStore.highlightingPost?.postId"
         :class="{
             'viewport-topmost-post': !supportScrollState
                 && viewportTopmostPostStore.viewportTopmostPost?.cursor === currentCursor
