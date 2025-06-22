@@ -15,7 +15,7 @@ export const replyTitleStyle = {
         return remWithPixels(this.insetBlockStart.rem - this.marginBlockStart.rem);
     }
 };
-export const tiebaUGCImageMaxSize = remWithPixels(18.75);
+export const tiebaUGCMediaMaxSize = remWithPixels(18.75);
 export const guessReplyContainIntrinsicBlockSize = (replyElements: HTMLElement[]) => {
     // block-size of .reply-content should be similar when author usernames are also similar, so only takes the first element
     const contentEl = document.querySelector<HTMLElement>('.reply-content');
@@ -103,10 +103,10 @@ export const guessReplyContainIntrinsicBlockSize = (replyElements: HTMLElement[]
         el.style.setProperty('--sub-reply-group-count',
             el.querySelectorAll('.sub-reply-group').length.toString());
 
-        const imageLineCount = (el.querySelectorAll('.tieba-ugc-image')
-            .length * tiebaUGCImageMaxSize.px) / contentStyles.width;
-        el.style.setProperty('--predicted-image-height',
-            `${Math.ceil(imageLineCount) * tiebaUGCImageMaxSize.px}px`);
+        const mediaLineCount = (el.querySelectorAll('.tieba-ugc-media')
+            .length * tiebaUGCMediaMaxSize.px) / contentStyles.width;
+        el.style.setProperty('--predicted-media-height',
+            `${Math.ceil(mediaLineCount) * tiebaUGCMediaMaxSize.px}px`);
 
         const replyContentHeight = predictPostContentHeight(contentStyles.width)(el.querySelector('.reply-content'));
         el.style.setProperty('--predicted-reply-content-height', `${replyContentHeight}px`);

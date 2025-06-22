@@ -2,18 +2,14 @@
 <div v-viewer.static>
     <!-- eslint-disable-next-line vue/no-unused-vars -->
     <DefineUGCImage v-slot="{ $slots, src, ...attrs }">
-        <NuxtLink
-            v-if="useHydrationStore().isHydratingOrSSR"
-            :to="src" target="_blank" class="tieba-ugc-image">
-            <!-- eslint-disable-next-line vue/no-duplicate-attr-inheritance -->
+        <NuxtLink v-if="useHydrationStore().isHydratingOrSSR" :to="src" target="_blank">
             <img
                 :src="src" :referrerpolicy="tiebaImageReferrerPolicy"
-                loading="lazy" class="tieba-ugc-image" v-bind="attrs" />
+                loading="lazy" class="tieba-ugc-media tieba-ugc-image" v-bind="attrs" />
         </NuxtLink>
-        <!-- eslint-disable-next-line vue/no-duplicate-attr-inheritance -->
         <img
             v-else :src="src" :referrerpolicy="tiebaImageReferrerPolicy"
-            loading="lazy" class="tieba-ugc-image" v-bind="attrs" />
+            loading="lazy" class="tieba-ugc-media tieba-ugc-image" v-bind="attrs" />
     </DefineUGCImage>
     <div v-for="(i, index) in content" :key="index" class="post-content-item">
         <NewlineToBr is="span" v-if="i.type === undefined || i.type === 40" :text="i.text" />
@@ -73,11 +69,13 @@ useViewerStore().enable();
 </script>
 
 <style scoped>
-img.tieba-ugc-image {
-    max-inline-size: v-bind('tiebaUGCImageMaxSize.remString');
-    max-block-size: v-bind('tiebaUGCImageMaxSize.remString');
+.tieba-ugc-media {
+    max-inline-size: v-bind('tiebaUGCMediaMaxSize.remString');
+    max-block-size: v-bind('tiebaUGCMediaMaxSize.remString');
     object-fit: contain;
     margin: .25rem;
+}
+.tieba-ugc-image {
     cursor: zoom-in;
 }
 
@@ -86,9 +84,9 @@ img.tieba-ugc-image {
     display: contents;
 }
 /* https://stackoverflow.com/questions/18189147/selecting-an-element-that-doesnt-have-a-child-with-a-certain-class */
-.post-content-item:not(:has(.tieba-ugc-image)):has(+ .post-content-item > .tieba-ugc-image)::after,
-/* allow mupltie continuous .post-content-item > .tieba-ugc-image to not wrap */
-.post-content-item:has(.tieba-ugc-image):not(:has(+ .post-content-item > .tieba-ugc-image))::after {
+.post-content-item:not(:has(* .tieba-ugc-image)):has(+ .post-content-item > * .tieba-ugc-image)::after,
+/* allow mupltie continuous .post-content-item > * .tieba-ugc-image to not wrap */
+.post-content-item:has(* .tieba-ugc-image):not(:has(+ .post-content-item > * .tieba-ugc-image))::after {
     content: '';
     display: block;
 }
