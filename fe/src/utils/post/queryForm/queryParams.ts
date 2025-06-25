@@ -56,7 +56,9 @@ export const paramNamesKeyByType = {
     ]
 } as const;
 
-export const numericParamSubParamRangeValues = ['<', '=', '>', 'BETWEEN', 'IN'] as const;
+export const numericParamSubParamRangeSingleValues = ['<', '=', '>'] as const;
+export const numericParamSubParamRangeMultiValues = ['BETWEEN', 'IN'] as const;
+export const numericParamSubParamRangeValues = [...numericParamSubParamRangeSingleValues, ...numericParamSubParamRangeMultiValues] as const;
 export interface NamelessParamNumeric {
     value: number | string, // support subParam.range === BETWEEN or IN
     subParam: { range: ArrayElement<typeof numericParamSubParamRangeValues> }

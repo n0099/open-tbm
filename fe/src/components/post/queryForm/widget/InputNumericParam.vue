@@ -12,17 +12,19 @@
 import _ from 'lodash';
 
 const { placeholders } = defineProps<{ placeholders: Record<'BETWEEN' | 'IN' | 'equals', string> }>();
-// eslint-disable-next-line vue/define-emits-declaration
-defineEmits({
-    'update:modelValue': (p: KnownNumericParams) =>
-        _.isString(p.name) && _.isString(p.value)
-        && numericParamSubParamRangeValues.includes(p.subParam.range)
+const modelValue = defineModel<KnownNumericParams>({
+    required: true,
+    validator: (p: KnownNumericParams) =>
+        (_.isString(p.name) && paramNamesKeyByType.numeric.includes(p.name))
+        && ((_.isNumber(p.value)
+            && numericParamSubParamRangeSingleValues.includes(p.subParam.range as ArrayElement<typeof numericParamSubParamRangeSingleValues>))
+        || (_.isString(p.value)
+            && numericParamSubParamRangeMultiValues.includes(p.subParam.range as ArrayElement<typeof numericParamSubParamRangeMultiValues>)))
 });
-const modelValue = defineModel<KnownNumericParams>({ required: true });
-
 const emitModelChange = (e: Event) => {
     modelValue.value = { ...modelValue.value, value: (e.target as HTMLInputElement).value };
 };
+
 const inputAttrs = (type: keyof typeof placeholders) => ({
     // eslint-disable-next-line @typescript-eslint/naming-convention
     'aria-label': modelValue.value.name,

@@ -41,14 +41,15 @@ export const inputTextParamPlaceholder = (p: KnownTextParams) =>
 import _ from 'lodash';
 
 const { paramIndex } = defineProps<{ paramIndex: number }>();
-// eslint-disable-next-line vue/define-emits-declaration
-defineEmits({
-    'update:modelValue': (p: KnownTextParams) =>
-        _.isString(p.name) && _.isString(p.value)
+const modelValue = defineModel<KnownTextParams>({
+    required: true,
+    validator: (p: KnownTextParams) =>
+        _.isString(p.name)
+        && paramNamesKeyByType.text.includes(p.name)
+        && _.isString(p.value)
         && textParamSubParamMatchByValues.includes(p.subParam.matchBy)
         && _.isBoolean(p.subParam.spaceSplit)
 });
-const modelValue = defineModel<KnownTextParams>({ required: true });
 const emitModelChange = (
     name: keyof NamelessParamText['subParam'],
     value: ObjValues<NamelessParamText['subParam']>
