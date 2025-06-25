@@ -45,7 +45,7 @@ export const useViewportTopmostPostStore = defineStore('viewportTopmostPost', ()
     // eslint-disable-next-line @typescript-eslint/require-await
     const usingIntersectionObserver = async (): UsingImplement => {
         const { height: windowHeight } = useWindowSize();
-        const onIntersect = (entries: IntersectionObserverEntry[]) => {
+        const onIntersect = _.throttle((entries: IntersectionObserverEntry[]) => {
             _.orderBy(entries, entry => entry.time) // https://github.com/vueuse/vueuse/issues/4197
                 .forEach(entry => {
                     const elWithDataset = entry.target.querySelector('.sticky-stuck-indicator');
@@ -57,7 +57,7 @@ export const useViewportTopmostPostStore = defineStore('viewportTopmostPost', ()
                             && viewportTopmostPost.value?.tid === newTopmostPost.tid))
                         viewportTopmostPost.value = newTopmostPost;
                 });
-        };
+        }, 100, { trailing: true });
 
         // bottom: -100% will only trigger when reaching the top border of root that defaults to viewport
         // https://stackoverflow.com/questions/16302483/event-to-detect-when-positionsticky-is-triggered

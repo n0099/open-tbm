@@ -4,7 +4,9 @@
     :value="currentParam" class="form-select form-control flex-grow-0">
     <option :disabled="currentParam !== 'add'" :hidden="currentParam !== 'add'" value="add">New...</option>
     <optgroup v-for="(group, groupName) in paramsGroup" :key="groupName" :label="groupName">
-        <option v-for="(paramDescription, paramName) in group" :key="paramName" :value="paramName">
+        <option
+            v-for="(paramDescription, paramName) in group" :key="paramName"
+            :value="paramName" :selected="paramName === currentParam">
             {{ paramDescription }}
         </option>
     </optgroup>
@@ -57,7 +59,7 @@ import _ from 'lodash';
 defineProps<{ currentParam: string }>();
 // eslint-disable-next-line vue/define-emits-declaration
 defineEmits({
-    paramChange: (p: string) => _.includes(_.flatMap(paramsGroup, Object.keys), p)
+    paramChange: (paramName: string) => _.includes(_.flatMap(paramsGroup, Object.keys), paramName)
 });
 </script>
 

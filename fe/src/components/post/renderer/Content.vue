@@ -85,9 +85,9 @@ useViewerStore().enable();
     display: contents;
 }
 /* https://stackoverflow.com/questions/18189147/selecting-an-element-that-doesnt-have-a-child-with-a-certain-class */
-.post-content-item:not(:has(* .tieba-ugc-image)):has(+ .post-content-item > * .tieba-ugc-image)::after,
-/* allow mupltie continuous .post-content-item > * .tieba-ugc-image to not wrap */
-.post-content-item:has(* .tieba-ugc-image):not(:has(+ .post-content-item > * .tieba-ugc-image))::after {
+.post-content-item:not(:has(.tieba-ugc-image)):has(+ .post-content-item .tieba-ugc-image)::after,
+/* allow mupltie continuous `.post-content-item .tieba-ugc-image` to not wrap */
+.post-content-item:has(.tieba-ugc-image):not(:has(+ .post-content-item .tieba-ugc-image))::after {
     content: '';
     display: block;
 }
