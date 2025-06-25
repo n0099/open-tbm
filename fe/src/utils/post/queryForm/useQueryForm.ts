@@ -1,7 +1,7 @@
 import 'core-js/actual/structured-clone';
 import _ from 'lodash';
 
-export interface UnknownParam { name: string, value: unknown, subParam: ObjUnknown }
+export interface UnknownParam { name: string, value?: unknown, subParam: ObjUnknown }
 export interface NamelessUnknownParam { value?: unknown, subParam?: ObjUnknown }
 export type ParamPreprocessorOrWatcher = (p: UnknownParam) => void;
 export const useQueryForm = <

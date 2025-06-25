@@ -46,7 +46,7 @@ const modelValue = defineModel<KnownTextParams>({
     validator: (p: KnownTextParams) =>
         _.isString(p.name)
         && paramNamesKeyByType.text.includes(p.name)
-        && _.isString(p.value)
+        && (p.value === undefined || _.isString(p.value))
         && textParamSubParamMatchByValues.includes(p.subParam.matchBy)
         && _.isBoolean(p.subParam.spaceSplit)
 });

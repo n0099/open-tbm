@@ -79,19 +79,17 @@ interface NamelessParamsOther {
     authorManagerType: { value: ForumModeratorType | 'NULL' }
 }
 
-export type AddNameToParam<Name extends UnknownParam['name'], NamelessParam extends Partial<UnknownParam>> =
-Omit<NamelessParam, 'subParam'>
-    & {
-        name: Name,
-        value: unknown,
-        subParam: ObjEmpty
+export interface AddNameToParam<Name extends UnknownParam['name'], NamelessParam extends Partial<UnknownParam>> {
+    name: Name,
+    value?: NamelessParam['value'],
+    subParam: ObjEmpty
         | { not?: boolean }
 
             // https://stackoverflow.com/questions/68232762/check-if-type-is-the-unknown-type
             & (unknown extends NamelessParam['subParam']
                 ? ObjEmpty
                 : NamelessParam['subParam'])
-    };
+}
 export type KnownParams = { [P in keyof NamelessParamsOther]: AddNameToParam<P, NamelessParamsOther[P]> }
     & { [P in ArrayElement<typeof paramNamesKeyByType.numeric>]: AddNameToParam<P, NamelessParamNumeric> }
     & { [P in ArrayElement<typeof paramNamesKeyByType.text>]: AddNameToParam<P, NamelessParamText> }

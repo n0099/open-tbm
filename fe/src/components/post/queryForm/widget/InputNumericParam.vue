@@ -16,7 +16,8 @@ const modelValue = defineModel<KnownNumericParams>({
     required: true,
     validator: (p: KnownNumericParams) =>
         (_.isString(p.name) && paramNamesKeyByType.numeric.includes(p.name))
-        && ((_.isNumber(p.value)
+        && (p.value === undefined
+        || (_.isNumber(p.value)
             && numericParamSubParamRangeSingleValues.includes(p.subParam.range as ArrayElement<typeof numericParamSubParamRangeSingleValues>))
         || (_.isString(p.value)
             && numericParamSubParamRangeMultiValues.includes(p.subParam.range as ArrayElement<typeof numericParamSubParamRangeMultiValues>)))
