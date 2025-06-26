@@ -89,27 +89,26 @@ export const getQueryFormDeps = () => {
 
         const isRequiredPostTypes = (current: PostType[], required?: ObjValues<RequiredPostTypes>): required is undefined => {
             return required === undefined // not set means this param accepts any post types
-                || _.isEmpty(_.difference(current, required[1]));
+                || _.isEmpty(_.difference(current, required));
         };
         const requiredPostTypesToString = (required: NonNullable<ObjValues<RequiredPostTypes>>) => required.join(' | ');
         const postTypes = _.sortBy(uniqueParams.value.postTypes.value);
 
         invalidParamsIndex.value = []; // reset to prevent duplicate indexes
         // check params required post types, query by post id or fid doesn't restrict on post types
-        if (!['postID', 'fid'].includes(currentQueryType.value)) {
-            params.value.map(clearParamDefaultValue).forEach((param, paramIndex) => {
-                if (param?.name === undefined || param.value === undefined) {
+        params.value.map(clearParamDefaultValue).forEach((param, paramIndex) => {
+            // 'undefined' will be set by `<select v-model="ref">` when ref is `undefined`
+            if (param?.name === undefined || param.value === undefined || param.value === 'undefined') {
+                invalidParamsIndex.value.push(paramIndex);
+            } else if (!['postID', 'fid'].includes(currentQueryType.value)) {
+                const required = requiredPostTypesKeyByParam[param.name];
+                if (!isRequiredPostTypes(postTypes, required)) {
                     invalidParamsIndex.value.push(paramIndex);
-                } else {
-                    const required = requiredPostTypesKeyByParam[param.name];
-                    if (!isRequiredPostTypes(postTypes, required)) {
-                        invalidParamsIndex.value.push(paramIndex);
-                        notyShow('warning',
-                            `第${paramIndex + 1}个${param.name}参数要求帖子类型为${requiredPostTypesToString(required)}`);
-                    }
+                    notyShow('warning',
+                        `第${paramIndex + 1}个${param.name}参数要求帖子类型为${requiredPostTypesToString(required)}`);
                 }
-            });
-        }
+            }
+        });
 
         // check order by required post types
         isOrderByInvalid.value = false;

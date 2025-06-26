@@ -60,7 +60,9 @@ export const useQueryForm = <
             throw new Error(`Param ${param.name} not found in paramsDefaultValue`);
 
         /** remove subParam.not: false, which previously added by {@link fillParamDefaultValue()} */
-        if (defaultParam.subParam !== undefined)
+        if (defaultParam.subParam === undefined)
+            defaultParam.subParam = { not: false };
+        else
             defaultParam.subParam.not ??= false;
         // eslint-disable-next-line unicorn/prefer-structured-clone
         const newParam: Partial<UnknownParam> = _.cloneDeep(param); // prevent mutating origin param
