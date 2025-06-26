@@ -11,6 +11,7 @@ use Symfony\Component\Validator\Constraints as Assert;
 class ParamsValidator
 {
     public const array UNIQUE_PARAMS_NAME = ['postTypes', 'orderBy'];
+    public const array USER_GENDER_VALUES = [0, 1, 2, 'NULL'];
 
     private QueryParams $params;
 
@@ -53,7 +54,7 @@ class ParamsValidator
     private function validateParamValue(array $param): void
     {
         $paramsPossibleValue = [
-            'userGender' => ['0', '1', '2'],
+            'userGender' => self::USER_GENDER_VALUES,
             'userManagerType' => ['NULL', 'manager', 'assist', 'voiceadmin'],
         ];
         $numericParams = collect(QueryParams::PARAM_NAME_KEY_BY_TYPE['numeric'])->push('fid')

@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Helper;
+use App\PostsQuery\ParamsValidator;
 use App\PostsQuery\QueryResult;
 use App\Repository\UserRepository;
 use App\Validator\Validator;
@@ -30,7 +31,7 @@ class UsersController extends AbstractController
             'uid' => new Assert\Type('digit'),
             'name' => new Assert\Type('string'),
             'displayName' => new Assert\Type('string'),
-            'gender' => new Assert\Choice(['0', '1', '2', 'NULL']),
+            'gender' => new Assert\Choice(ParamsValidator::USER_GENDER_VALUES),
         ];
         $this->validator->validate($queryParams, new Assert\Collection($paramConstraints, allowMissingFields: true));
 
