@@ -3,7 +3,7 @@
     <div class="input-group">
         <select v-model="selectBy" class="select-user-by form-select">
             <option
-                v-for="[selecteBy, description] in Object.entries(selectByDescription)"
+                v-for="(description, selecteBy) in selectByDescription"
                 :key="selecteBy" :value="selecteBy">
                 {{ description }}
             </option>

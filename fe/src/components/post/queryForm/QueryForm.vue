@@ -79,7 +79,7 @@
             </div>
             <template v-if="p.name === 'fid'">
                 <ReuseSuspenseLoading>
-                    <LazyWidgetSelectForum v-model.number="p.value" class="flex-grow-0 w-50">
+                    <LazyWidgetSelectForum v-model="p.value" class="flex-grow-0 w-50">
                         <template #indicators="{ renderer }">
                             <div class="input-group-text"><RenderFunction :renderer="renderer" /></div>
                         </template>
@@ -162,10 +162,9 @@
                 <select v-model="p.value" class="form-control flex-grow-0 w-25">
                     <option value="NULL">吧友</option>
                     <option
-                        v-for="[moderatorType, moderatorTypeDescription] in Object.entries(knownModeratorTypes)
-                            .flatMap(([key, value]) => [key, value])"
-                        :key="moderatorType" :value="moderatorType">
-                        {{ moderatorTypeDescription }}
+                        v-for="([description, color], type) in knownModeratorTypes"
+                        :key="type" :value="type" :class="`text-${color}`">
+                        {{ description }} {{ type }}
                     </option>
                 </select>
             </template>
