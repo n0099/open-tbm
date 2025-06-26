@@ -72,7 +72,7 @@ export interface NamelessParamText {
     }
 }
 interface NamelessParamDateTime { value: string, subParam: { range: undefined } }
-interface NamelessParamGender { value: '0' | '1' | '2' }
+interface NamelessParamGender { value: Exclude<UserGender, null> }
 interface NamelessParamsOther {
     fid: { value: Fid },
     threadProperties: { value: Array<'good' | 'sticky'> },
@@ -147,7 +147,12 @@ const paramMetadataKeyByType: Record<'array' | 'numeric' | 'text' | 'dateTime' |
             param.value = _.isArray(param.subParam.range) ? param.subParam.range.join(',') : '';
         }
     },
-    gender: { default: { value: '0' } }
+    gender: {
+        default: { value: undefined },
+        preprocessor(param) {
+            param.value = Number(param.value);
+        }
+    }
 };
 const paramsDefaultValue = {
     fid: { value: 0, subParam: {} },
@@ -175,7 +180,9 @@ const useQueryFormDependency: Parameters<typeof useQueryForm>[0] = {
         ..._.mapValues(_.keyBy(paramNamesKeyByType.text), () =>
             paramMetadataKeyByType.text.preprocessor),
         ..._.mapValues(_.keyBy(paramNamesKeyByType.dateTime), () =>
-            paramMetadataKeyByType.dateTime.preprocessor)
+            paramMetadataKeyByType.dateTime.preprocessor),
+        ..._.mapValues(_.keyBy(paramNamesKeyByType.gender), () =>
+            paramMetadataKeyByType.gender.preprocessor)
     },
     paramsWatcher: {
         ..._.mapValues(_.keyBy(paramNamesKeyByType.text), () =>
