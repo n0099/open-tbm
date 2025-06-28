@@ -257,11 +257,6 @@ const currentQueryTypeDescription = computed(() => {
 
 const queryFormSubmit = async () => useTriggerRouteUpdateStore()
     .pushOrReplace('<PostQueryForm>@submit')(generateRoute());
-
-watch(() => uniqueParams.value.postTypes.value, (to, from) => {
-    if (_.isEmpty(to))
-        uniqueParams.value.postTypes.value = from; // to prevent empty post types
-});
 </script>
 
 <style scoped>

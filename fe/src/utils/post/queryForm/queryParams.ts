@@ -200,13 +200,18 @@ const useQueryFormDependency: Parameters<typeof useQueryForm>[0] = {
 // must get invoked with in the setup of component
 export const useQueryFormWithUniqueParams = () => {
     const ret = useQueryForm<KnownUniqueParams, KnownParams>(useQueryFormDependency);
-    ret.uniqueParams.value = {
+    const { uniqueParams } = ret;
+    uniqueParams.value = {
         postTypes: {
             name: 'postTypes',
             ...paramsDefaultValue.postTypes as DeepWritable<typeof paramsDefaultValue.postTypes>
         },
         orderBy: { name: 'orderBy', ...paramsDefaultValue.orderBy }
     };
+    watch(() => uniqueParams.value.postTypes.value, (to, from) => {
+        if (_.isEmpty(to))
+            uniqueParams.value.postTypes.value = from; // to prevent empty post types
+    });
 
     return ret;
 };
