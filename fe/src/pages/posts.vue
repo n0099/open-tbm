@@ -98,7 +98,7 @@ if (import.meta.server) {
     }, { flush: 'sync' });
 }
 
-const parseRouteThenFetch = async (newRoute: RouteLocationNormalizedLoaded, isTriggeredByQueryForm: boolean) => {
+const parseRouteThenFetch = (newRoute: RouteLocationNormalizedLoaded, isTriggeredByQueryForm: boolean) => {
     const setQueryParam = (newQueryParam?: ApiPosts['queryParam']) => {
         queryParam.value = newQueryParam;
         const hydratedVueQuery = useState('vue-query-nuxt').value as ReturnType<typeof dehydrate> | undefined;
@@ -106,7 +106,7 @@ const parseRouteThenFetch = async (newRoute: RouteLocationNormalizedLoaded, isTr
         if (postQuery === undefined || postQuery.state.status !== 'error' || isTriggeredByQueryForm)
             shouldFetch.value = newQueryParam !== undefined;
     };
-    const flattenParams = await parseRouteToGetFlattenParams(newRoute);
+    const flattenParams = parseRouteToGetFlattenParams(newRoute);
     if (flattenParams === false) {
         setQueryParam();
 
@@ -135,14 +135,14 @@ watchDeep(() => [route.query, route.params], async (_discard, [oldQuery, oldPara
     if (to.hash === '' && (isTriggeredByQueryForm || isNewQuery))
         void nextTick(() => { window.scrollTo({ top: 0 }) });
     if (isTriggeredByQueryForm || isNewQuery)
-        await parseRouteThenFetch(to, isTriggeredByQueryForm);
+        parseRouteThenFetch(to, isTriggeredByQueryForm);
 
     /** must invoke {@link parseRouteThenFetch()} before {@link queryClient.resetQueries()} */
     /** to prevent refetch the old route when navigating to different route aka {@link compareRouteIsNewQuery()} is true */
     if (isTriggeredByQueryForm && !isNewQuery)
         await queryClient.resetQueries({ queryKey: ['posts'] });
 });
-await parseRouteThenFetch(route, false);
+parseRouteThenFetch(route, false);
 </script>
 
 <style scoped>

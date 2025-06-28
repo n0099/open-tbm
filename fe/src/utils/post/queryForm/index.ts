@@ -12,7 +12,6 @@ export const isDateTimeParam = (param: Param): param is KnownDateTimeParams =>
 
 export type QueryFormDeps = ReturnType<typeof getQueryFormDeps>;
 export const getQueryFormDeps = () => {
-    const router = useRouter();
     const isOrderByInvalid = ref(false);
     const queryFormWithUniqueParams = useQueryFormWithUniqueParams();
     const {
@@ -79,14 +78,7 @@ export const getQueryFormDeps = () => {
         return generateParamRoute(clearedUniqueParams, clearedParams); // param route
     };
 
-    const checkParams = async (): Promise<boolean> => {
-        const clearedParams = clearedParamsDefaultValue();
-        if (currentQueryType.value === 'postID' && isFidParamExists(clearedParams)) {
-            getFidParams(clearedParams)?.forEach(param => { param.value = 0 }); // reset fid to default
-            notyShow('info', '已移除按帖索引查询所不需要的查询贴吧参数');
-            await router.push(generateRoute()); // update route to match new params without fid
-        }
-
+    const checkParams = () => {
         const isRequiredPostTypes = (current: PostType[], required?: ObjValues<RequiredPostTypes>): required is undefined => {
             return required === undefined // not set means this param accepts any post types
                 || _.isEmpty(_.difference(current, required));
@@ -138,10 +130,10 @@ export const getQueryFormDeps = () => {
         if (_.isArray(route.params.pathMatch))
             parseParamRoute(route.params.pathMatch.filter(i => i !== ''));
     };
-    const parseRouteToGetFlattenParams = async (route: RouteLocationNormalized)
-    : Promise<ReturnType<typeof flattenParams> | false> => {
+    const parseRouteToGetFlattenParams = (route: RouteLocationNormalized)
+    : ReturnType<typeof flattenParams> | false => {
         parseRoute(route);
-        if (await checkParams())
+        if (checkParams())
             return flattenParams();
 
         return false;
