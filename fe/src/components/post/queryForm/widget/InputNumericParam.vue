@@ -8,6 +8,11 @@
 <input v-else @input="emitModelChange($event)" v-bind="inputAttrs('equals')" />
 </template>
 
+<script lang="ts">
+const isSubParamRangeSingleValues = (param: KnownNumericParams) =>
+    numericParamSubParamRangeSingleValues.includes(param.subParam.range as ArrayElement<typeof numericParamSubParamRangeSingleValues>);
+</script>
+
 <script setup lang="ts">
 import _ from 'lodash';
 
@@ -18,12 +23,16 @@ const modelValue = defineModel<KnownNumericParams>({
         (_.isString(p.name) && paramNamesKeyByType.numeric.includes(p.name))
         && (p.value === undefined
         || (_.isNumber(p.value)
-            && numericParamSubParamRangeSingleValues.includes(p.subParam.range as ArrayElement<typeof numericParamSubParamRangeSingleValues>))
+            && isSubParamRangeSingleValues(p))
         || (_.isString(p.value)
             && numericParamSubParamRangeMultiValues.includes(p.subParam.range as ArrayElement<typeof numericParamSubParamRangeMultiValues>)))
 });
 const emitModelChange = (e: Event) => {
-    modelValue.value = { ...modelValue.value, value: (e.target as HTMLInputElement).value };
+    const inputEl = e.target as HTMLInputElement;
+    const value = isSubParamRangeSingleValues(modelValue.value)
+        ? Number(inputEl.value)
+        : inputEl.value;
+    modelValue.value = { ...modelValue.value, value };
 };
 
 const inputAttrs = (type: keyof typeof placeholders) => ({
