@@ -39,8 +39,9 @@ export const queryFunction = async <TResponse>
     queryParam?: ObjUnknown,
     signal?: AbortSignal
 ): Promise<TResponse> => {
+    const globalLoadingStore = useGlobalLoadingStore();
     if (import.meta.client) {
-        useGlobalLoadingStore().start();
+        globalLoadingStore.start();
         document.body.style.cursor = 'progress';
     }
     try {
@@ -62,7 +63,7 @@ export const queryFunction = async <TResponse>
         throw e;
     } finally {
         if (import.meta.client) {
-            useGlobalLoadingStore().stop();
+            globalLoadingStore.stop();
             document.body.style.cursor = '';
         }
     }

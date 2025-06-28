@@ -1,7 +1,7 @@
 <template>
 <div
     id="app-wrapper" class="d-flex flex-column gap-3"
-    :class="{ 'is-hydrating-or-ssr': useHydrationStore().isHydratingOrSSR }">
+    :class="{ 'is-hydrating-or-ssr': hydrationStore.isHydratingOrSSR }">
     <header>
         <GlobalNavBar />
         <MinimumResolutionWarning />
@@ -32,6 +32,7 @@ import iconLoadingBlock from 'assets/icon-loading-block.svg';
 import AntdZhCn from 'ant-design-vue/es/locale/zh_CN';
 
 const config = useRuntimeConfig().public;
+const hydrationStore = useHydrationStore();
 const routeUpdatingStore = useRouteUpdatingStore();
 const globalLoadingStore = useGlobalLoadingStore();
 

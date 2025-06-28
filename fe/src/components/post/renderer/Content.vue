@@ -2,7 +2,7 @@
 <div v-viewer.static>
     <!-- eslint-disable-next-line vue/no-unused-vars -->
     <DefineUGCImage v-slot="{ $slots, src, ...attrs }">
-        <NuxtLink v-if="useHydrationStore().isHydratingOrSSR" :to="src" target="_blank">
+        <NuxtLink v-if="hydrationStore.isHydratingOrSSR" :to="src" target="_blank">
             <img
                 :src="src" :referrerpolicy="tiebaImageReferrerPolicy"
                 loading="lazy" class="tieba-ugc-media tieba-ugc-image" v-bind="attrs" />
@@ -66,6 +66,7 @@ defineProps<{ content: PostContent | null }>();
 const tiebaImageReferrerPolicy = undefinedWhenEmpty(useRuntimeConfig().public
     .tiebaImageReferrerPolicy as ImgHTMLAttributes['referrerpolicy']);
 const [DefineUGCImage, ReuseUGCImage] = createReusableTemplate<{ src?: string }>({ inheritAttrs: false });
+const hydrationStore = useHydrationStore();
 useViewerStore().enable();
 </script>
 

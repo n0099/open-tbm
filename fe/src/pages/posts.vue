@@ -48,6 +48,7 @@ const { data, error, isPending, isFetching, isFetched, dataUpdatedAt, errorUpdat
     useApiPosts(queryParam, { initialPageParam: initialPageCursor, enabled: shouldFetch });
 const selectedRenderTypes = ref<[PostRenderer]>(['list']);
 const renderType = computed(() => selectedRenderTypes.value[0]);
+const triggerRouteUpdateStore = useTriggerRouteUpdateStore();
 const queryFormDeps = getQueryFormDeps();
 const { currentQueryType, parseRouteToGetFlattenParams } = queryFormDeps;
 usePostsSEO(data, currentQueryType);
@@ -129,7 +130,7 @@ const parseRouteThenFetch = (newRoute: RouteLocationNormalizedLoaded, isTriggere
 watchDeep(() => [route.query, route.params], async (_discard, [oldQuery, oldParams]) => {
     const to = route;
     const from = { query: oldQuery, params: oldParams } as RouteLocationNormalizedLoaded;
-    const isTriggeredByQueryForm = useTriggerRouteUpdateStore()
+    const isTriggeredByQueryForm = triggerRouteUpdateStore
         .isTriggeredBy('<PostQueryForm>@submit', Object.assign(to, { force: true }));
     const isNewQuery = compareRouteIsNewQuery(to, from);
     if (to.hash === '' && (isTriggeredByQueryForm || isNewQuery))

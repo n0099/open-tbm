@@ -90,6 +90,7 @@ const { thread } = defineProps<{
     forums: ApiPosts['response']['forums'],
     replyElementRefs: TemplateRefsList<HTMLElement | null>
 }>();
+const hydrationStore = useHydrationStore();
 const highlightPostStore = useHighlightPostStore();
 const { currentCursor } = usePostPageProvision().inject();
 const viewportTopmostPostStore = useViewportTopmostPostStore();
@@ -99,7 +100,7 @@ const { stickyTitleEl } = await viewportTopmostPostStore.observe({ cursor: curre
 const zanTippyContent = (zan: NonNullable<Thread['zan']>) => () => {
     const latestTimeText = () => {
         const dateTime = DateTime.fromSeconds(Number(zan.lastTime));
-        if (useHydrationStore().isHydratingOrSSR) {
+        if (hydrationStore.isHydratingOrSSR) {
             return setDateTimeZoneAndLocale()(dateTime)
                 .toLocaleString(DateTime.DATETIME_FULL_WITH_SECONDS);
         }

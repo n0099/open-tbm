@@ -199,7 +199,7 @@
             </span>
         </button>
         <span class="col-auto text-muted">{{ currentQueryTypeDescription }}</span>
-        <span v-if="useHydrationStore().isHydratingOrSSR" class="col-auto">
+        <span v-if="hydrationStore.isHydratingOrSSR" class="col-auto">
             提交查询表单需要使用 JavaScript
         </span>
     </div>
@@ -226,6 +226,7 @@ const { // https://github.com/orgs/vuejs/discussions/6147
     deleteParam
 } = queryFormDeps;
 const [DefineSuspenseLoading, ReuseSuspenseLoading] = createReusableTemplate();
+const hydrationStore = useHydrationStore();
 
 const getPostIDParamPlaceholders = (p: Param) => ({
     IN: p.name === 'tid' ? '5000000000,5000000001,5000000002,...' : '15000000000,15000000001,15000000002,...',
