@@ -105,9 +105,6 @@
                 </ReuseSuspenseLoading>
             </template>
             <template v-if="isTextParam(p)">
-                <input
-                    v-model="p.value" :placeholder="inputTextParamPlaceholder(p)"
-                    type="text" class="form-control" required />
                 <ReuseSuspenseLoading>
                     <LazyPostQueryFormWidgetInputTextParam
                         @update:modelValue="onParamUpdate(pI, $event)"
@@ -210,7 +207,6 @@
 </template>
 
 <script setup lang="ts">
-import { inputTextParamPlaceholder } from '@/components/post/queryForm/widget/InputTextParam.vue';
 import { faPlus, faSortAmountDown, faTimes } from '@fortawesome/free-solid-svg-icons';
 import _ from 'lodash';
 

@@ -1,4 +1,7 @@
 <template>
+<input
+    v-model="modelValue.value" :placeholder="inputTextParamPlaceholder(modelValue)"
+    type="text" class="form-control" required />
 <div class="input-group-text">
     <div class="form-check form-check-inline">
         <input
@@ -27,16 +30,6 @@
 </div>
 </template>
 
-<script lang="ts">
-const matchByDescription = {
-    implicit: '模糊',
-    explicit: '精确',
-    regex: '正则'
-};
-export const inputTextParamPlaceholder = (p: KnownTextParams) =>
-    `${matchByDescription[p.subParam.matchBy]}匹配 空格${p.subParam.spaceSplit ? '不能' : ''}分割关键词`;
-</script>
-
 <script setup lang="ts">
 import _ from 'lodash';
 
@@ -59,6 +52,14 @@ const emitModelChange = (
         subParam: { ...modelValue.value.subParam, [name]: value }
     } as KnownTextParams;
 };
+
+const matchByDescription = {
+    implicit: '模糊',
+    explicit: '精确',
+    regex: '正则'
+};
+const inputTextParamPlaceholder = (p: KnownTextParams) =>
+    `${matchByDescription[p.subParam.matchBy]}匹配 空格${p.subParam.spaceSplit ? '不能' : ''}分割关键词`;
 
 type InputType = KnownTextParams['subParam']['matchBy'] | 'spaceSplit';
 const inputID = (type: InputType) =>
