@@ -1,7 +1,7 @@
 import 'core-js/actual/structured-clone';
 import _ from 'lodash';
 
-export interface UnknownParam { name: string, value: unknown, subParam: ObjUnknown }
+export interface UnknownParam { name: string, value?: unknown, subParam: ObjUnknown }
 export interface NamelessUnknownParam { value?: unknown, subParam?: ObjUnknown }
 export type ParamPreprocessorOrWatcher = (p: UnknownParam) => void;
 export const useQueryForm = <
@@ -23,7 +23,7 @@ export const useQueryForm = <
 
     // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-parameters
     const fillParamDefaultValue = <T extends Param | UniqueParam>
-    (param: Partial<UnknownParam> & { name: string }, resetToDefault = false): T => {
+    (param: Partial<UnknownParam> & Pick<UnknownParam, 'name'>, resetToDefault = false): T => {
         // prevent defaultsDeep mutate origin paramsDefaultValue
         // eslint-disable-next-line compat/compat
         const defaultParam = structuredClone(deps.paramsDefaultValue[param.name]);
@@ -60,7 +60,9 @@ export const useQueryForm = <
             throw new Error(`Param ${param.name} not found in paramsDefaultValue`);
 
         /** remove subParam.not: false, which previously added by {@link fillParamDefaultValue()} */
-        if (defaultParam.subParam !== undefined)
+        if (defaultParam.subParam === undefined)
+            defaultParam.subParam = { not: false };
+        else
             defaultParam.subParam.not ??= false;
         // eslint-disable-next-line unicorn/prefer-structured-clone
         const newParam: Partial<UnknownParam> = _.cloneDeep(param); // prevent mutating origin param
@@ -198,11 +200,6 @@ export const useQueryForm = <
             .filter(param => param.name in deps.paramsWatcher)
             .each(param => deps.paramsWatcher[param.name]?.(param))
             .value();
-    });
-
-    onBeforeMount(() => {
-        uniqueParams.value = _.mapValues(uniqueParams.value, _.unary(fillParamDefaultValue)) as UniqueParams;
-        params.value = params.value.map(_.unary(fillParamDefaultValue)) as typeof params.value;
     });
 
     return {

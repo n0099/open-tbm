@@ -1,28 +1,40 @@
 <template>
 <input
     v-if="modelValue.subParam.range === 'IN'"
-    @input="emitModelChange($event)" v-bind="inputAttrs('IN')" />
+    @change="emitModelChange($event)" v-bind="inputAttrs('IN')" />
 <input
     v-else-if="modelValue.subParam.range === 'BETWEEN'"
-    @input="emitModelChange($event)" v-bind="inputAttrs('BETWEEN')" />
-<input v-else @input="emitModelChange($event)" v-bind="inputAttrs('equals')" />
+    @change="emitModelChange($event)" v-bind="inputAttrs('BETWEEN')" />
+<input v-else @change="emitModelChange($event)" v-bind="inputAttrs('equals')" />
 </template>
+
+<script lang="ts">
+const isSubParamRangeSingleValues = (param: KnownNumericParams) =>
+    numericParamSubParamRangeSingleValues.includes(param.subParam.range as ArrayElement<typeof numericParamSubParamRangeSingleValues>);
+</script>
 
 <script setup lang="ts">
 import _ from 'lodash';
 
 const { placeholders } = defineProps<{ placeholders: Record<'BETWEEN' | 'IN' | 'equals', string> }>();
-// eslint-disable-next-line vue/define-emits-declaration
-defineEmits({
-    'update:modelValue': (p: KnownNumericParams) =>
-        _.isString(p.name) && _.isString(p.value)
-        && numericParamSubParamRangeValues.includes(p.subParam.range)
+const modelValue = defineModel<KnownNumericParams>({
+    required: true,
+    validator: (p: KnownNumericParams) =>
+        (_.isString(p.name) && paramNamesKeyByType.numeric.includes(p.name))
+        && (p.value === undefined
+        || (_.isNumber(p.value)
+            && isSubParamRangeSingleValues(p))
+        || (_.isString(p.value)
+            && numericParamSubParamRangeMultiValues.includes(p.subParam.range as ArrayElement<typeof numericParamSubParamRangeMultiValues>)))
 });
-const modelValue = defineModel<KnownNumericParams>({ required: true });
-
 const emitModelChange = (e: Event) => {
-    modelValue.value = { ...modelValue.value, value: (e.target as HTMLInputElement).value };
+    const inputEl = e.target as HTMLInputElement;
+    const value = isSubParamRangeSingleValues(modelValue.value)
+        ? Number(inputEl.value)
+        : inputEl.value;
+    modelValue.value = { ...modelValue.value, value };
 };
+
 const inputAttrs = (type: keyof typeof placeholders) => ({
     // eslint-disable-next-line @typescript-eslint/naming-convention
     'aria-label': modelValue.value.name,

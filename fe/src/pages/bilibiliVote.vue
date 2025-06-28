@@ -63,7 +63,7 @@
             <div class="loading-table loading-huaji" />
         </template>
         <LazyATable
-            v-if="!useHydrationStore().isHydratingOrSSR" rowKey="candidateIndex"
+            v-if="!hydrationStore.isHydratingOrSSR" rowKey="candidateIndex"
             :columns="candidatesDetailColumns" :dataSource="candidatesDetailData" size="small"
             :pagination="{ pageSize: 1056, pageSizeOptions: ['20', '50', '100', '300', '1056'] }">
             <template #bodyCell="{ column: { dataIndex: column }, value: name }">
@@ -452,6 +452,7 @@ const chartsInitialOption: {
 };
 
 useHead({ title: 'bilibili吧2019年吧主公投 - 专题' });
+const hydrationStore = useHydrationStore();
 const query = ref<{
     top5CandidateCountGroupByTimeGranularity: GroupByTimeGranularity,
     allVoteCountGroupByTimeGranularity: GroupByTimeGranularity

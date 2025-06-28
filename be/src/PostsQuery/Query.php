@@ -114,13 +114,13 @@ readonly class Query extends BaseQuery
         $userTypeOfUserParams = str_starts_with($name, 'author') ? 'author' : 'latestReplier';
         $fieldNameOfUserNameParams = str_ends_with($name, 'DisplayName') ? 'displayName' : 'name';
         $getAndCacheUserQuery =
-            static function (QueryBuilder $newQueryWhenCacheMiss) use (&$outCachedUserQueryResult): Collection {
+            static function (QueryBuilder $newQueryWhenCacheMiss) use (&$outCachedUserQueryResult): array {
                 // $outCachedUserQueryResult === null means it's the first call
                 $outCachedUserQueryResult ??= $newQueryWhenCacheMiss->getQuery()->getResult();
                 return $outCachedUserQueryResult;
             };
 
-        $whereBetween = static function (string $field) use ($query, $not, $value, $sqlParamName) {
+        $whereBetween = static function (string $field) use ($not, $query, $sqlParamName, $value) {
             $values = explode(',', $value);
             return $query->andWhere("t.$field $not BETWEEN :{$sqlParamName}_0 AND :{$sqlParamName}_1")
                 ->setParameter("{$sqlParamName}_0", $values[0])
@@ -154,7 +154,7 @@ readonly class Query extends BaseQuery
             // dateTimeRange
             'postedAt', 'latestReplyPostedAt' => $whereBetween($name),
             // array
-            'threadProperties' => (static function () use ($notReverse, $value, $query) {
+            'threadProperties' => (static function () use ($notReverse, $query, $value) {
                 foreach ($value as $threadProperty) {
                     match ($threadProperty) {
                         'good' => $query->andWhere("t.isGood IS $notReverse NULL"),
@@ -175,15 +175,19 @@ readonly class Query extends BaseQuery
                             $sqlParamName,
                         )),
                     ),
-            'authorGender', 'latestReplierGender' =>
-                $query->andWhere("t.{$userTypeOfUserParams}Uid $not IN (:$sqlParamName)")
-                    ->setParameter(
-                        $sqlParamName,
-                        $getAndCacheUserQuery($this->userRepository->createQueryBuilder('t')
-                            ->select('t.uid')
-                            ->where("t.gender = :{$sqlParamName}_gender")
-                            ->setParameter("{$sqlParamName}_gender", $value)),
-                    ),
+            'authorGender', 'latestReplierGender' => (function () use ($not, $query, $sqlParamName, $value, $userTypeOfUserParams, $getAndCacheUserQuery) {
+                $newUserQuery = $this->userRepository->createQueryBuilder('t')->select('t.uid');
+                if ($value === 'NULL') {
+                    $newUserQuery->where('t.gender IS NULL');
+                } else {
+                    $newUserQuery
+                        ->where("t.gender = :{$sqlParamName}_gender")
+                        ->setParameter("{$sqlParamName}_gender", $value);
+                }
+                return $query
+                    ->andWhere("t.{$userTypeOfUserParams}Uid $not IN (:$sqlParamName)")
+                    ->setParameter($sqlParamName, $getAndCacheUserQuery($newUserQuery));
+            })(),
             'authorManagerType' =>
                 $value === 'NULL'
                     ? $query->andWhere("t.authorManagerType IS $not NULL")

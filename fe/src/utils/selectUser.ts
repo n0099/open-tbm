@@ -2,7 +2,7 @@ export const selectUserBy = ['', 'uid', 'name', 'nameNULL', 'displayName', 'disp
 export type SelectUserBy = ArrayElement<typeof selectUserBy>;
 export type SelectUserParams = Partial<{
     uid: BaiduUserID,
-    uidCompareBy: '<' | '=' | '>',
+    uidCompareBy: ArrayElement<typeof numericParamSubParamRangeSingleValues>,
     // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
     name: string | 'NULL',
     nameUseRegex: boolean,

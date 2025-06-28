@@ -1,54 +1,48 @@
 <template>
+<input
+    v-model.lazy="modelValue.value" :placeholder="inputTextParamPlaceholder(modelValue)"
+    type="text" class="form-control" required />
 <div class="input-group-text">
     <div class="form-check form-check-inline">
         <input
-            @input="emitModelChange('matchBy', ($event.target as HTMLInputElement).value as 'regex')"
+            @change="emitModelChange('matchBy', ($event.target as HTMLInputElement).value as 'regex')"
             v-bind="inputAttrs('regex')" />
         <label :for="inputID('regex')" class="form-check-label">正则</label>
     </div>
     <div class="form-check form-check-inline">
         <input
-            @input="emitModelChange('matchBy', ($event.target as HTMLInputElement).value as 'implicit')"
+            @change="emitModelChange('matchBy', ($event.target as HTMLInputElement).value as 'implicit')"
             v-bind="inputAttrs('implicit')" />
         <label :for="inputID('implicit')" class="form-check-label">模糊</label>
     </div>
     <div class="form-check form-check-inline">
         <input
-            @input="emitModelChange('matchBy', ($event.target as HTMLInputElement).value as 'explicit')"
+            @change="emitModelChange('matchBy', ($event.target as HTMLInputElement).value as 'explicit')"
             v-bind="inputAttrs('explicit')" />
         <label :for="inputID('explicit')" class="form-check-label">精确</label>
     </div>
     <div class="form-check form-check-inline">
         <input
-            @input="emitModelChange('spaceSplit', ($event.target as HTMLInputElement).checked)"
+            @change="emitModelChange('spaceSplit', ($event.target as HTMLInputElement).checked)"
             v-bind="inputAttrs('spaceSplit')" />
         <label :for="inputID('spaceSplit')" class="form-check-label">空格分隔</label>
     </div>
 </div>
 </template>
 
-<script lang="ts">
-const matchByDescription = {
-    implicit: '模糊',
-    explicit: '精确',
-    regex: '正则'
-};
-export const inputTextParamPlaceholder = (p: KnownTextParams) =>
-    `${matchByDescription[p.subParam.matchBy]}匹配 空格${p.subParam.spaceSplit ? '不能' : ''}分割关键词`;
-</script>
-
 <script setup lang="ts">
 import _ from 'lodash';
 
 const { paramIndex } = defineProps<{ paramIndex: number }>();
-// eslint-disable-next-line vue/define-emits-declaration
-defineEmits({
-    'update:modelValue': (p: KnownTextParams) =>
-        _.isString(p.name) && _.isString(p.value)
+const modelValue = defineModel<KnownTextParams>({
+    required: true,
+    validator: (p: KnownTextParams) =>
+        _.isString(p.name)
+        && paramNamesKeyByType.text.includes(p.name)
+        && (p.value === undefined || _.isString(p.value))
         && textParamSubParamMatchByValues.includes(p.subParam.matchBy)
         && _.isBoolean(p.subParam.spaceSplit)
 });
-const modelValue = defineModel<KnownTextParams>({ required: true });
 const emitModelChange = (
     name: keyof NamelessParamText['subParam'],
     value: ObjValues<NamelessParamText['subParam']>
@@ -58,6 +52,14 @@ const emitModelChange = (
         subParam: { ...modelValue.value.subParam, [name]: value }
     } as KnownTextParams;
 };
+
+const matchByDescription = {
+    implicit: '模糊',
+    explicit: '精确',
+    regex: '正则'
+};
+const inputTextParamPlaceholder = (p: KnownTextParams) =>
+    `${matchByDescription[p.subParam.matchBy]}匹配 空格${p.subParam.spaceSplit ? '不能' : ''}分割关键词`;
 
 type InputType = KnownTextParams['subParam']['matchBy'] | 'spaceSplit';
 const inputID = (type: InputType) =>

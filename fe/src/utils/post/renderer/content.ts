@@ -20,15 +20,37 @@ export const extractContentTexts = (content?: PostContent | null) => content
             }
         })() ?? '');
     }, '') ?? '';
-export const toHTTPS = (url?: string) => url?.replace('http://', 'https://');
+export const toHTTPS = (rawUrl?: string): string | undefined => {
+    if (rawUrl === undefined)
+        return undefined;
+    const url = URL.parse(rawUrl);
+    if (url === null)
+        return undefined;
+    url.protocol = 'https:';
+
+    return url.toString();
+};
 const config = useRuntimeConfig().public;
+
+// https://github.com/n0099/open-tbm/blob/3dd6664e522a7ae74c5143bacf8c90294fcc568a/c%23/crawler/src/Tieba/Crawl/Parser/Post/ReplyParser.cs#L7
+const tiebaImageFilenameRegex = /^(?:[0-9a-f]{40}|[0-9a-f]{24})$/u;
 export const toTiebaImageUrl = (originSrc?: string) => {
-    if (originSrc === undefined || !/^(?:[0-9a-f]{40}|[0-9a-f]{24})$/u.test(originSrc))
+    if (originSrc === undefined || !tiebaImageFilenameRegex.test(originSrc))
         return originSrc;
     if (config.tiebaImageProxy !== '')
         return `${config.tiebaImageProxy}/${originSrc}`;
 
     return `https://imgsrc.baidu.com/forum/pic/item/${originSrc}.jpg`;
+};
+
+// https://github.com/n0099/open-tbm/blob/3dd6664e522a7ae74c5143bacf8c90294fcc568a/c%23/crawler/src/Tieba/Crawl/Parser/Post/ReplyParser.cs#L59
+export const extractTiebaImageFilename = (rawURL: string): string | undefined => {
+    const url = new URL(rawURL);
+    const urlFilename = url.pathname.split('/').at(-1);
+    if (urlFilename === undefined)
+        return undefined;
+
+    return tiebaImageFilenameRegex.exec(urlFilename.split('.')[0])?.[0];
 };
 export const tryExtractTiebaOutboundUrl = (rawURL?: string) => {
     const url = new URL(rawURL ?? '');

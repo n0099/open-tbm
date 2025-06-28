@@ -54,8 +54,10 @@ export const useRelativeTimeStore = defineStore('relativeTime', () => {
         const observeTargetEl = ref<Element | null>();
         if (supportIntersectionObserver.value) {
             watchImmediate(observeTargetEl, (currentTarget, originalTarget) => {
-                if (!_.isNil(originalTarget))
+                if (!_.isNil(originalTarget)) {
                     intersectionObserver?.unobserve(originalTarget);
+                    clearTimeout(getElementVisibility(originalTarget).debounceId);
+                }
                 if (!_.isNil(currentTarget)) {
                     intersectionObserver?.observe(currentTarget);
                     isVisibleRef.value = getElementVisibility(currentTarget).isVisible;

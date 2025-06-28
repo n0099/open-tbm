@@ -44,12 +44,13 @@ const queryClient = useQueryClient();
 const queryParam = ref<ApiPosts['queryParam']>();
 const shouldFetch = ref(false);
 const initialPageCursor = ref<Cursor>('');
-const { data, error, isPending, isFetching, isFetched, dataUpdatedAt, errorUpdatedAt, fetchNextPage, isFetchingNextPage, hasNextPage } =
-    useApiPosts(queryParam, { initialPageParam: initialPageCursor, enabled: shouldFetch });
 const selectedRenderTypes = ref<[PostRenderer]>(['list']);
 const renderType = computed(() => selectedRenderTypes.value[0]);
+const triggerRouteUpdateStore = useTriggerRouteUpdateStore();
 const queryFormDeps = getQueryFormDeps();
 const { currentQueryType, parseRouteToGetFlattenParams } = queryFormDeps;
+const { data, error, isPending, isFetching, isFetched, dataUpdatedAt, errorUpdatedAt, fetchNextPage, isFetchingNextPage, hasNextPage } =
+    useApiPosts(queryParam, { initialPageParam: initialPageCursor, enabled: shouldFetch });
 usePostsSEO(data, currentQueryType);
 
 const queryStartedAtSSR = useState('postsQuerySSRStartTime', () => 0);
@@ -98,15 +99,15 @@ if (import.meta.server) {
     }, { flush: 'sync' });
 }
 
-const parseRouteThenFetch = async (newRoute: RouteLocationNormalizedLoaded, isTriggeredByQueryForm: boolean) => {
+const parseRouteThenFetch = (newRoute: RouteLocationNormalizedLoaded, isTriggeredByQueryForm: boolean) => {
     const setQueryParam = (newQueryParam?: ApiPosts['queryParam']) => {
         queryParam.value = newQueryParam;
-        const hydratedVueQuery = useState('vue-query-nuxt').value as ReturnType<typeof dehydrate> | undefined;
-        const postQuery = hydratedVueQuery?.queries.find(query => _.isEqual(query.queryKey, [apiPostsEndpoint, newQueryParam]));
-        if (postQuery === undefined || postQuery.state.status !== 'error' || isTriggeredByQueryForm)
+        const dehydratedVueQuery = useState('vue-query-nuxt').value as ReturnType<typeof dehydrate> | undefined;
+        const postQuery = dehydratedVueQuery?.queries.find(query => _.isEqual(query.queryKey, [apiPostsEndpoint, newQueryParam]));
+        if (isTriggeredByQueryForm || postQuery === undefined || postQuery.state.status !== 'error')
             shouldFetch.value = newQueryParam !== undefined;
     };
-    const flattenParams = await parseRouteToGetFlattenParams(newRoute);
+    const flattenParams = parseRouteToGetFlattenParams(newRoute);
     if (flattenParams === false) {
         setQueryParam();
 
@@ -129,20 +130,18 @@ const parseRouteThenFetch = async (newRoute: RouteLocationNormalizedLoaded, isTr
 watchDeep(() => [route.query, route.params], async (_discard, [oldQuery, oldParams]) => {
     const to = route;
     const from = { query: oldQuery, params: oldParams } as RouteLocationNormalizedLoaded;
-    const isTriggeredByQueryForm = useTriggerRouteUpdateStore()
+    const isTriggeredByQueryForm = triggerRouteUpdateStore
         .isTriggeredBy('<PostQueryForm>@submit', Object.assign(to, { force: true }));
     const isNewQuery = compareRouteIsNewQuery(to, from);
     if (to.hash === '' && (isTriggeredByQueryForm || isNewQuery))
         void nextTick(() => { window.scrollTo({ top: 0 }) });
-    if (isTriggeredByQueryForm || isNewQuery)
-        await parseRouteThenFetch(to, isTriggeredByQueryForm);
-
-    /** must invoke {@link parseRouteThenFetch()} before {@link queryClient.resetQueries()} */
-    /** to prevent refetch the old route when navigating to different route aka {@link compareRouteIsNewQuery()} is true */
     if (isTriggeredByQueryForm && !isNewQuery)
         await queryClient.resetQueries({ queryKey: ['posts'] });
+    if (isTriggeredByQueryForm || isNewQuery)
+        parseRouteThenFetch(to, isTriggeredByQueryForm);
 });
-await parseRouteThenFetch(route, false);
+await nextTick(); // prevent hydartion mismatch due to race condition
+parseRouteThenFetch(route, false);
 </script>
 
 <style scoped>

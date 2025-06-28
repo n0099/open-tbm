@@ -56,7 +56,9 @@ export const paramNamesKeyByType = {
     ]
 } as const;
 
-export const numericParamSubParamRangeValues = ['<', '=', '>', 'BETWEEN', 'IN'] as const;
+export const numericParamSubParamRangeSingleValues = ['<', '=', '>'] as const;
+export const numericParamSubParamRangeMultiValues = ['BETWEEN', 'IN'] as const;
+export const numericParamSubParamRangeValues = [...numericParamSubParamRangeSingleValues, ...numericParamSubParamRangeMultiValues] as const;
 export interface NamelessParamNumeric {
     value: number | string, // support subParam.range === BETWEEN or IN
     subParam: { range: ArrayElement<typeof numericParamSubParamRangeValues> }
@@ -70,26 +72,24 @@ export interface NamelessParamText {
     }
 }
 interface NamelessParamDateTime { value: string, subParam: { range: undefined } }
-interface NamelessParamGender { value: '0' | '1' | '2' }
+interface NamelessParamGender { value: Exclude<UserGender, null> }
 interface NamelessParamsOther {
     fid: { value: Fid },
     threadProperties: { value: Array<'good' | 'sticky'> },
     authorManagerType: { value: ForumModeratorType | 'NULL' }
 }
 
-export type AddNameToParam<Name extends UnknownParam['name'], NamelessParam extends Partial<UnknownParam>> =
-Omit<NamelessParam, 'subParam'>
-    & {
-        name: Name,
-        value: unknown,
-        subParam: ObjEmpty
+export interface AddNameToParam<Name extends UnknownParam['name'], NamelessParam extends Partial<UnknownParam>> {
+    name: Name,
+    value?: NamelessParam['value'],
+    subParam: ObjEmpty
         | { not?: boolean }
 
             // https://stackoverflow.com/questions/68232762/check-if-type-is-the-unknown-type
             & (unknown extends NamelessParam['subParam']
                 ? ObjEmpty
                 : NamelessParam['subParam'])
-    };
+}
 export type KnownParams = { [P in keyof NamelessParamsOther]: AddNameToParam<P, NamelessParamsOther[P]> }
     & { [P in ArrayElement<typeof paramNamesKeyByType.numeric>]: AddNameToParam<P, NamelessParamNumeric> }
     & { [P in ArrayElement<typeof paramNamesKeyByType.text>]: AddNameToParam<P, NamelessParamText> }
@@ -147,7 +147,12 @@ const paramMetadataKeyByType: Record<'array' | 'numeric' | 'text' | 'dateTime' |
             param.value = _.isArray(param.subParam.range) ? param.subParam.range.join(',') : '';
         }
     },
-    gender: { default: { value: '0' } }
+    gender: {
+        default: { value: undefined },
+        preprocessor(param) {
+            param.value = Number(param.value);
+        }
+    }
 };
 const paramsDefaultValue = {
     fid: { value: 0, subParam: {} },
@@ -175,7 +180,9 @@ const useQueryFormDependency: Parameters<typeof useQueryForm>[0] = {
         ..._.mapValues(_.keyBy(paramNamesKeyByType.text), () =>
             paramMetadataKeyByType.text.preprocessor),
         ..._.mapValues(_.keyBy(paramNamesKeyByType.dateTime), () =>
-            paramMetadataKeyByType.dateTime.preprocessor)
+            paramMetadataKeyByType.dateTime.preprocessor),
+        ..._.mapValues(_.keyBy(paramNamesKeyByType.gender), () =>
+            paramMetadataKeyByType.gender.preprocessor)
     },
     paramsWatcher: {
         ..._.mapValues(_.keyBy(paramNamesKeyByType.text), () =>
@@ -193,13 +200,18 @@ const useQueryFormDependency: Parameters<typeof useQueryForm>[0] = {
 // must get invoked with in the setup of component
 export const useQueryFormWithUniqueParams = () => {
     const ret = useQueryForm<KnownUniqueParams, KnownParams>(useQueryFormDependency);
-    ret.uniqueParams.value = {
+    const { uniqueParams } = ret;
+    uniqueParams.value = {
         postTypes: {
             name: 'postTypes',
             ...paramsDefaultValue.postTypes as DeepWritable<typeof paramsDefaultValue.postTypes>
         },
         orderBy: { name: 'orderBy', ...paramsDefaultValue.orderBy }
     };
+    watch(() => uniqueParams.value.postTypes.value, (to, from) => {
+        if (_.isEmpty(to))
+            uniqueParams.value.postTypes.value = from; // to prevent empty post types
+    });
 
     return ret;
 };

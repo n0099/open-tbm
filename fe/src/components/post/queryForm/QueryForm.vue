@@ -79,7 +79,7 @@
             </div>
             <template v-if="p.name === 'fid'">
                 <ReuseSuspenseLoading>
-                    <LazyWidgetSelectForum v-model.number="p.value" class="flex-grow-0 w-50">
+                    <LazyWidgetSelectForum v-model="p.value" class="flex-grow-0 w-50">
                         <template #indicators="{ renderer }">
                             <div class="input-group-text"><RenderFunction :renderer="renderer" /></div>
                         </template>
@@ -105,9 +105,6 @@
                 </ReuseSuspenseLoading>
             </template>
             <template v-if="isTextParam(p)">
-                <input
-                    v-model="p.value" :placeholder="inputTextParamPlaceholder(p)"
-                    type="text" class="form-control" required />
                 <ReuseSuspenseLoading>
                     <LazyPostQueryFormWidgetInputTextParam
                         @update:modelValue="onParamUpdate(pI, $event)"
@@ -162,10 +159,9 @@
                 <select v-model="p.value" class="form-control flex-grow-0 w-25">
                     <option value="NULL">吧友</option>
                     <option
-                        v-for="[moderatorType, moderatorTypeDescription] in Object.entries(knownModeratorTypes)
-                            .flatMap(([key, value]) => [key, value])"
-                        :key="moderatorType" :value="moderatorType">
-                        {{ moderatorTypeDescription }}
+                        v-for="([description, color], type) in knownModeratorTypes"
+                        :key="type" :value="type" :class="`text-${color}`">
+                        {{ description }} {{ type }}
                     </option>
                 </select>
             </template>
@@ -203,7 +199,7 @@
             </span>
         </button>
         <span class="col-auto text-muted">{{ currentQueryTypeDescription }}</span>
-        <span v-if="useHydrationStore().isHydratingOrSSR" class="col-auto">
+        <span v-if="hydrationStore.isHydratingOrSSR" class="col-auto">
             提交查询表单需要使用 JavaScript
         </span>
     </div>
@@ -211,7 +207,6 @@
 </template>
 
 <script setup lang="ts">
-import { inputTextParamPlaceholder } from '@/components/post/queryForm/widget/InputTextParam.vue';
 import { faPlus, faSortAmountDown, faTimes } from '@fortawesome/free-solid-svg-icons';
 import _ from 'lodash';
 
@@ -231,6 +226,7 @@ const { // https://github.com/orgs/vuejs/discussions/6147
     deleteParam
 } = queryFormDeps;
 const [DefineSuspenseLoading, ReuseSuspenseLoading] = createReusableTemplate();
+const hydrationStore = useHydrationStore();
 
 const getPostIDParamPlaceholders = (p: Param) => ({
     IN: p.name === 'tid' ? '5000000000,5000000001,5000000002,...' : '15000000000,15000000001,15000000002,...',
@@ -257,12 +253,7 @@ const currentQueryTypeDescription = computed(() => {
 });
 
 const queryFormSubmit = async () => useTriggerRouteUpdateStore()
-    .push('<PostQueryForm>@submit')({ ...generateRoute(), force: true });
-
-watch(() => uniqueParams.value.postTypes.value, (to, from) => {
-    if (_.isEmpty(to))
-        uniqueParams.value.postTypes.value = from; // to prevent empty post types
-});
+    .pushOrReplace('<PostQueryForm>@submit')(generateRoute());
 </script>
 
 <style scoped>

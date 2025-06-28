@@ -106,8 +106,9 @@ class PostsController extends AbstractController
                     ->map(fn(int $latestReplierId) => $latestRepliersUidKeyById->get($latestReplierId))
                     ->filter(fn(?int $latestReplierUid) => $latestReplierUid !== null)
                     ->merge($authorsUidKeyByFid[$fid])
-                    ->unique()])
-            ->merge($authorsUidKeyByFid->only($uniqueFidInAuthorsUid));
+                    ->unique()
+                    ->values()])
+            ->replace($authorsUidKeyByFid->only($uniqueFidInAuthorsUid));
         $forumModerators = collect($this->forumModeratorRepository->getLatestOfUsers($usersIdKeyByFid
             ->map(fn(Collection $usersId) => $usersId
                 ->map(fn(int $uid) => $users->get($uid)?->getPortrait())
