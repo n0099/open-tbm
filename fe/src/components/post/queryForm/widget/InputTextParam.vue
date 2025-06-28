@@ -1,29 +1,29 @@
 <template>
 <input
-    v-model="modelValue.value" :placeholder="inputTextParamPlaceholder(modelValue)"
+    v-model.lazy="modelValue.value" :placeholder="inputTextParamPlaceholder(modelValue)"
     type="text" class="form-control" required />
 <div class="input-group-text">
     <div class="form-check form-check-inline">
         <input
-            @input="emitModelChange('matchBy', ($event.target as HTMLInputElement).value as 'regex')"
+            @change="emitModelChange('matchBy', ($event.target as HTMLInputElement).value as 'regex')"
             v-bind="inputAttrs('regex')" />
         <label :for="inputID('regex')" class="form-check-label">正则</label>
     </div>
     <div class="form-check form-check-inline">
         <input
-            @input="emitModelChange('matchBy', ($event.target as HTMLInputElement).value as 'implicit')"
+            @change="emitModelChange('matchBy', ($event.target as HTMLInputElement).value as 'implicit')"
             v-bind="inputAttrs('implicit')" />
         <label :for="inputID('implicit')" class="form-check-label">模糊</label>
     </div>
     <div class="form-check form-check-inline">
         <input
-            @input="emitModelChange('matchBy', ($event.target as HTMLInputElement).value as 'explicit')"
+            @change="emitModelChange('matchBy', ($event.target as HTMLInputElement).value as 'explicit')"
             v-bind="inputAttrs('explicit')" />
         <label :for="inputID('explicit')" class="form-check-label">精确</label>
     </div>
     <div class="form-check form-check-inline">
         <input
-            @input="emitModelChange('spaceSplit', ($event.target as HTMLInputElement).checked)"
+            @change="emitModelChange('spaceSplit', ($event.target as HTMLInputElement).checked)"
             v-bind="inputAttrs('spaceSplit')" />
         <label :for="inputID('spaceSplit')" class="form-check-label">空格分隔</label>
     </div>

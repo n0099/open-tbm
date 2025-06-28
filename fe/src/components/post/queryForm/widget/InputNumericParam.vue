@@ -1,11 +1,11 @@
 <template>
 <input
     v-if="modelValue.subParam.range === 'IN'"
-    @input="emitModelChange($event)" v-bind="inputAttrs('IN')" />
+    @change="emitModelChange($event)" v-bind="inputAttrs('IN')" />
 <input
     v-else-if="modelValue.subParam.range === 'BETWEEN'"
-    @input="emitModelChange($event)" v-bind="inputAttrs('BETWEEN')" />
-<input v-else @input="emitModelChange($event)" v-bind="inputAttrs('equals')" />
+    @change="emitModelChange($event)" v-bind="inputAttrs('BETWEEN')" />
+<input v-else @change="emitModelChange($event)" v-bind="inputAttrs('equals')" />
 </template>
 
 <script lang="ts">
