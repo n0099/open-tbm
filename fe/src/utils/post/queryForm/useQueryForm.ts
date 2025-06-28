@@ -23,7 +23,7 @@ export const useQueryForm = <
 
     // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-parameters
     const fillParamDefaultValue = <T extends Param | UniqueParam>
-    (param: Partial<UnknownParam> & { name: string }, resetToDefault = false): T => {
+    (param: Partial<UnknownParam> & Pick<UnknownParam, 'name'>, resetToDefault = false): T => {
         // prevent defaultsDeep mutate origin paramsDefaultValue
         // eslint-disable-next-line compat/compat
         const defaultParam = structuredClone(deps.paramsDefaultValue[param.name]);
@@ -200,11 +200,6 @@ export const useQueryForm = <
             .filter(param => param.name in deps.paramsWatcher)
             .each(param => deps.paramsWatcher[param.name]?.(param))
             .value();
-    });
-
-    onBeforeMount(() => {
-        uniqueParams.value = _.mapValues(uniqueParams.value, _.unary(fillParamDefaultValue)) as UniqueParams;
-        params.value = params.value.map(_.unary(fillParamDefaultValue)) as typeof params.value;
     });
 
     return {

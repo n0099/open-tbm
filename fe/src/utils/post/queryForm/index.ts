@@ -118,14 +118,12 @@ export const getQueryFormDeps = () => {
     };
     const parseRoute = (route: RouteLocationNormalized) => {
         assertRouteNameIsStr(route.name);
-        const routeName = routeNameWithoutCursor(route.name);
-        uniqueParams.value = _.mapValues(uniqueParams.value, _.unary(fillParamDefaultValue)) as KnownUniqueParams;
         params.value = [];
 
         ([...postID, 'fid'] as const).forEach((name: PostIDStr | 'fid') => {
             const paramValue = route.params[name];
-            if (routeName === `posts/${name}` && !_.isArray(paramValue))
-                params.value = [{ name, value: Number(paramValue), subParam: {} }];
+            if (routeNameWithoutCursor(route.name) === `posts/${name}` && !_.isArray(paramValue))
+                params.value = [fillParamDefaultValue({ name, value: Number(paramValue), subParam: {} })];
         });
         if (_.isArray(route.params.pathMatch))
             parseParamRoute(route.params.pathMatch.filter(i => i !== ''));
