@@ -30,7 +30,7 @@ class InterpolateParametersSQLOutputWalker extends SqlOutputWalker
             (match ($type) { /** @see Type::getBindingType() */
                 ParameterType::NULL => 'NULL',
                 ParameterType::INTEGER => $value,
-                ParameterType::BOOLEAN => (new BooleanType())->convertToDatabaseValue($value, $platform),
+                ParameterType::BOOLEAN => new BooleanType()->convertToDatabaseValue($value, $platform),
                 ParameterType::STRING, ParameterType::ASCII => $platform->quoteStringLiteral($value),
                 default => throw new ValueNotConvertible($value, $type->name)
             });

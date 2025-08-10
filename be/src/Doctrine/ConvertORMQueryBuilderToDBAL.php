@@ -26,7 +26,7 @@ class ConvertORMQueryBuilderToDBAL
         string $denormalizeClass
     ): array
     {
-        $parsedQuery = (new Parser($query->getQuery()))->parse();
+        $parsedQuery = new Parser($query->getQuery())->parse();
         $queryParametersMapping = $parsedQuery->getParameterMappings();
         $resultSetMapping = $parsedQuery->getResultSetMapping();
         /** @var Collection $dbalQueryParams */

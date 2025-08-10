@@ -171,7 +171,7 @@ readonly class QueryResult
 
         /** @var array{key-of<UnionPostKey>, string} $firstQueryFieldAliases */
         // field name and aliases in the first query in a union will override any other queries in union
-        $firstQueryFieldAliases = array_flip((new Parser($firstQuery->getQuery()))
+        $firstQueryFieldAliases = array_flip(new Parser($firstQuery->getQuery())
             ->parse()->getResultSetMapping()->scalarMappings);
         if ($flattedQueryBuilder instanceof DBALQueryBuilder) {
             $flattedQueryBuilder = $flattedQueryBuilder
@@ -179,7 +179,7 @@ readonly class QueryResult
                 ->addOrderBy($firstQueryFieldAliases['postId'])
                 ->setMaxResults($maxResults);
         }
-        $rawSQL = (new SqlFormatter(new NullHighlighter()))->format(match (true) {
+        $rawSQL = new SqlFormatter(new NullHighlighter())->format(match (true) {
             $flattedQueryBuilder instanceof DBALQueryBuilder => $flattedQueryBuilder->getSQL(),
             $flattedQueryBuilder instanceof QueryBuilder => $getParametersInterpolatedRawSQL($flattedQueryBuilder)
         });
