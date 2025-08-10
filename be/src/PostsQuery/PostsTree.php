@@ -62,7 +62,7 @@ readonly class PostsTree
         $this->threads = collect($postModels['thread']->getPosts($parentThreadsID->concat($tids)))
             ->map(fn(\App\Entity\Post\Thread $entity) => Thread::fromEntity($entity))
             ->each(static fn(Thread $thread) =>
-                $thread->setIsMatchQuery($tids->contains($thread->getTid())));
+                $thread->setIsMatchQuery($tids->contains($thread->tid)));
         $this->stopwatch->stop('fillWithThreadsFields');
 
         $this->stopwatch->start('fillWithRepliesFields');
@@ -72,7 +72,7 @@ readonly class PostsTree
         $this->replies = collect($postModels['reply']->getPosts($allRepliesId))
             ->map(fn(\App\Entity\Post\Reply $entity) => Reply::fromEntity($entity))
             ->each(static fn(Reply $reply) =>
-                $reply->setIsMatchQuery($pids->contains($reply->getPid())));
+                $reply->setIsMatchQuery($pids->contains($reply->pid)));
         $this->stopwatch->stop('fillWithRepliesFields');
 
         $this->stopwatch->start('fillWithSubRepliesFields');
@@ -83,14 +83,14 @@ readonly class PostsTree
         $this->stopwatch->start('parsePostContentProtoBufBytes');
         // not using one-to-one association due to relying on PostRepository->getTableNameSuffix()
         $replyContents = collect($this->replyContentRepository->getPostsContent($allRepliesId))
-            ->mapWithKeys(fn(ReplyContent $content) => [$content->getPid() => $content->getContent()]);
+            ->mapWithKeys(fn(ReplyContent $content) => [$content->pid => $content->getContent()]);
         $this->replies->each(fn(Reply $reply) =>
-            $reply->setContent($replyContents->get($reply->getPid())));
+            $reply->setContent($replyContents->get($reply->pid)));
 
         $subReplyContents = collect($this->subReplyContentRepository->getPostsContent($spids))
-            ->mapWithKeys(fn(SubReplyContent $content) => [$content->getSpid() => $content->getContent()]);
+            ->mapWithKeys(fn(SubReplyContent $content) => [$content->spid => $content->getContent()]);
         $this->subReplies->each(fn(SubReply $subReply) =>
-            $subReply->setContent($subReplyContents->get($subReply->getSpid())));
+            $subReply->setContent($subReplyContents->get($subReply->spid)));
         $this->stopwatch->stop('parsePostContentProtoBufBytes');
 
         return [
@@ -108,14 +108,14 @@ readonly class PostsTree
     /** @return Collection<int, Thread> */
     public function nestPostsWithParent(): Collection
     {
-        $replies = $this->replies->groupBy(fn(Reply $reply) => $reply->getTid());
-        $subReplies = $this->subReplies->groupBy(fn(SubReply $subReply) => $subReply->getPid());
+        $replies = $this->replies->groupBy(fn(Reply $reply) => $reply->tid);
+        $subReplies = $this->subReplies->groupBy(fn(SubReply $subReply) => $subReply->pid);
         return $this->threads->map(fn(Thread $thread) =>
             $thread->setReplies(
                 $replies
-                    ->get($thread->getTid(), collect())
+                    ->get($thread->tid, collect())
                     ->map(fn(Reply $reply) =>
-                        $reply->setSubReplies($subReplies->get($reply->getPid(), collect()))),
+                        $reply->setSubReplies($subReplies->get($reply->pid, collect()))),
             ));
     }
 
