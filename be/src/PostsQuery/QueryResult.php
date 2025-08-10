@@ -51,7 +51,7 @@ readonly class QueryResult
         $maxResults = $limit + 1;
         $explainJSON = \Safe\json_decode($query->getEntityManager()->getConnection()->executeQuery(
             'EXPLAIN (COSTS, VERBOSE, BUFFERS, FORMAT JSON) ' . $query->getSQL()
-        )->fetchOne(), true);
+        )->fetchOne(), associative: true);
         $plansCost = array_sum(array_map(static fn(array $plan) => $plan['Plan']['Total Cost'], $explainJSON));
         $planCostLimit = $this->containerBag->get('app.query_plan_cost_limit');
         if (!($planCostLimit === null || $planCostLimit === '' || (int)$planCostLimit === 0)) {
