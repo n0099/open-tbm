@@ -9,12 +9,8 @@ class Thread extends ThreadEntity implements SortablePost
 {
     use Post { fromEntity as private fromPostEntity; }
 
-    private Collection $replies;
-
-    public function getReplies(): Collection
-    {
-        return $this->replies;
-    }
+    public Collection $replies;
+    public bool $isMatchQuery; // https://github.com/php/php-src/issues/18391
 
     public function setReplies(Collection $value): self
     {

@@ -9,24 +9,13 @@ trait Post
 {
     use TimestampedDTO { fromEntity as private fromTimestampedEntity; }
 
-    private bool $isMatchQuery;
-    private mixed $sortingKey = null;
-
-    public function getIsMatchQuery(): bool
-    {
-        return $this->isMatchQuery;
-    }
+    // public bool $isMatchQuery; // https://github.com/php/php-src/issues/18391
+    #[Ignore] public mixed $sortingKey = null;
 
     public function setIsMatchQuery(bool $value): self
     {
         $this->isMatchQuery = $value;
         return $this;
-    }
-
-    #[Ignore]
-    public function getSortingKey(): mixed
-    {
-        return $this->sortingKey;
     }
 
     public function setSortingKey(mixed $value): self

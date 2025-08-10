@@ -11,12 +11,9 @@ class Reply extends ReplyEntity implements SortablePost
     use Post { fromEntity as private fromPostEntity; }
     use PostWithContent;
 
-    private Collection $subReplies;
-
-    public function getSubReplies(): Collection
-    {
-        return $this->subReplies;
-    }
+    #[Ignore] public int $fid;
+    public Collection $subReplies;
+    public bool $isMatchQuery; // https://github.com/php/php-src/issues/18391
 
     public function setSubReplies(Collection $value): self
     {
@@ -35,11 +32,5 @@ class Reply extends ReplyEntity implements SortablePost
         $dto->geolocation = $entity->geolocation;
         $dto->signatureId = $entity->signatureId;
         return $dto;
-    }
-
-    #[Ignore]
-    public function getFid(): int
-    {
-        return $this->fid;
     }
 }
