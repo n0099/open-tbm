@@ -62,7 +62,7 @@ readonly class PostsTree
         $this->threads = collect($postModels['thread']->getPosts($parentThreadsID->concat($tids)))
             ->map(fn(\App\Entity\Post\Thread $entity) => Thread::fromEntity($entity))
             ->each(static fn(Thread $thread) =>
-                $thread->setIsMatchQuery($tids->contains($thread->tid)));
+                $thread->isMatchQuery = $tids->contains($thread->tid));
         $this->stopwatch->stop('fillWithThreadsFields');
 
         $this->stopwatch->start('fillWithRepliesFields');
@@ -72,7 +72,7 @@ readonly class PostsTree
         $this->replies = collect($postModels['reply']->getPosts($allRepliesId))
             ->map(fn(\App\Entity\Post\Reply $entity) => Reply::fromEntity($entity))
             ->each(static fn(Reply $reply) =>
-                $reply->setIsMatchQuery($pids->contains($reply->pid)));
+                $reply->isMatchQuery = $pids->contains($reply->pid));
         $this->stopwatch->stop('fillWithRepliesFields');
 
         $this->stopwatch->start('fillWithSubRepliesFields');

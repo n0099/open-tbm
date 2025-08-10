@@ -32,124 +32,163 @@ class PostsTreeTest extends KernelTestCase
     public static function provideReOrderNestedPostsData(): array
     {
         $input = collect([
-            new Thread()
-                ->setPostedAt(1)
-                ->setIsMatchQuery(true)
-                ->setReplies(collect([
-                    new Reply()
-                        ->setPostedAt(2)
-                        ->setIsMatchQuery(true)
-                        ->setSubReplies(collect([
-                            new SubReply()->setPostedAt(30),
-                        ])),
-                    new Reply()
-                        ->setPostedAt(20)
-                        ->setIsMatchQuery(false)
-                        ->setSubReplies(collect([
-                            new SubReply()->setPostedAt(3),
-                        ])),
-                    new Reply()
-                        ->setPostedAt(4)
-                        ->setIsMatchQuery(false)
-                        ->setSubReplies(collect([
-                            new SubReply()->setPostedAt(5),
-                            new SubReply()->setPostedAt(33)->setIsMatchQuery(false),
-                            new SubReply()->setPostedAt(60),
-                        ])),
-                ])),
-            new Thread()
-                ->setPostedAt(7)
-                ->setIsMatchQuery(false)
-                ->setReplies(collect([
-                    new Reply()
-                        ->setPostedAt(31)
-                        ->setIsMatchQuery(true)
-                        ->setSubReplies(collect()),
-                ])),
+            tap(new Thread(), static function (Thread $value) {
+                $value->postedAt = 1;
+                $value->isMatchQuery = true;
+                $value->replies = collect([
+                    tap(new Reply(), static function (Reply $value) {
+                        $value->postedAt = 2;
+                        $value->isMatchQuery = true;
+                        $value->subReplies = collect([
+                            tap(new SubReply(), static fn(SubReply $value) =>
+                                $value->postedAt = 30),
+                        ]);
+                    }),
+                    tap(new Reply(), static function (Reply $value) {
+                        $value->postedAt = 20;
+                        $value->isMatchQuery = false;
+                        $value->subReplies = collect([
+                            tap(new SubReply(), static fn(SubReply $value) =>
+                                $value->postedAt = 3),
+                        ]);
+                    }),
+                    tap(new Reply(), static function (Reply $value) {
+                        $value->postedAt = 4;
+                        $value->isMatchQuery = false;
+                        $value->subReplies = collect([
+                            tap(new SubReply(), static fn(SubReply $value) =>
+                                $value->postedAt = 5),
+                            tap(new SubReply(), static function (SubReply $value) {
+                                $value->postedAt = 33;
+                                $value->isMatchQuery = false;
+                            }),
+                            tap(new SubReply(), static fn(SubReply $value) =>
+                                $value->postedAt = 60),
+                        ]);
+                    }),
+                ]);
+            }),
+            tap(new Thread(), static function (Thread $value) {
+                $value->postedAt = 7;
+                $value->isMatchQuery = false;
+                $value->replies = collect([
+                    tap(new Reply(), static function (Reply $value) {
+                        $value->postedAt = 31;
+                        $value->isMatchQuery = true;
+                        $value->subReplies = collect();
+                    }),
+                ]);
+            }),
         ]);
         $expectedWhenOrderByAsc = collect([
-            new Thread()
-                ->setPostedAt(1)
-                ->setIsMatchQuery(true)
-                ->setReplies(collect([
-                    new Reply()
-                        ->setPostedAt(2)
-                        ->setIsMatchQuery(true)
-                        ->setSubReplies(collect([
-                            new SubReply()->setPostedAt(30),
-                        ]))
-                        ->setSortingKey(2),
-                    new Reply()
-                        ->setPostedAt(20)
-                        ->setIsMatchQuery(false)
-                        ->setSubReplies(collect([
-                            new SubReply()->setPostedAt(3),
-                        ]))
-                        ->setSortingKey(3),
-                    new Reply()
-                        ->setPostedAt(4)
-                        ->setIsMatchQuery(false)
-                        ->setSubReplies(collect([
-                            new SubReply()->setPostedAt(5),
-                            new SubReply()->setPostedAt(33)->setIsMatchQuery(false),
-                            new SubReply()->setPostedAt(60),
-                        ]))
-                        ->setSortingKey(5),
-                ]))
-                ->setSortingKey(1),
-            new Thread()
-                ->setPostedAt(7)
-                ->setIsMatchQuery(false)
-                ->setReplies(collect([
-                    new Reply()
-                        ->setPostedAt(31)
-                        ->setIsMatchQuery(true)
-                        ->setSubReplies(collect())
-                        ->setSortingKey(31),
-                ]))
-                ->setSortingKey(31),
+            tap(new Thread(), static function (Thread $value) {
+                $value->postedAt = 1;
+                $value->isMatchQuery = true;
+                $value->replies = collect([
+                    tap(new Reply(), static function (Reply $value) {
+                        $value->postedAt = 2;
+                        $value->isMatchQuery = true;
+                        $value->subReplies = collect([
+                            tap(new SubReply(), static fn(SubReply $value) =>
+                            $value->postedAt = 30),
+                        ]);
+                        $value->sortingKey = 2;
+                    }),
+                    tap(new Reply(), static function (Reply $value) {
+                        $value->postedAt = 20;
+                        $value->isMatchQuery = false;
+                        $value->subReplies = collect([
+                            tap(new SubReply(), static fn(SubReply $value) =>
+                            $value->postedAt = 3),
+                        ]);
+                        $value->sortingKey = 3;
+                    }),
+                    tap(new Reply(), static function (Reply $value) {
+                        $value->postedAt = 4;
+                        $value->isMatchQuery = false;
+                        $value->subReplies = collect([
+                            tap(new SubReply(), static fn(SubReply $value) =>
+                                $value->postedAt = 5),
+                            tap(new SubReply(), static function (SubReply $value) {
+                                $value->postedAt = 33;
+                                $value->isMatchQuery = false;
+                            }),
+                            tap(new SubReply(), static fn(SubReply $value) =>
+                                $value->postedAt = 60),
+                        ]);
+                        $value->sortingKey = 5;
+                    }),
+                ]);
+                $value->sortingKey = 1;
+            }),
+            tap(new Thread(), static function (Thread $value) {
+                $value->postedAt = 7;
+                $value->isMatchQuery = false;
+                $value->replies = collect([
+                    tap(new Reply(), static function (Reply $value) {
+                        $value->postedAt = 31;
+                        $value->isMatchQuery = true;
+                        $value->subReplies = collect();
+                        $value->sortingKey = 31;
+                    }),
+                ]);
+                $value->sortingKey = 31;
+            }),
         ]);
         $expectedWhenOrderByDesc = collect([
-            new Thread()
-                ->setPostedAt(1)
-                ->setIsMatchQuery(true)
-                ->setReplies(collect([
-                    new Reply()
-                        ->setPostedAt(4)
-                        ->setIsMatchQuery(false)
-                        ->setSubReplies(collect([
-                            new SubReply()->setPostedAt(60),
-                            new SubReply()->setPostedAt(33)->setIsMatchQuery(false),
-                            new SubReply()->setPostedAt(5),
-                        ]))
-                        ->setSortingKey(60),
-                    new Reply()
-                        ->setPostedAt(2)
-                        ->setIsMatchQuery(true)
-                        ->setSubReplies(collect([
-                            new SubReply()->setPostedAt(30),
-                        ]))
-                        ->setSortingKey(30),
-                    new Reply()
-                        ->setPostedAt(20)
-                        ->setIsMatchQuery(false)
-                        ->setSubReplies(collect([
-                            new SubReply()->setPostedAt(3),
-                        ]))
-                        ->setSortingKey(3),
-                ]))
-                ->setSortingKey(60),
-            new Thread()
-                ->setPostedAt(7)
-                ->setIsMatchQuery(false)
-                ->setReplies(collect([
-                    new Reply()
-                        ->setPostedAt(31)
-                        ->setIsMatchQuery(true)
-                        ->setSubReplies(collect())
-                        ->setSortingKey(31),
-                ]))
-                ->setSortingKey(31),
+            tap(new Thread(), static function (Thread $value) {
+                $value->postedAt = 1;
+                $value->isMatchQuery = true;
+                $value->replies = collect([
+                    tap(new Reply(), static function (Reply $value) {
+                        $value->postedAt = 4;
+                        $value->isMatchQuery = false;
+                        $value->subReplies = collect([
+                            tap(new SubReply(), static fn(SubReply $value) =>
+                                $value->postedAt = 60),
+                            tap(new SubReply(), static function (SubReply $value) {
+                                $value->postedAt = 33;
+                                $value->isMatchQuery = false;
+                            }),
+                            tap(new SubReply(), static fn(SubReply $value) =>
+                                $value->postedAt = 5),
+                        ]);
+                        $value->sortingKey = 60;
+                    }),
+                    tap(new Reply(), static function (Reply $value) {
+                        $value->postedAt = 2;
+                        $value->isMatchQuery = true;
+                        $value->subReplies = collect([
+                            tap(new SubReply(), static fn(SubReply $value) =>
+                            $value->postedAt = 30),
+                        ]);
+                        $value->sortingKey = 30;
+                    }),
+                    tap(new Reply(), static function (Reply $value) {
+                        $value->postedAt = 20;
+                        $value->isMatchQuery = false;
+                        $value->subReplies = collect([
+                            tap(new SubReply(), static fn(SubReply $value) =>
+                            $value->postedAt = 3),
+                        ]);
+                        $value->sortingKey = 3;
+                    }),
+                ]);
+                $value->sortingKey = 60;
+            }),
+            tap(new Thread(), static function (Thread $value) {
+                $value->postedAt = 7;
+                $value->isMatchQuery = false;
+                $value->replies = collect([
+                    tap(new Reply(), static function (Reply $value) {
+                        $value->postedAt = 31;
+                        $value->isMatchQuery = true;
+                        $value->subReplies = collect();
+                        $value->sortingKey = 31;
+                    }),
+                ]);
+                $value->sortingKey = 31;
+            }),
         ]);
         return [
             [$input, false, $expectedWhenOrderByAsc],
@@ -169,20 +208,24 @@ class PostsTreeTest extends KernelTestCase
 
     public static function provideNestPostsWithParent(): array
     {
+        $thread = new Thread();
+        $thread->tid = 1;
+        $reply = new Reply();
+        $reply->tid = 1;
+        $reply->pid = 2;
+        $subReply = new SubReply();
+        $subReply->tid = 1;
+        $subReply->pid = 2;
+        $subReply->spid = 3;
         return [[
             [
-                'threads' => collect([new Thread()->setTid(1)]),
-                'replies' => collect([new Reply()->setTid(1)->setPid(2)]),
-                'subReplies' => collect([new SubReply()->setTid(1)->setPid(2)->setSpid(3)]),
+                'threads' => collect([$thread]),
+                'replies' => collect([$reply]),
+                'subReplies' => collect([$subReply]),
             ],
-            collect([new Thread()
-                ->setTid(1)
-                ->setReplies(collect([
-                    new Reply()
-                        ->setTid(1)->setPid(2)
-                        ->setSubReplies(collect([
-                            new SubReply()->setTid(1)->setPid(2)->setSpid(3),
-                        ])),
+            collect([
+                tap(clone($thread), static fn(Thread $value) => $value->replies = collect([
+                    tap(clone($reply), static fn(Reply $value) => $value->subReplies = collect([$subReply])),
                 ])),
             ]),
         ]];

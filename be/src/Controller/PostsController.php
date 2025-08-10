@@ -76,8 +76,8 @@ class PostsController extends AbstractController
         ])->flatten();
         $latestRepliersUidKeyById = collect($latestRepliers)
             ->mapWithKeys(fn(array|LatestReplier $latestReplier) => [
-                is_array($latestReplier) ? $latestReplier['id'] : $latestReplier->getId() =>
-                    is_array($latestReplier) ? $latestReplier['uid'] : $latestReplier->getUid()
+                is_array($latestReplier) ? $latestReplier['id'] : $latestReplier->id =>
+                    is_array($latestReplier) ? $latestReplier['uid'] : $latestReplier->uid
             ])
             ->filter(static fn(?int $uid) => $uid !== null);
         $uids = $posts
@@ -85,7 +85,7 @@ class PostsController extends AbstractController
             ->concat($latestRepliersUidKeyById)
             ->unique();
         $users = collect($this->userRepository->getUsers($uids))
-            ->mapWithKeys(fn(\App\Entity\User $entity) => [$entity->getUid() => User::fromEntity($entity)]);
+            ->mapWithKeys(fn(\App\Entity\User $entity) => [$entity->uid => User::fromEntity($entity)]);
         $this->stopwatch->stop('queryUsers');
 
         $this->stopwatch->start('queryUserRelated');
@@ -111,13 +111,13 @@ class PostsController extends AbstractController
             ->replace($authorsUidKeyByFid->only($uniqueFidInAuthorsUid));
         $forumModerators = collect($this->forumModeratorRepository->getLatestOfUsers($usersIdKeyByFid
             ->map(fn(Collection $usersId) => $usersId
-                ->map(fn(int $uid) => $users->get($uid)?->getPortrait())
+                ->map(fn(int $uid) => $users->get($uid)?->portrait)
                 ->filter(fn(?string $portrait) => $portrait !== null))
         ))->keyBy(fn(ForumModerator $forumModerator) => $forumModerator->portrait);
 
         $users = $users->each(fn(User $user) => $user->setForumSpecific([
-            'authorExpGrade' => $authorExpGrades->get($user->getUid()),
-            'forumModerator' => $forumModerators->get($user->getPortrait())
+            'authorExpGrade' => $authorExpGrades->get($user->uid),
+            'forumModerator' => $forumModerators->get($user->portrait)
         ]));
         $this->stopwatch->stop('queryUserRelated');
 
