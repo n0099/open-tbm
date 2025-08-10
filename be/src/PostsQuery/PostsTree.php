@@ -83,12 +83,12 @@ readonly class PostsTree
         $this->stopwatch->start('parsePostContentProtoBufBytes');
         // not using one-to-one association due to relying on PostRepository->getTableNameSuffix()
         $replyContents = collect($this->replyContentRepository->getPostsContent($allRepliesId))
-            ->mapWithKeys(fn(ReplyContent $content) => [$content->pid => $content->getContent()]);
+            ->mapWithKeys(fn(ReplyContent $content) => [$content->pid => $content->content]);
         $this->replies->each(fn(Reply $reply) =>
             $reply->setContent($replyContents->get($reply->pid)));
 
         $subReplyContents = collect($this->subReplyContentRepository->getPostsContent($spids))
-            ->mapWithKeys(fn(SubReplyContent $content) => [$content->spid => $content->getContent()]);
+            ->mapWithKeys(fn(SubReplyContent $content) => [$content->spid => $content->content]);
         $this->subReplies->each(fn(SubReply $subReply) =>
             $subReply->setContent($subReplyContents->get($subReply->spid)));
         $this->stopwatch->stop('parsePostContentProtoBufBytes');

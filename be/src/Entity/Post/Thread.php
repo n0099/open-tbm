@@ -24,18 +24,12 @@ class Thread extends Post
     #[ORM\Column] public ?int $viewCount;
     #[ORM\Column] public ?int $shareCount;
     /** @var ?resource */
-    #[ORM\Column] public $zan;
+    #[ORM\Column] public $zan {
+        get => BlobResourceGetter::protoBuf($this->zan, Zan::class);
+    }
     /** @var ?resource */
-    #[ORM\Column] public $geolocation;
+    #[ORM\Column] public $geolocation {
+        get => BlobResourceGetter::protoBuf($this->geolocation, Lbs::class);
+    }
     #[ORM\Column] public ?string $authorPhoneType;
-
-    public function getZan(): ?array
-    {
-        return BlobResourceGetter::protoBuf($this->zan, Zan::class);
-    }
-
-    public function getGeolocation(): ?array
-    {
-        return BlobResourceGetter::protoBuf($this->geolocation, Lbs::class);
-    }
 }

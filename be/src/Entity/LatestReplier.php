@@ -13,7 +13,9 @@ class LatestReplier extends TimestampedEntity
     #[ORM\Column] public ?int $uid;
     #[ORM\Column] public ?string $name;
     /** @var ?resource */
-    #[ORM\Column] public $displayName;
+    #[ORM\Column] public $displayName {
+        get => BlobResourceGetter::resource($this->displayName);
+    }
 
     public function getId(): int
     {
@@ -23,10 +25,5 @@ class LatestReplier extends TimestampedEntity
     public function getUid(): ?int
     {
         return $this->uid;
-    }
-
-    public function getDisplayName(): ?string
-    {
-        return BlobResourceGetter::resource($this->displayName);
     }
 }

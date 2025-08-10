@@ -17,17 +17,14 @@ class Reply extends Post
     #[ORM\Column] public ?int $subReplyCount;
     #[ORM\Column] public ?int $isFold;
     /** @var ?resource */
-    #[ORM\Column] public $geolocation;
+    #[ORM\Column] public $geolocation {
+        get => BlobResourceGetter::protoBuf($this->geolocation, Lbs::class);
+    }
     #[ORM\Column] public ?int $signatureId;
 
     public function setPid(int $value): self
     {
         $this->pid = $value;
         return $this;
-    }
-
-    public function getGeolocation(): ?array
-    {
-        return BlobResourceGetter::protoBuf($this->geolocation, Lbs::class);
     }
 }
