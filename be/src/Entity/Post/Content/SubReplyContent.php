@@ -10,15 +10,4 @@ use Doctrine\ORM\Mapping as ORM;
 class SubReplyContent extends PostContent
 {
     #[ORM\Column(type: 'bigint'), ORM\Id] public int $spid;
-
-    public function getSpid(): int
-    {
-        return $this->spid;
-    }
-
-    public function setSpid(int $value): self
-    {
-        $this->spid = $value;
-        return $this;
-    }
 }

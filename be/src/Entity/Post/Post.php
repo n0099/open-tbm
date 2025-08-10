@@ -16,80 +16,15 @@ abstract class Post extends TimestampedEntity
     #[ORM\Column] public ?int $agreeCount;
     #[ORM\Column] public ?int $disagreeCount;
 
-    public function getFid(): int
-    {
-        return $this->fid;
-    }
-
-    public function setFid(int $fid): self
-    {
-        $this->fid = $fid;
-        return $this;
-    }
-
-    public function getTid(): int
-    {
-        return $this->tid;
-    }
-
     public function setTid(int $value): self
     {
         $this->tid = $value;
         return $this;
     }
 
-    public function getAuthorUid(): int
-    {
-        return $this->authorUid;
-    }
-
-    public function setAuthorUid(int $value): self
-    {
-        $this->authorUid = $value;
-        return $this;
-    }
-
-    public function getPostedAt(): int
-    {
-        return $this->postedAt;
-    }
-
     public function setPostedAt(int $value): self
     {
         $this->postedAt = $value;
-        return $this;
-    }
-
-    public function getLastSeenAt(): ?int
-    {
-        return $this->lastSeenAt;
-    }
-
-    public function setLastSeenAt(?int $value): self
-    {
-        $this->lastSeenAt = $value;
-        return $this;
-    }
-
-    public function getAgreeCount(): int
-    {
-        return $this->agreeCount ?? 0;
-    }
-
-    public function setAgreeCount(?int $value): self
-    {
-        $this->agreeCount = $value;
-        return $this;
-    }
-
-    public function getDisagreeCount(): int
-    {
-        return $this->disagreeCount ?? 0;
-    }
-
-    public function setDisagreeCount(?int $value): self
-    {
-        $this->disagreeCount = $value;
         return $this;
     }
 }

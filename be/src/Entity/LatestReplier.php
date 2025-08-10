@@ -20,43 +20,13 @@ class LatestReplier extends TimestampedEntity
         return $this->id;
     }
 
-    public function setId(int $value): self
-    {
-        $this->id = $value;
-        return $this;
-    }
-
     public function getUid(): ?int
     {
         return $this->uid;
     }
 
-    public function setUid(?int $value): self
-    {
-        $this->uid = $value;
-        return $this;
-    }
-
-    public function getName(): ?string
-    {
-        return $this->name;
-    }
-
-    public function setName(?string $value): self
-    {
-        $this->name = $value;
-        return $this;
-    }
-
     public function getDisplayName(): ?string
     {
         return BlobResourceGetter::resource($this->displayName);
-    }
-
-    /** @param ?resource $displayName */
-    public function setDisplayName($displayName): self
-    {
-        $this->displayName = $displayName;
-        return $this;
     }
 }

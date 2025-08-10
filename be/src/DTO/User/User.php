@@ -12,11 +12,6 @@ class User extends UserEntity
     /** @var array{int, array{forumModerator: ForumModerator, authorExpGrade: AuthorExpGrade}} */
     private array $forumSpecific;
 
-    public function getForumSpecific(): array
-    {
-        return $this->forumSpecific;
-    }
-
     public function setForumSpecific(array $forumSpecific): User
     {
         $this->forumSpecific = $forumSpecific;
