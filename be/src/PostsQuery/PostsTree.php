@@ -131,19 +131,18 @@ readonly class PostsTree
         $sortBySortingKey = static fn(Collection $posts): Collection => $posts
             ->sortBy(fn(SortablePost $post) => $post->getSortingKey(), descending: $isOrderByDesc)
             ->values(); // reset keys
-        $getOrderByProp = 'get' . ucfirst($orderByField);
         return $sortBySortingKey($nestedPosts->map(
-            function (Thread $thread) use ($getOrderByProp, $isOrderByDesc, $sortBySortingKey): Thread {
+            function (Thread $thread) use ($orderByField, $isOrderByDesc, $sortBySortingKey): Thread {
                 $thread->setReplies($sortBySortingKey($thread->getReplies()->map(
-                    function (Reply $reply) use ($getOrderByProp, $isOrderByDesc): Reply {
+                    function (Reply $reply) use ($orderByField, $isOrderByDesc): Reply {
                         $reply->setSubReplies($reply->getSubReplies()->sortBy(
-                            fn(SubReply $subReplies) => $subReplies->{$getOrderByProp}(),
+                            fn(SubReply $subReplies) => $subReplies->$orderByField,
                             descending: $isOrderByDesc,
                         )->values()); // reset keys
-                        return $this->setSortingKeyForSortablePost($reply, $reply->getSubReplies(), $getOrderByProp, $isOrderByDesc);
+                        return $this->setSortingKeyForSortablePost($reply, $reply->getSubReplies(), $orderByField, $isOrderByDesc);
                     },
                 )));
-                $this->setSortingKeyForSortablePost($thread, $thread->getReplies(), $getOrderByProp, $isOrderByDesc);
+                $this->setSortingKeyForSortablePost($thread, $thread->getReplies(), $orderByField, $isOrderByDesc);
                 return $thread;
             },
         ));
@@ -158,7 +157,7 @@ readonly class PostsTree
     private function setSortingKeyForSortablePost(
         SortablePost $currentPost,
         Collection $subPosts,
-        string $getOrderByProp,
+        string $orderByField,
         bool $isOrderByDesc,
     ): SortablePost {
         // use the topmost value between sorting key or value of orderBy field within its sub-posts
@@ -170,7 +169,7 @@ readonly class PostsTree
                 ->filter(static fn(SortablePost $p) => $p->getIsMatchQuery() === true)
                 // if no sub-posts matching the query, use null as the sorting key
                 ->first()
-                ?->{$getOrderByProp}(),
+                ?->$orderByField,
             // sorting key from the first sorted sub-posts
             // not requiring isMatchQuery since a sub-post without isMatchQuery
             // might have its own sub-posts with isMatchQuery
@@ -179,7 +178,7 @@ readonly class PostsTree
         ]);
         if ($currentPost->getIsMatchQuery() === true) {
             // also try to use the value of orderBy field in the current post
-            $currentAndSubPostSortingKeys->push($currentPost->{$getOrderByProp}());
+            $currentAndSubPostSortingKeys->push($currentPost->$orderByField);
         }
 
         // Collection->filter() will remove falsy values like null
