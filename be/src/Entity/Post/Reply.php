@@ -11,14 +11,14 @@ use TbClient\Post\Common\Lbs;
 #[ORM\Table(name: '"tbmc_reply"')]
 class Reply extends Post
 {
-    #[ORM\Column(type: 'bigint')] protected int $tid;
-    #[ORM\Column(type: 'bigint'), ORM\Id] protected int $pid;
-    #[ORM\Column] protected int $floor;
-    #[ORM\Column] protected ?int $subReplyCount;
-    #[ORM\Column] protected ?int $isFold;
+    #[ORM\Column(type: 'bigint')] public int $tid;
+    #[ORM\Column(type: 'bigint'), ORM\Id] public int $pid;
+    #[ORM\Column] public int $floor;
+    #[ORM\Column] public ?int $subReplyCount;
+    #[ORM\Column] public ?int $isFold;
     /** @var ?resource */
-    #[ORM\Column] protected $geolocation;
-    #[ORM\Column] protected ?int $signatureId;
+    #[ORM\Column] public $geolocation;
+    #[ORM\Column] public ?int $signatureId;
 
     public function getPid(): int
     {

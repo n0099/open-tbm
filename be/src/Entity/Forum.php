@@ -9,9 +9,9 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\Table(name: '"tbm_forum"')]
 class Forum
 {
-    #[ORM\Column, ORM\Id] private int $fid;
-    #[ORM\Column] private string $name;
-    #[ORM\Column] private bool $isCrawling;
+    #[ORM\Column, ORM\Id] public int $fid;
+    #[ORM\Column] public string $name;
+    #[ORM\Column] public bool $isCrawling;
 
     public function getFid(): int
     {

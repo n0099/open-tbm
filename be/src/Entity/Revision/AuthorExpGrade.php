@@ -9,11 +9,11 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\Table(name: '"tbmcr_authorExpGrade"')]
 class AuthorExpGrade
 {
-    #[ORM\Column, ORM\Id] private int $discoveredAt;
-    #[ORM\Column, ORM\Id] private int $fid;
-    #[ORM\Column, ORM\Id] private int $uid;
-    #[ORM\Column] private string $triggeredBy;
-    #[ORM\Column] private int $authorExpGrade;
+    #[ORM\Column, ORM\Id] public int $discoveredAt;
+    #[ORM\Column, ORM\Id] public int $fid;
+    #[ORM\Column, ORM\Id] public int $uid;
+    #[ORM\Column] public string $triggeredBy;
+    #[ORM\Column] public int $authorExpGrade;
 
     public function getDiscoveredAt(): int
     {

@@ -9,10 +9,10 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\Table(name: '"tbmcr_forumModerator"')]
 class ForumModerator
 {
-    #[ORM\Column, ORM\Id] private int $discoveredAt;
-    #[ORM\Column, ORM\Id] private int $fid;
-    #[ORM\Column, ORM\Id] private string $portrait;
-    #[ORM\Column, ORM\Id] private string $moderatorTypes;
+    #[ORM\Column, ORM\Id] public int $discoveredAt;
+    #[ORM\Column, ORM\Id] public int $fid;
+    #[ORM\Column, ORM\Id] public string $portrait;
+    #[ORM\Column, ORM\Id] public string $moderatorTypes;
 
     public function getDiscoveredAt(): int
     {

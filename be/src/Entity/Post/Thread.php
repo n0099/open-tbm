@@ -12,22 +12,22 @@ use TbClient\Post\Common\Zan;
 #[ORM\Table(name: '"tbmc_thread"')]
 class Thread extends Post
 {
-    #[ORM\Column(type: 'bigint'), ORM\Id] protected int $tid;
-    #[ORM\Column(type: 'bigint')] protected int $threadType;
-    #[ORM\Column] protected ?string $stickyType;
-    #[ORM\Column] protected ?string $topicType;
-    #[ORM\Column] protected ?int $isGood;
-    #[ORM\Column] protected string $title;
-    #[ORM\Column] protected int $latestReplyPostedAt;
-    #[ORM\Column] protected ?int $latestReplierId;
-    #[ORM\Column] protected ?int $replyCount;
-    #[ORM\Column] protected ?int $viewCount;
-    #[ORM\Column] protected ?int $shareCount;
+    #[ORM\Column(type: 'bigint'), ORM\Id] public int $tid;
+    #[ORM\Column(type: 'bigint')] public int $threadType;
+    #[ORM\Column] public ?string $stickyType;
+    #[ORM\Column] public ?string $topicType;
+    #[ORM\Column] public ?int $isGood;
+    #[ORM\Column] public string $title;
+    #[ORM\Column] public int $latestReplyPostedAt;
+    #[ORM\Column] public ?int $latestReplierId;
+    #[ORM\Column] public ?int $replyCount;
+    #[ORM\Column] public ?int $viewCount;
+    #[ORM\Column] public ?int $shareCount;
     /** @var ?resource */
-    #[ORM\Column] protected $zan;
+    #[ORM\Column] public $zan;
     /** @var ?resource */
-    #[ORM\Column] protected $geolocation;
-    #[ORM\Column] protected ?string $authorPhoneType;
+    #[ORM\Column] public $geolocation;
+    #[ORM\Column] public ?string $authorPhoneType;
 
     public function getThreadType(): int
     {

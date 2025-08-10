@@ -10,7 +10,7 @@ use TbClient\Wrapper\PostContentWrapper;
 abstract class PostContent
 {
     /** @var ?resource */
-    #[ORM\Column] private $protoBufBytes;
+    #[ORM\Column] public $protoBufBytes;
 
     public function getContent(): ?array
     {

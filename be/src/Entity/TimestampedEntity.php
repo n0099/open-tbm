@@ -7,8 +7,8 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\MappedSuperclass]
 abstract class TimestampedEntity
 {
-    #[ORM\Column] protected int $createdAt;
-    #[ORM\Column] protected ?int $updatedAt;
+    #[ORM\Column] public int $createdAt;
+    #[ORM\Column] public ?int $updatedAt;
 
     public function getCreatedAt(): int
     {

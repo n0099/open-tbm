@@ -9,11 +9,11 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\Table(name: '"tbmc_latestReplier"')]
 class LatestReplier extends TimestampedEntity
 {
-    #[ORM\Column, ORM\Id] private int $id;
-    #[ORM\Column] private ?int $uid;
-    #[ORM\Column] private ?string $name;
+    #[ORM\Column, ORM\Id] public int $id;
+    #[ORM\Column] public ?int $uid;
+    #[ORM\Column] public ?string $name;
     /** @var ?resource */
-    #[ORM\Column] private $displayName;
+    #[ORM\Column] public $displayName;
 
     public function getId(): int
     {
