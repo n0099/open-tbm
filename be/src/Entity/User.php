@@ -25,14 +25,4 @@ class User extends TimestampedEntity
         get => BlobResourceGetter::protoBufWrapper($this->icon, UserIconWrapper::class);
     }
     #[ORM\Column] public ?string $ipGeolocation;
-
-    public function getUid(): ?int
-    {
-        return $this->uid;
-    }
-
-    public function getPortrait(): string
-    {
-        return $this->portrait;
-    }
 }

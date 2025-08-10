@@ -15,12 +15,6 @@ class Reply extends ReplyEntity implements SortablePost
     public Collection $subReplies;
     public bool $isMatchQuery; // https://github.com/php/php-src/issues/18391
 
-    public function setSubReplies(Collection $value): self
-    {
-        $this->subReplies = $value;
-        return $this;
-    }
-
     public static function fromEntity(ReplyEntity $entity): self
     {
         $dto = self::fromPostEntity($entity);

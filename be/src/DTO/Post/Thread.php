@@ -12,12 +12,6 @@ class Thread extends ThreadEntity implements SortablePost
     public Collection $replies;
     public bool $isMatchQuery; // https://github.com/php/php-src/issues/18391
 
-    public function setReplies(Collection $value): self
-    {
-        $this->replies = $value;
-        return $this;
-    }
-
     public static function fromEntity(ThreadEntity $entity): self
     {
         $dto = self::fromPostEntity($entity);

@@ -21,10 +21,4 @@ class Reply extends Post
         get => BlobResourceGetter::protoBuf($this->geolocation, Lbs::class);
     }
     #[ORM\Column] public ?int $signatureId;
-
-    public function setPid(int $value): self
-    {
-        $this->pid = $value;
-        return $this;
-    }
 }

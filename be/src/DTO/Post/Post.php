@@ -12,18 +12,6 @@ trait Post
     // public bool $isMatchQuery; // https://github.com/php/php-src/issues/18391
     #[Ignore] public mixed $sortingKey = null;
 
-    public function setIsMatchQuery(bool $value): self
-    {
-        $this->isMatchQuery = $value;
-        return $this;
-    }
-
-    public function setSortingKey(mixed $value): self
-    {
-        $this->sortingKey = $value;
-        return $this;
-    }
-
     public static function fromEntity(\App\Entity\Post\Post $entity): self
     {
         $dto = self::fromTimestampedEntity($entity);
