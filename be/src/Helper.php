@@ -92,4 +92,18 @@ class Helper
         $json = \Safe\json_encode(compact('errorCode', 'errorInfo'));
         throw HttpException::fromStatusCode($statusCode, message: $json, code: $errorCode);
     }
+
+    public static function copyClass(object $from, string $to): object
+    {
+        $fromClass = new \ReflectionClass($from::class);
+        $toClass = new \ReflectionClass($to);
+        if (!$toClass->isSubclassOf($fromClass)) {
+            throw new \InvalidArgumentException($to . ' should be a subclass of' . $from::class);
+        }
+        $toInstance = new $to;
+        foreach ($fromClass->getProperties() as $property) {
+            $toClass->getProperty($property->name)->setRawValue($toInstance, $property->getRawValue($from));
+        }
+        return $toInstance;
+    }
 }

@@ -48,8 +48,8 @@ readonly class Query extends BaseQuery
         $this->queryResult->setResult(
             $this->buildQueries($params),
             $cursor,
-            $this->getOrderByField(),
-            $this->isOrderByDesc(),
+            $this->orderByField,
+            $this->isOrderByDesc,
             $queryByPostIDParamsName
         );
     }
@@ -90,7 +90,7 @@ readonly class Query extends BaseQuery
         $sqlParamName = "param$paramIndex";
         $name = $param->name;
         $value = $param->value;
-        $sub = $param->getAllSub();
+        $sub = $param->subParams;
         $sub['not'] ??= false;
         $not = $sub['not'] ? 'NOT' : '';
         $notReverse = $sub['not'] ? '' : 'NOT';

@@ -13,14 +13,9 @@ class ParamsValidator
     public const array UNIQUE_PARAMS_NAME = ['postTypes', 'orderBy'];
     public const array USER_GENDER_VALUES = [0, 1, 2, 'NULL'];
 
-    private QueryParams $params;
+    private(set) QueryParams $params;
 
     public function __construct(private readonly Validator $validator) {}
-
-    public function getParams(): QueryParams
-    {
-        return $this->params;
-    }
 
     /** @param array[] $value */
     public function setParams(array $value): static

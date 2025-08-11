@@ -60,9 +60,9 @@ readonly class PostsTree
             ->concat($result->subReplies->map(fn(SubReplyKey $postKey) => $postKey->tid))
             ->unique();
         $this->threads = collect($postModels['thread']->getPosts($parentThreadsID->concat($tids)))
-            ->map(fn(\App\Entity\Post\Thread $entity) => Thread::fromEntity($entity))
-            ->each(static fn(Thread $thread) =>
-                $thread->setIsMatchQuery($tids->contains($thread->getTid())));
+            ->map(fn(\App\Entity\Post\Thread $entity) => Helper::copyClass($entity, Thread::class))
+            ->each(static fn(Thread $thread) => // prevent early exit of `Collection::each()` due to the assignment return false
+                ($thread->isMatchQuery = $tids->contains($thread->tid)) || true);
         $this->stopwatch->stop('fillWithThreadsFields');
 
         $this->stopwatch->start('fillWithRepliesFields');
@@ -70,27 +70,27 @@ readonly class PostsTree
         $parentRepliesID = $result->subReplies->map(fn(SubReplyKey $postKey) => $postKey->parentPostId)->unique();
         $allRepliesId = $parentRepliesID->concat($pids);
         $this->replies = collect($postModels['reply']->getPosts($allRepliesId))
-            ->map(fn(\App\Entity\Post\Reply $entity) => Reply::fromEntity($entity))
-            ->each(static fn(Reply $reply) =>
-                $reply->setIsMatchQuery($pids->contains($reply->getPid())));
+            ->map(fn(\App\Entity\Post\Reply $entity) => Helper::copyClass($entity, Reply::class))
+            ->each(static fn(Reply $reply) => // prevent early exit of `Collection::each()` due to the assignment return false
+                ($reply->isMatchQuery = $pids->contains($reply->pid)) || true);
         $this->stopwatch->stop('fillWithRepliesFields');
 
         $this->stopwatch->start('fillWithSubRepliesFields');
         $this->subReplies = collect($postModels['subReply']->getPosts($spids))
-            ->map(fn(\App\Entity\Post\SubReply $entity) => SubReply::fromEntity($entity));
+            ->map(fn(\App\Entity\Post\SubReply $entity) => Helper::copyClass($entity, SubReply::class));
         $this->stopwatch->stop('fillWithSubRepliesFields');
 
         $this->stopwatch->start('parsePostContentProtoBufBytes');
         // not using one-to-one association due to relying on PostRepository->getTableNameSuffix()
         $replyContents = collect($this->replyContentRepository->getPostsContent($allRepliesId))
-            ->mapWithKeys(fn(ReplyContent $content) => [$content->getPid() => $content->getContent()]);
+            ->mapWithKeys(fn(ReplyContent $content) => [$content->pid => $content->content]);
         $this->replies->each(fn(Reply $reply) =>
-            $reply->setContent($replyContents->get($reply->getPid())));
+            $reply->content = $replyContents->get($reply->pid));
 
         $subReplyContents = collect($this->subReplyContentRepository->getPostsContent($spids))
-            ->mapWithKeys(fn(SubReplyContent $content) => [$content->getSpid() => $content->getContent()]);
+            ->mapWithKeys(fn(SubReplyContent $content) => [$content->spid => $content->content]);
         $this->subReplies->each(fn(SubReply $subReply) =>
-            $subReply->setContent($subReplyContents->get($subReply->getSpid())));
+            $subReply->content = $subReplyContents->get($subReply->spid));
         $this->stopwatch->stop('parsePostContentProtoBufBytes');
 
         return [
@@ -108,15 +108,14 @@ readonly class PostsTree
     /** @return Collection<int, Thread> */
     public function nestPostsWithParent(): Collection
     {
-        $replies = $this->replies->groupBy(fn(Reply $reply) => $reply->getTid());
-        $subReplies = $this->subReplies->groupBy(fn(SubReply $subReply) => $subReply->getPid());
-        return $this->threads->map(fn(Thread $thread) =>
-            $thread->setReplies(
-                $replies
-                    ->get($thread->getTid(), collect())
-                    ->map(fn(Reply $reply) =>
-                        $reply->setSubReplies($subReplies->get($reply->getPid(), collect()))),
-            ));
+        $replies = $this->replies->groupBy(fn(Reply $reply) => $reply->tid);
+        $subReplies = $this->subReplies->groupBy(fn(SubReply $subReply) => $subReply->pid);
+        return $this->threads->each(fn(Thread $thread) =>
+            $thread->replies = $replies
+                ->get($thread->tid, collect())
+                ->each(fn(Reply $reply) =>
+                    $reply->subReplies = $subReplies->get($reply->pid, collect()))
+        );
     }
 
     /**
@@ -129,21 +128,20 @@ readonly class PostsTree
         bool $isOrderByDesc,
     ): Collection {
         $sortBySortingKey = static fn(Collection $posts): Collection => $posts
-            ->sortBy(fn(SortablePost $post) => $post->getSortingKey(), descending: $isOrderByDesc)
+            ->sortBy(fn(SortablePost $post) => $post->sortingKey, descending: $isOrderByDesc)
             ->values(); // reset keys
-        $getOrderByProp = 'get' . ucfirst($orderByField);
         return $sortBySortingKey($nestedPosts->map(
-            function (Thread $thread) use ($getOrderByProp, $isOrderByDesc, $sortBySortingKey): Thread {
-                $thread->setReplies($sortBySortingKey($thread->getReplies()->map(
-                    function (Reply $reply) use ($getOrderByProp, $isOrderByDesc): Reply {
-                        $reply->setSubReplies($reply->getSubReplies()->sortBy(
-                            fn(SubReply $subReplies) => $subReplies->{$getOrderByProp}(),
+            function (Thread $thread) use ($orderByField, $isOrderByDesc, $sortBySortingKey): Thread {
+                $thread->replies = $sortBySortingKey($thread->replies->map(
+                    function (Reply $reply) use ($orderByField, $isOrderByDesc): Reply {
+                        $reply->subReplies = $reply->subReplies->sortBy(
+                            fn(SubReply $subReplies) => $subReplies->$orderByField,
                             descending: $isOrderByDesc,
-                        )->values()); // reset keys
-                        return $this->setSortingKeyForSortablePost($reply, $reply->getSubReplies(), $getOrderByProp, $isOrderByDesc);
-                    },
-                )));
-                $this->setSortingKeyForSortablePost($thread, $thread->getReplies(), $getOrderByProp, $isOrderByDesc);
+                        )->values(); // reset keys
+                        return $this->setSortingKeyForSortablePost($reply, $reply->subReplies, $orderByField, $isOrderByDesc);
+                    }
+                ));
+                $this->setSortingKeyForSortablePost($thread, $thread->replies, $orderByField, $isOrderByDesc);
                 return $thread;
             },
         ));
@@ -158,7 +156,7 @@ readonly class PostsTree
     private function setSortingKeyForSortablePost(
         SortablePost $currentPost,
         Collection $subPosts,
-        string $getOrderByProp,
+        string $orderByField,
         bool $isOrderByDesc,
     ): SortablePost {
         // use the topmost value between sorting key or value of orderBy field within its sub-posts
@@ -167,26 +165,26 @@ readonly class PostsTree
         $currentAndSubPostSortingKeys = collect([
             // value of orderBy field in the first sorted sub-post that isMatchQuery after previous sorting
             $subPosts // sub replies won't have isMatchQuery
-                ->filter(static fn(SortablePost $p) => $p->getIsMatchQuery() === true)
+                ->filter(static fn(SortablePost $p) => $p->isMatchQuery === true)
                 // if no sub-posts matching the query, use null as the sorting key
                 ->first()
-                ?->{$getOrderByProp}(),
+                ?->$orderByField,
             // sorting key from the first sorted sub-posts
             // not requiring isMatchQuery since a sub-post without isMatchQuery
             // might have its own sub-posts with isMatchQuery
             // and its sortingKey would be selected from its own sub-posts
-            $firstSubPost?->getSortingKey(),
+            $firstSubPost?->sortingKey,
         ]);
-        if ($currentPost->getIsMatchQuery() === true) {
+        if ($currentPost->isMatchQuery === true) {
             // also try to use the value of orderBy field in the current post
-            $currentAndSubPostSortingKeys->push($currentPost->{$getOrderByProp}());
+            $currentAndSubPostSortingKeys->push($currentPost->$orderByField);
         }
 
         // Collection->filter() will remove falsy values like null
         $currentAndSubPostSortingKeys = $currentAndSubPostSortingKeys->filter()->sort();
-        $currentPost->setSortingKey($isOrderByDesc
+        $currentPost->sortingKey = $isOrderByDesc
             ? $currentAndSubPostSortingKeys->last()
-            : $currentAndSubPostSortingKeys->first());
+            : $currentAndSubPostSortingKeys->first();
 
         return $currentPost;
     }
