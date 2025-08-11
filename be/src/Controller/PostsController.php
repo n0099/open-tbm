@@ -51,7 +51,7 @@ class PostsController extends AbstractController
 
         $params = $this->paramsValidator
             ->setParams(\Safe\json_decode($request->query->get('query'), associative: true))
-            ->getParams();
+            ->params;
         $this->paramsValidator->addDefaultParamsThenValidate();
 
         $this->stopwatch->start('$queryClass->query()');

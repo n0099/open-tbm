@@ -23,7 +23,7 @@ class QueryParamTest extends TestCase
         $sut = new QueryParam([$name => $value, ...$subParams]);
         self::assertEquals($name, $sut->name);
         self::assertEquals($value, $sut->value);
-        self::assertEquals($subParams, $sut->getAllSub());
+        self::assertEquals($subParams, $sut->subParams);
         foreach ($subParams as $subParamName => $subParamValue) {
             self::assertEquals($subParamValue, $sut->getSub($subParamName));
             $sut->setSub($subParamName, $randomValue);

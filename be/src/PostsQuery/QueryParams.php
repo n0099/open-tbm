@@ -85,7 +85,7 @@ class QueryParams
             $value = $this->getUniqueParamValue($name) ?? $default['value'];
             $subParams = [
                 ...$default['subParam'] ?? [],
-                ...Arr::first($this->pick($name))?->getAllSub() ?? []
+                ...Arr::first($this->pick($name))?->subParams ?? []
             ];
             $paramFilledWithDefaults = new QueryParam([$name => $value, ...$subParams]);
 

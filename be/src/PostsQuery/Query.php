@@ -90,7 +90,7 @@ readonly class Query extends BaseQuery
         $sqlParamName = "param$paramIndex";
         $name = $param->name;
         $value = $param->value;
-        $sub = $param->getAllSub();
+        $sub = $param->subParams;
         $sub['not'] ??= false;
         $not = $sub['not'] ? 'NOT' : '';
         $notReverse = $sub['not'] ? '' : 'NOT';

@@ -103,7 +103,7 @@ class ParamsValidatorTest extends KernelTestCase
     {
         $sut = self::newParamsValidator([['postTypes' => $shuffledPostTypes], ['tid' => 0]]);
         $sut->addDefaultParamsThenValidate(shouldSkip40003: true);
-        self::assertEquals($orderedPostTypes, $sut->getParams()->getUniqueParamValue('postTypes'));
+        self::assertEquals($orderedPostTypes, $sut->params->getUniqueParamValue('postTypes'));
     }
 
     public static function providePostTypesParamValueOrder(): array
