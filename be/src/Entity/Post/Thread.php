@@ -20,9 +20,9 @@ class Thread extends Post
     #[ORM\Column] public string $title;
     #[ORM\Column] public int $latestReplyPostedAt;
     #[ORM\Column] public ?int $latestReplierId;
-    #[ORM\Column] public ?int $replyCount;
-    #[ORM\Column] public ?int $viewCount;
-    #[ORM\Column] public ?int $shareCount;
+    #[ORM\Column] public ?int $replyCount { get => $this->replyCount ?? 0; }
+    #[ORM\Column] public ?int $viewCount { get => $this->viewCount ?? 0; }
+    #[ORM\Column] public ?int $shareCount { get => $this->shareCount ?? 0; }
     /** @var ?resource */
     #[ORM\Column] public $zan {
         get => BlobResourceGetter::protoBuf($this->zan, Zan::class);

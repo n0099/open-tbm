@@ -14,7 +14,7 @@ class Reply extends Post
     #[ORM\Column(type: 'bigint')] public int $tid;
     #[ORM\Column(type: 'bigint'), ORM\Id] public int $pid;
     #[ORM\Column] public int $floor;
-    #[ORM\Column] public ?int $subReplyCount;
+    #[ORM\Column] public ?int $subReplyCount { get => $this->subReplyCount ?? 0; }
     #[ORM\Column] public ?int $isFold;
     /** @var ?resource */
     #[ORM\Column] public $geolocation {
