@@ -48,8 +48,8 @@ readonly class Query extends BaseQuery
         $this->queryResult->setResult(
             $this->buildQueries($params),
             $cursor,
-            $this->getOrderByField(),
-            $this->isOrderByDesc(),
+            $this->orderByField,
+            $this->isOrderByDesc,
             $queryByPostIDParamsName
         );
     }

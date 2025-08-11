@@ -61,8 +61,8 @@ readonly class PostsTree
             ->unique();
         $this->threads = collect($postModels['thread']->getPosts($parentThreadsID->concat($tids)))
             ->map(fn(\App\Entity\Post\Thread $entity) => Thread::fromEntity($entity))
-            ->each(static fn(Thread $thread) =>
-                $thread->isMatchQuery = $tids->contains($thread->tid));
+            ->each(static fn(Thread $thread) => // prevent early exit of `Collection::each()` due to the assignment return false
+                ($thread->isMatchQuery = $tids->contains($thread->tid)) || true);
         $this->stopwatch->stop('fillWithThreadsFields');
 
         $this->stopwatch->start('fillWithRepliesFields');
@@ -71,8 +71,8 @@ readonly class PostsTree
         $allRepliesId = $parentRepliesID->concat($pids);
         $this->replies = collect($postModels['reply']->getPosts($allRepliesId))
             ->map(fn(\App\Entity\Post\Reply $entity) => Reply::fromEntity($entity))
-            ->each(static fn(Reply $reply) =>
-                $reply->isMatchQuery = $pids->contains($reply->pid));
+            ->each(static fn(Reply $reply) => // prevent early exit of `Collection::each()` due to the assignment return false
+                ($reply->isMatchQuery = $pids->contains($reply->pid)) || true);
         $this->stopwatch->stop('fillWithRepliesFields');
 
         $this->stopwatch->start('fillWithSubRepliesFields');

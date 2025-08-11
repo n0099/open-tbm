@@ -10,13 +10,7 @@ class User extends UserEntity
     use TimestampedDTO { fromEntity as private fromTimestampedEntity; }
 
     /** @var array{int, array{forumModerator: ForumModerator, authorExpGrade: AuthorExpGrade}} */
-    private array $forumSpecific;
-
-    public function setForumSpecific(array $forumSpecific): User
-    {
-        $this->forumSpecific = $forumSpecific;
-        return $this;
-    }
+    public array $forumSpecific;
 
     public static function fromEntity(UserEntity $entity): self
     {

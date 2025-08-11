@@ -115,10 +115,10 @@ class PostsController extends AbstractController
                 ->filter(fn(?string $portrait) => $portrait !== null))
         ))->keyBy(fn(ForumModerator $forumModerator) => $forumModerator->portrait);
 
-        $users = $users->each(fn(User $user) => $user->setForumSpecific([
+        $users = $users->each(fn(User $user) => $user->forumSpecific = [
             'authorExpGrade' => $authorExpGrades->get($user->uid),
             'forumModerator' => $forumModerators->get($user->portrait)
-        ]));
+        ]);
         $this->stopwatch->stop('queryUserRelated');
 
         return [
@@ -132,8 +132,8 @@ class PostsController extends AbstractController
             )->mapWithKeys(fn(array $forum) => [$forum['fid'] => $forum['name']]),
             'threads' => $this->query->postsTree->reOrderNestedPosts(
                 $this->query->postsTree->nestPostsWithParent(),
-                $this->query->getOrderByField(),
-                $this->query->isOrderByDesc(),
+                $this->query->orderByField,
+                $this->query->isOrderByDesc,
             ),
             'users' => $users->values(),
             'latestRepliers' => $latestRepliers,

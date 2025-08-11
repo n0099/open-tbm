@@ -4,9 +4,9 @@ namespace App\PostsQuery;
 
 abstract readonly class BaseQuery
 {
-    private string $orderByField;
+    private(set) string $orderByField;
 
-    private bool $isOrderByDesc;
+    private(set) bool $isOrderByDesc;
 
     public function __construct(
         public QueryResult $queryResult,
@@ -15,20 +15,12 @@ abstract readonly class BaseQuery
 
     abstract public function query(QueryParams $params, ?string $cursor): void;
 
-    public function getOrderByField(): string
-    {
-        return $this->orderByField;
-    }
-
+    // https://wiki.php.net/rfc/property-hooks#interaction_with_readonly
+    // https://externals.io/message/124149
     protected function setOrderByField(string $value): self
     {
         $this->orderByField = $value;
         return $this;
-    }
-
-    public function isOrderByDesc(): bool
-    {
-        return $this->isOrderByDesc;
     }
 
     protected function setIsOrderByDesc(bool $value): self
