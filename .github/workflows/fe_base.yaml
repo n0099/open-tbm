@@ -12,21 +12,21 @@ jobs:
   tsc:
     runs-on: ${{ inputs.runs-on }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: ./.github/actions/fe
       - run: yarn run vue-tsc
 
   eslint:
     runs-on: ${{ inputs.runs-on }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: ./.github/actions/fe
       - run: yarn run eslint .
 
   stylelint:
     runs-on: ${{ inputs.runs-on }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: ./.github/actions/fe
 
       - id: cache-restore
@@ -50,7 +50,7 @@ jobs:
   type-coverage:
     runs-on: ${{ inputs.runs-on }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: ./.github/actions/fe
 
       - id: cache-restore
