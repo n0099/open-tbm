@@ -60,7 +60,7 @@ readonly class PostsTree
             ->concat($result->subReplies->map(fn(SubReplyKey $postKey) => $postKey->tid))
             ->unique();
         $this->threads = collect($postModels['thread']->getPosts($parentThreadsID->concat($tids)))
-            ->map(fn(\App\Entity\Post\Thread $entity) => Thread::fromEntity($entity))
+            ->map(fn(\App\Entity\Post\Thread $entity) => Helper::copyClass($entity, Thread::class))
             ->each(static fn(Thread $thread) => // prevent early exit of `Collection::each()` due to the assignment return false
                 ($thread->isMatchQuery = $tids->contains($thread->tid)) || true);
         $this->stopwatch->stop('fillWithThreadsFields');
@@ -70,14 +70,14 @@ readonly class PostsTree
         $parentRepliesID = $result->subReplies->map(fn(SubReplyKey $postKey) => $postKey->parentPostId)->unique();
         $allRepliesId = $parentRepliesID->concat($pids);
         $this->replies = collect($postModels['reply']->getPosts($allRepliesId))
-            ->map(fn(\App\Entity\Post\Reply $entity) => Reply::fromEntity($entity))
+            ->map(fn(\App\Entity\Post\Reply $entity) => Helper::copyClass($entity, Reply::class))
             ->each(static fn(Reply $reply) => // prevent early exit of `Collection::each()` due to the assignment return false
                 ($reply->isMatchQuery = $pids->contains($reply->pid)) || true);
         $this->stopwatch->stop('fillWithRepliesFields');
 
         $this->stopwatch->start('fillWithSubRepliesFields');
         $this->subReplies = collect($postModels['subReply']->getPosts($spids))
-            ->map(fn(\App\Entity\Post\SubReply $entity) => SubReply::fromEntity($entity));
+            ->map(fn(\App\Entity\Post\SubReply $entity) => Helper::copyClass($entity, SubReply::class));
         $this->stopwatch->stop('fillWithSubRepliesFields');
 
         $this->stopwatch->start('parsePostContentProtoBufBytes');
