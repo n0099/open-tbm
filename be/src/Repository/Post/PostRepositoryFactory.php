@@ -2,7 +2,7 @@
 
 namespace App\Repository\Post;
 
-use App\Helper;
+use App\Utils;
 
 readonly class PostRepositoryFactory
 {
@@ -16,7 +16,7 @@ readonly class PostRepositoryFactory
     public function newForumPosts(): array
     {
         return array_combine(
-            Helper::POST_TYPES,
+            Utils::POST_TYPES,
             [$this->threadRepository, $this->replyRepository, $this->subReplyRepository],
         );
     }

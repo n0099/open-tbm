@@ -11,7 +11,7 @@ use App\Entity\Post\Content\SubReplyContent;
 use App\DTO\Post\Reply;
 use App\DTO\Post\SubReply;
 use App\DTO\Post\Thread;
-use App\Helper;
+use App\Utils;
 use App\Repository\Post\Content\ReplyContentRepository;
 use App\Repository\Post\Content\SubReplyContentRepository;
 use App\Repository\Post\PostRepositoryFactory;
@@ -58,7 +58,7 @@ readonly class PostsTree
             ->concat($result->subReplies->map(fn(SubReplyKey $postKey) => $postKey->tid))
             ->unique();
         $this->threads = collect($postModels['thread']->getPosts($parentThreadsID->concat($tids)))
-            ->map(fn(\App\Entity\Post\Thread $entity) => Helper::copyClass($entity, Thread::class))
+            ->map(fn(\App\Entity\Post\Thread $entity) => Utils::copyClass($entity, Thread::class))
             ->each(static fn(Thread $thread) => // prevent early exit of `Collection::each()` due to the assignment return false
                 ($thread->isMatchQuery = $tids->contains($thread->tid)) || true);
         $this->stopwatch->stop('fillWithThreadsFields');
@@ -68,14 +68,14 @@ readonly class PostsTree
         $parentRepliesID = $result->subReplies->map(fn(SubReplyKey $postKey) => $postKey->parentPostId)->unique();
         $allRepliesId = $parentRepliesID->concat($pids);
         $this->replies = collect($postModels['reply']->getPosts($allRepliesId))
-            ->map(fn(\App\Entity\Post\Reply $entity) => Helper::copyClass($entity, Reply::class))
+            ->map(fn(\App\Entity\Post\Reply $entity) => Utils::copyClass($entity, Reply::class))
             ->each(static fn(Reply $reply) => // prevent early exit of `Collection::each()` due to the assignment return false
                 ($reply->isMatchQuery = $pids->contains($reply->pid)) || true);
         $this->stopwatch->stop('fillWithRepliesFields');
 
         $this->stopwatch->start('fillWithSubRepliesFields');
         $this->subReplies = collect($postModels['subReply']->getPosts($spids))
-            ->map(fn(\App\Entity\Post\SubReply $entity) => Helper::copyClass($entity, SubReply::class));
+            ->map(fn(\App\Entity\Post\SubReply $entity) => Utils::copyClass($entity, SubReply::class));
         $this->stopwatch->stop('fillWithSubRepliesFields');
 
         $this->stopwatch->start('parsePostContentProtoBufBytes');
@@ -92,7 +92,7 @@ readonly class PostsTree
         $this->stopwatch->stop('parsePostContentProtoBufBytes');
 
         return [
-            'matchQueryPostCount' => collect(Helper::POST_TYPES)
+            'matchQueryPostCount' => collect(Utils::POST_TYPES)
                 ->combine([$tids, $pids, $spids])
                 ->map(static fn(Collection $ids, string $type) => $ids->count())
                 ->toArray(),

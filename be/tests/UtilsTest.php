@@ -2,14 +2,14 @@
 
 namespace App\Tests;
 
-use App\Helper;
+use App\Utils;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
-#[CoversClass(Helper::class)]
-class HelperTest extends TestCase
+#[CoversClass(Utils::class)]
+class UtilsTest extends TestCase
 {
     public static function assertAbort(int $statusCode, int $errorCode, string $errorInfo, callable $callback): void
     {
@@ -26,24 +26,24 @@ class HelperTest extends TestCase
     #[DataProvider('provideAbortAPI')]
     public function testAbortAPI(int $statusCode, int $errorCode, string $errorInfo): void
     {
-        self::assertAbort($statusCode, $errorCode, $errorInfo, static fn() => Helper::abortAPI($errorCode));
+        self::assertAbort($statusCode, $errorCode, $errorInfo, static fn() => Utils::abortAPI($errorCode));
     }
 
     #[DataProvider('provideAbortAPI')]
     public function testAbortAPIIf(int $statusCode, int $errorCode, string $errorInfo): void
     {
-        self::assertAbort($statusCode, $errorCode, $errorInfo, static fn() => Helper::abortAPIIf($errorCode, true));
+        self::assertAbort($statusCode, $errorCode, $errorInfo, static fn() => Utils::abortAPIIf($errorCode, true));
     }
 
     #[DataProvider('provideAbortAPI')]
     public function testAbortAPIIfNot(int $statusCode, int $errorCode, string $errorInfo): void
     {
-        self::assertAbort($statusCode, $errorCode, $errorInfo, static fn() => Helper::abortAPIIfNot($errorCode, false));
+        self::assertAbort($statusCode, $errorCode, $errorInfo, static fn() => Utils::abortAPIIfNot($errorCode, false));
     }
 
     public static function provideAbortAPI(): array
     {
-        return collect(Helper::ERROR_STATUS_CODE_INFO)
+        return collect(Utils::ERROR_STATUS_CODE_INFO)
             ->flatMap(static fn(array $codeWithInfo, int $statusCode) => array_map(
                 static fn(int $errorCode, string $errorInfo) => [$statusCode, $errorCode, $errorInfo],
                 array_keys($codeWithInfo),
@@ -56,11 +56,11 @@ class HelperTest extends TestCase
     public function testAbortAPIWithNonExistsCode(int $errorCode): void
     {
         $this->expectExceptionObject(new \InvalidArgumentException('Given error code doesn\'t existed'));
-        Helper::abortAPI($errorCode);
+        Utils::abortAPI($errorCode);
     }
 
     public static function provideAbortAPIWithNonExistsCode(): array
     {
-        return [[collect(Helper::ERROR_STATUS_CODE_INFO)->max(static fn(array $i) => max(array_keys($i))) + 1]];
+        return [[collect(Utils::ERROR_STATUS_CODE_INFO)->max(static fn(array $i) => max(array_keys($i))) + 1]];
     }
 }

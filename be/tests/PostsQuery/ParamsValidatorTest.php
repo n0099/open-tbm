@@ -2,7 +2,7 @@
 
 namespace App\Tests\PostsQuery;
 
-use App\Helper;
+use App\Utils;
 use App\PostsQuery\ParamsValidator;
 use Illuminate\Support\Arr;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -61,7 +61,7 @@ class ParamsValidatorTest extends KernelTestCase
                     'threadProperties' => ['sticky'],
                     default => '0',
                 }],
-                ['postTypes' => array_diff(Helper::POST_TYPES, $coverageAndPostTypes[1])],
+                ['postTypes' => array_diff(Utils::POST_TYPES, $coverageAndPostTypes[1])],
             ])
             ->mapWithKeys(static fn(array $i, string $name) => ["40003, $name" => [40003, $i]])
             ->all();
@@ -72,7 +72,7 @@ class ParamsValidatorTest extends KernelTestCase
         return collect(ParamsValidator::REQUIRED_POST_TYPES_KEY_BY_ORDER_BY_VALUE)
             ->map(static fn(array $coverageAndPostTypes, string $name) => [
                 ['tid' => 0],
-                ['postTypes' => array_diff(Helper::POST_TYPES, $coverageAndPostTypes[1])],
+                ['postTypes' => array_diff(Utils::POST_TYPES, $coverageAndPostTypes[1])],
                 ['orderBy' => $name],
             ])
             ->mapWithKeys(static fn(array $i, string $name) => ["40004, $name" => [40004, $i]])
@@ -109,8 +109,8 @@ class ParamsValidatorTest extends KernelTestCase
     public static function providePostTypesParamValueOrder(): array
     {
         return [[
-            collect(Helper::POST_TYPES)->sort()->values()->all(),
-            Arr::shuffle(Helper::POST_TYPES),
+            collect(Utils::POST_TYPES)->sort()->values()->all(),
+            Arr::shuffle(Utils::POST_TYPES),
         ]];
     }
 }

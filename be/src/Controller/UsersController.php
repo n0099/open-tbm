@@ -2,7 +2,7 @@
 
 namespace App\Controller;
 
-use App\Helper;
+use App\Utils;
 use App\PostsQuery\ParamsValidator;
 use App\PostsQuery\QueryResult;
 use App\Repository\UserRepository;
@@ -56,7 +56,7 @@ class UsersController extends AbstractController
         ['result' => $result, 'hasMorePages' => $hasMorePages] =
             $this->queryResult->getQueryResult($queries, $this->perPageItems);
         $resultCount = $result->count();
-        Helper::abortAPIIf(40402, $resultCount === 0);
+        Utils::abortAPIIf(40402, $resultCount === 0);
 
         return [
             'pages' => [

@@ -6,7 +6,7 @@ use App\DTO\PostKey\BasePostKey;
 use App\DTO\PostKey\Reply;
 use App\DTO\PostKey\SubReply;
 use App\DTO\PostKey\Thread;
-use App\Helper;
+use App\Utils;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 
@@ -23,7 +23,7 @@ class CursorCodec
     {
         $encodedCursorsKeyByPostType = $postsKeyByTypePluralName
             ->mapWithKeys(static fn(Collection $posts, string $type) => [
-                Helper::POST_TYPE_PLURAL_TO_SINGULAR[$type] => $posts->last(), // null when no posts
+                Utils::POST_TYPE_PLURAL_TO_SINGULAR[$type] => $posts->last(), // null when no posts
             ]) // [singularPostTypeName => lastPostInResult]
             ->filter(static fn(?BasePostKey $post) => $post !== null)
             ->map(fn(BasePostKey $post) => [$post->postId, $post->orderByFieldValue])
@@ -55,8 +55,8 @@ class CursorCodec
                     return $prefix . ($prefix === '' ? '' : ':') . $value;
                 })
                 ->join(','));
-        return collect(Helper::POST_TYPES)
-            // merge cursors into flipped Helper::POST_TYPES with the same post type key
+        return collect(Utils::POST_TYPES)
+            // merge cursors into flipped Utils::POST_TYPES with the same post type key
             // value of keys that non exists in $encodedCursorsKeyByPostType will remain as int
             ->flip()->merge($encodedCursorsKeyByPostType)
             // if the flipped value is a default int key there's no posts of this type
@@ -69,7 +69,7 @@ class CursorCodec
     /** @psalm-return Collection<'reply'|'subReply'|'thread', Collection> */
     public function decodeCursor(string $encodedCursors, string $orderByField): Collection
     {
-        return collect(Helper::POST_TYPES)
+        return collect(Utils::POST_TYPES)
             ->combine(Str::of($encodedCursors)
                 ->explode(',')
                 ->map(static function (string $encodedCursor): int|string|null {
@@ -104,7 +104,7 @@ class CursorCodec
             ->mapWithKeys(fn(Collection $cursors, string $postType) =>
             [$postType =>
                 $cursors->mapWithKeys(fn(int|string|null $cursor, int $index) =>
-                [$index === 0 ? Helper::POST_TYPE_TO_ID[$postType] : $orderByField => $cursor]),
+                [$index === 0 ? Utils::POST_TYPE_TO_ID[$postType] : $orderByField => $cursor]),
             ])
             // filter out cursors with all fields value being null, '' or 0 with their encoded cursor ',,'
             ->reject(static fn(Collection $cursors) =>

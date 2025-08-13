@@ -2,7 +2,7 @@
 
 namespace App\PostsQuery;
 
-use App\Helper;
+use App\Utils;
 use App\Repository\ForumRepository;
 use App\Repository\Post\PostRepository;
 use App\Repository\Post\PostRepositoryFactory;
@@ -27,11 +27,11 @@ readonly class Query extends BaseQuery
         /** @var ?int $fid */
         $fid = $params->getUniqueParamValue('fid');
         if ($fid !== null) {
-            Helper::abortAPIIfNot(40406, $this->forumRepository->isForumExists($fid));
+            Utils::abortAPIIfNot(40406, $this->forumRepository->isForumExists($fid));
         }
 
         $queryByPostIDParamsName = collect(array_count_values(
-            collect($params->pick(...Helper::POST_ID))
+            collect($params->pick(...Utils::POST_ID))
                 ->filter(static fn(QueryParam $p) => $p->getSub('range') === '=')
                 ->map(static fn(QueryParam $p) => $p->name)
                 ->toArray()

@@ -4,7 +4,7 @@ namespace App;
 
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
-class Helper
+class Utils
 {
     public const array POST_ID = ['tid', 'pid', 'spid'];
     public const array POST_TYPES = ['thread', 'reply', 'subReply'];

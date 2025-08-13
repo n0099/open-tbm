@@ -6,7 +6,7 @@ use App\Doctrine\InterpolateParametersSQLOutputWalker;
 use App\DTO\PostKey\Reply as ReplyKey;
 use App\DTO\PostKey\SubReply as SubReplyKey;
 use App\DTO\PostKey\Thread as ThreadKey;
-use App\Helper;
+use App\Utils;
 use Doctrine\DBAL\Query\QueryBuilder as DBALQueryBuilder;
 use Doctrine\DBAL\Query\UnionType;
 use Doctrine\ORM\AbstractQuery;
@@ -50,7 +50,7 @@ readonly class QueryResult
         $plansCost = array_sum(array_map(static fn(array $plan) => $plan['Plan']['Total Cost'], $explainJSON));
         $planCostLimit = $this->containerBag->get('app.query_plan_cost_limit');
         if (!($planCostLimit === null || $planCostLimit === '' || (int)$planCostLimit === 0)) {
-            Helper::abortAPIIf(40006, $plansCost > $planCostLimit);
+            Utils::abortAPIIf(40006, $plansCost > $planCostLimit);
         }
 
         $result = collect($query->getResult());
@@ -65,7 +65,7 @@ readonly class QueryResult
         ];
     }
 
-    /** @param Collection<Helper::POST_TYPE, QueryBuilder> $queries */
+    /** @param Collection<Utils::POST_TYPE, QueryBuilder> $queries */
     public function setResult(
         Collection $queries,
         ?string $cursorParamValue,
@@ -92,7 +92,7 @@ readonly class QueryResult
                 // https://mysql.rjweb.org/doc.php/pagination
                 // https://medium.com/swlh/how-to-implement-cursor-pagination-like-a-pro-513140b65f32
                 // https://slack.engineering/evolving-api-pagination-at-slack/
-                ->addOrderBy('t.' . Helper::POST_TYPE_TO_ID[$postType])
+                ->addOrderBy('t.' . Utils::POST_TYPE_TO_ID[$postType])
                 ->setMaxResults($maxResults);
 
             $cursors = $cursorsKeyByPostType->get($postType, collect());
@@ -121,7 +121,7 @@ readonly class QueryResult
         $this->currentCursor = $cursorParamValue ?? '';
         $this->nextCursor = $hasMorePages
             ? $this->cursorCodec->encodeNextCursor($postsKeyByTypePluralName->except(
-                $queryByPostIDParamsName->map(static fn(string $postID) => Helper::POST_ID_TO_TYPE_PLURAL[$postID])
+                $queryByPostIDParamsName->map(static fn(string $postID) => Utils::POST_ID_TO_TYPE_PLURAL[$postID])
             ))
             : null;
         $this->query = ['query' => $rawSQL, 'plan' => $queryPlan];
@@ -192,7 +192,7 @@ readonly class QueryResult
         $postsKeyByTypePluralName = $result
             ->groupBy(static fn(/** @var UnionPostKey $unionPostKey */ array $unionPostKey) => $unionPostKey['postType'])
             ->mapWithKeys(static fn(Collection $unionPostKeys, /** @var 'reply'|'subReply'|'thread' $postType */ string $postType) =>
-                [Helper::POST_TYPE_TO_PLURAL[$postType] => $unionPostKeys
+                [Utils::POST_TYPE_TO_PLURAL[$postType] => $unionPostKeys
                     ->map(static function (/** @var UnionPostKey $unionPostKey */ array $unionPostKey) use ($postType) {
                         [
                             'postId' => $postId,
@@ -208,7 +208,7 @@ readonly class QueryResult
                         };
                     })
                 ]);
-        Helper::abortAPIIf(40401, $postsKeyByTypePluralName->every(static fn(Collection $i) => $i->isEmpty()));
+        Utils::abortAPIIf(40401, $postsKeyByTypePluralName->every(static fn(Collection $i) => $i->isEmpty()));
 
         return [
             'rawSQL' => $rawSQL,

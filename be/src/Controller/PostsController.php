@@ -8,7 +8,7 @@ use App\DTO\User\User;
 use App\Entity\LatestReplier;
 use App\Entity\Post\Post;
 use App\Entity\Post\Thread;
-use App\Helper;
+use App\Utils;
 use App\PostsQuery\ParamsValidator;
 use App\PostsQuery\Query;
 use App\Repository\ForumRepository;
@@ -86,7 +86,7 @@ class PostsController extends AbstractController
             ->concat($latestRepliersUidKeyById)
             ->unique();
         $users = collect($this->userRepository->getUsers($uids))
-            ->mapWithKeys(fn(\App\Entity\User $entity) => [$entity->uid => Helper::copyClass($entity, User::class)]);
+            ->mapWithKeys(fn(\App\Entity\User $entity) => [$entity->uid => Utils::copyClass($entity, User::class)]);
         $this->stopwatch->stop('queryUsers');
 
         $this->stopwatch->start('queryUserRelated');

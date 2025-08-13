@@ -2,7 +2,7 @@
 
 namespace App\PostsQuery;
 
-use App\Helper;
+use App\Utils;
 use Illuminate\Support\Arr;
 
 class QueryParams
@@ -77,7 +77,7 @@ class QueryParams
     public function addDefaultValueOnUniqueParams(): void
     {
         $uniqueParamsDefaultValue = [
-            'postTypes' => ['value' => Helper::POST_TYPES],
+            'postTypes' => ['value' => Utils::POST_TYPES],
             'orderBy' => ['value' => 'default', 'subParam' => ['direction' => 'ASC']],
         ];
         foreach ($uniqueParamsDefaultValue as $name => $default) {
