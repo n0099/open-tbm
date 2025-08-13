@@ -23,10 +23,8 @@ readonly class PostsTree
 {
     /** @var Collection<int, Thread> */
     public Collection $threads;
-
     /** @var Collection<int, Reply> */
     public Collection $replies;
-
     /** @var Collection<int, SubReply> */
     public Collection $subReplies;
 

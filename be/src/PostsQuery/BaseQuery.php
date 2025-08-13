@@ -5,7 +5,6 @@ namespace App\PostsQuery;
 abstract readonly class BaseQuery
 {
     private(set) string $orderByField;
-
     private(set) bool $isOrderByDesc;
 
     public function __construct(

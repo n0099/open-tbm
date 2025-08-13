@@ -25,17 +25,12 @@ readonly class QueryResult
 {
     /** @var Collection<int, ThreadKey> */
     public Collection $threads;
-
     /** @var Collection<int, ReplyKey> */
     public Collection $replies;
-
     /** @var Collection<int, SubReplyKey> */
     public Collection $subReplies;
-
     public string $currentCursor;
-
     public ?string $nextCursor;
-
     public array $query;
 
     public function __construct(
