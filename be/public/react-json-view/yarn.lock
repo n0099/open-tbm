@@ -430,7 +430,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/react-dom@npm:^19":
+"@types/react-dom@npm:^19.1.7":
   version: 19.1.7
   resolution: "@types/react-dom@npm:19.1.7"
   peerDependencies:
@@ -1324,7 +1324,7 @@ __metadata:
     "@microlink/react-json-view": "npm:^1.27.0"
     "@types/node": "npm:^24.2.1"
     "@types/react": "npm:^19.1.10"
-    "@types/react-dom": "npm:^19"
+    "@types/react-dom": "npm:^19.1.7"
     react: "npm:^19.1.1"
     react-dom: "npm:^19.1.1"
     typescript: "npm:^5.9.2"
