@@ -16,7 +16,6 @@
         "illuminate/collections": "^12.21",
         "spatie/laravel-collection-macros": "^8",
         "spatie/regex": "^3.1.1",
-        "symfony/asset": "^7.3.0",
         "symfony/dotenv": "^7.3.0",
         "symfony/flex": "^2.8.1",
         "symfony/framework-bundle": "^7.3.1",
@@ -108,8 +107,7 @@
     },
     "scripts": {
         "auto-scripts": {
-            "cache:clear": "symfony-cmd",
-            "assets:install %PUBLIC_DIR%": "symfony-cmd"
+            "cache:clear": "symfony-cmd"
         },
         "post-install-cmd": [
             "@auto-scripts"
