@@ -1,0 +1,15 @@
+{
+  "type": "module",
+  "dependencies": {
+    "@microlink/react-json-view": "^1.27.0",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1"
+  },
+  "devDependencies": {
+    "@types/node": "^24.2.1",
+    "@types/react": "^19.1.10",
+    "@types/react-dom": "^19",
+    "typescript": "^5.9.2",
+    "vite": "^7.1.2"
+  }
+}
