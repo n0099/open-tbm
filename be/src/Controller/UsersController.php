@@ -38,19 +38,17 @@ class UsersController extends AbstractController
 
         /** @var QueryBuilder $queryBuilder */
         $queryBuilder = collect($queryParams)
-            ->reduceSpread( // https://stackoverflow.com/beta/discussions/78344321/a-simple-example-of-how-to-use-laravels-reducespread-method
-                function (int $paramIndex, QueryBuilder $queryBuilder, $paramValue, string $paramName) use ($paramConstraints): array {
+            ->reduce(
+                function (QueryBuilder $queryBuilder, $paramValue, string $paramName) use ($paramConstraints): QueryBuilder {
                     if (!array_key_exists($paramName, $paramConstraints)) {
                         throw new \InvalidArgumentException();
                     }
-                    $queryBuilder = $paramValue === 'NULL'
+                    return $paramValue === 'NULL'
                         && in_array($paramName, ['name', 'displayName', 'gender'], true)
                         ? $queryBuilder->andWhere("t.$paramName IS NULL")
-                        : $queryBuilder->andWhere("t.$paramName = ?$paramIndex")
-                            ->setParameter($paramIndex, $paramValue);
-                    return [$paramIndex + 1, $queryBuilder];
+                        : $queryBuilder->andWhere("t.$paramName = :$paramName")
+                            ->setParameter($paramName, $paramValue);
                 },
-                0,
                 $this->userRepository->createQueryBuilder('t')
             );
         $queryBuilder = $queryBuilder->orderBy('t.uid', 'DESC');
