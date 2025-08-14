@@ -10,5 +10,8 @@ export default defineConfig({
             entry: resolve(__dirname, 'index.js'),
             formats: ['es']
         }
+    },
+    define: { // https://stackoverflow.com/questions/74120349/building-bundle-for-web-in-vite/74121995#74121995
+        'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV)
     }
 });
