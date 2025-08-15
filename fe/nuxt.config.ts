@@ -81,7 +81,6 @@ export default defineNuxtConfig({
             analyzer({ analyzerMode: 'static', fileName: 'vite-bundle-analyzer' })
         ],
         build: { target: 'esnext' },
-        assetsInclude: ['**/*.avifs'],
         $server: { // https://github.com/nuxt/nuxt/issues/32175#issuecomment-2898200099
             build: {
                 rollupOptions: {

@@ -4,7 +4,7 @@
         <div class="col"><hr /></div>
         <div class="w-auto">
             <picture>
-                <source :srcset="iconHuajiLoadingSpinnerAvifs" type="image/avif" />
+                <source :srcset="iconHuajiLoadingSpinnerAvif" type="image/avif" />
                 <img :src="iconHuajiLoadingSpinnerGif" alt="loading" />
             </picture>
         </div>
@@ -19,7 +19,7 @@
 
 <script setup lang="ts">
 import iconHuajiLoadingSpinnerGif from '@/assets/icon-huaji-loading-spinner-2nd-frames-removed.gif';
-import iconHuajiLoadingSpinnerAvifs from '@/assets/icon-huaji-loading-spinner.avifs';
+import iconHuajiLoadingSpinnerAvif from '@/assets/icon-huaji-loading-spinner.avif';
 import placeholderPostList from '@/assets/placeholder-post-list.svg';
 
 defineProps<{ isLoading: boolean }>();
