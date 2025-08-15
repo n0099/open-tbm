@@ -60,7 +60,7 @@
 </template>
 
 <script setup lang="ts">
-import 'assets/css/bootstrapCallout.css';
+import '@/assets/css/bootstrapCallout.css';
 import type { TemplateRefsList } from '@vueuse/core';
 import { faCommentDots } from '@fortawesome/free-solid-svg-icons';
 

@@ -28,7 +28,7 @@
 </template>
 
 <script setup lang="ts">
-import iconLoadingBlock from 'assets/icon-loading-block.svg';
+import iconLoadingBlock from '@/assets/icon-loading-block.svg';
 import AntdZhCn from 'ant-design-vue/es/locale/zh_CN';
 
 const config = useRuntimeConfig().public;

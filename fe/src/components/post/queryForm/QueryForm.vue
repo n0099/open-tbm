@@ -258,7 +258,7 @@ const queryFormSubmit = async () => useTriggerRouteUpdateStore()
 
 <style scoped>
 :deep(.input-group-text ~ * > .ant-input-lg) {
-    block-size: unset; /* revert the effect in global style assets/css/global.css */
+    block-size: unset; /* revert the effect in global style @/assets/css/global.css */
 }
 /* remove borders for <ARangePicker> in the start, middle and end of .input-group */
 :deep(.input-group > :not(:first-child) .ant-calendar-picker-input) {

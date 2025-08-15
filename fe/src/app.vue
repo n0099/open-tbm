@@ -8,7 +8,7 @@
 </template>
 
 <script setup lang="ts">
-import 'assets/css/global.css';
+import '@/assets/css/global.css';
 import { VueQueryDevtools } from '@tanstack/vue-query-devtools';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'noty/lib/noty.css';
