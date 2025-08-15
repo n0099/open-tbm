@@ -1,5 +1,7 @@
 // eslint-disable-next-line import-x/extensions
 import { withNuxt } from './.nuxt/eslint.config.mjs';
+// eslint-disable-next-line import-x/extensions
+import { configsPath } from './configs.ts';
 import * as vueESLintParser from 'vue-eslint-parser';
 import { defineConfigWithVueTs, vueTsConfigs } from '@vue/eslint-config-typescript';
 import pluginVue from 'eslint-plugin-vue';
@@ -7,7 +9,7 @@ import eslintJs from '@eslint/js';
 import pluginStylistic from '@stylistic/eslint-plugin';
 import pluginTanstackQuery from '@tanstack/eslint-plugin-query';
 import * as typescriptESLintParser from '@typescript-eslint/parser';
-// eslint-disable-next-line import-x/no-unresolved
+import { createTypeScriptImportResolver } from 'eslint-import-resolver-typescript';
 import pluginCompat from 'eslint-plugin-compat';
 import { flatConfigs as pluginImportX } from 'eslint-plugin-import-x';
 import pluginPinia from 'eslint-plugin-pinia';
@@ -153,7 +155,7 @@ const rules = {
             '@stylistic/brace-style': ['warn', '1tbs', { allowSingleLine: true }],
             '@stylistic/comma-dangle': 'warn',
             '@stylistic/comma-spacing': 'warn',
-            '@stylistic/func-call-spacing': 'warn',
+            '@stylistic/function-call-spacing': 'warn',
             '@stylistic/indent': 'warn',
             '@stylistic/keyword-spacing': 'warn',
             '@stylistic/no-extra-parens': ['warn', 'all', {
@@ -567,14 +569,23 @@ export default withNuxt(defineConfigWithVueTs(
             parser: typescriptESLintParser,
             parserOptions: {
                 projectService: true, // https://typescript-eslint.io/blog/announcing-typescript-eslint-v8-beta/#project-service
-                tsconfigRootDir: import.meta.dirname, // https://github.com/typescript-eslint/typescript-eslint/issues/251
             },
         },
-        settings: { 'import-x/resolver': { typescript: true } },
         plugins: { '@stylistic': pluginStylistic },
 
         // https://stackoverflow.com/questions/30221286/how-to-convert-an-array-of-objects-to-an-object-in-lodash/36692117#36692117
         rules: Object.assign({}, ..._.flatMap(Object.values(rules), Object.values)),
+    },
+    { // https://nuxt.com/docs/4.x/guide/concepts/typescript#project-references
+        settings: { 'import-x/resolver-next': [createTypeScriptImportResolver({ project: './.nuxt/tsconfig.shared.json' })] },
+    },
+    {
+        files: ['src/**/*'],
+        settings: { 'import-x/resolver-next': [createTypeScriptImportResolver({ project: './.nuxt/tsconfig.app.json' })] },
+    },
+    {
+        files: ['server/**/*'],
+        settings: { 'import-x/resolver-next': [createTypeScriptImportResolver({ project: './.nuxt/tsconfig.server.json' })] },
     },
     {
         files: ['**/*.js'],
@@ -593,16 +604,17 @@ export default withNuxt(defineConfigWithVueTs(
             parserOptions: {
                 parser: typescriptESLintParserForExtraFiles,
                 projectService: true, // https://typescript-eslint.io/blog/announcing-typescript-eslint-v8-beta/#project-service
-                tsconfigRootDir: import.meta.dirname, // https://github.com/typescript-eslint/typescript-eslint/issues/251
             },
         },
     },
     {
-        files: ['vite.config.ts', 'eslint.config.js'],
+        files: configsPath,
         languageOptions: {
             parser: typescriptESLintParser,
             parserOptions: {
-                projectService: true, // https://typescript-eslint.io/blog/announcing-typescript-eslint-v8-beta/#project-service
+                projectService: {
+                    project: './.nuxt/tsconfig.node.json',
+                },
             },
         },
     },

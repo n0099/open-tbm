@@ -1,4 +1,5 @@
 import type { PluginVisualizerOptions } from 'rollup-plugin-visualizer';
+import { configsPath } from './configs';
 import { keysWithSameValue } from './src/utils';
 import { analyzer } from 'vite-bundle-analyzer';
 import { access, constants } from 'node:fs/promises';
@@ -63,7 +64,9 @@ export default defineNuxtConfig({
     },
     ogImage: { fonts: ['Noto Sans SC'] },
     schemaOrg: { identity: 'Organization' },
-    features: { inlineStyles: false }, // https://github.com/nuxt/nuxt/issues/21821
+    typescript: {
+        nodeTsConfig: { include: configsPath.map(path => `../${path}`) }
+    },
     sourcemap: true,
     build: {
         analyze: {
@@ -95,7 +98,6 @@ export default defineNuxtConfig({
     },
     experimental: {
         viewTransition: true,
-        respectNoSSRHeader: true,
         componentIslands: true,
         asyncContext: true
     },
