@@ -14,7 +14,7 @@ nuxt-dev.*
 !.yarn/sdks
 !.yarn/versions
 
-# https://nuxt.com/docs/guide/directory-structure/gitignore
+# https://nuxt.com/docs/4.x/guide/directory-structure/gitignore
 # Nuxt dev/build outputs
 .output
 .data
@@ -32,8 +32,6 @@ logs
 
 # Misc
 .DS_Store
-.fleet
-.idea
 
 # Local env files
 .env

@@ -62,7 +62,7 @@ const rules = {
                     { pattern: 'lodash{,-{es,fp}}{,/**}', group: 'external', position: 'after' }, // lodash
                     { pattern: 'echarts{,/**}', group: 'external', position: 'after' },
                     { pattern: '*vue*{,/**}', group: 'external', position: 'before' }, // ant-design-vue @vueuse/core
-                    { pattern: '*/*vue*{,/**}', group: 'external', position: 'before' }, // @unhead/vue @fortawesome/vue-fontawesome @tanstack/vue-query
+                    { pattern: '*/*vue*{,/**}', group: 'external', position: 'before' }, // @fortawesome/vue-fontawesome @tanstack/vue-query
                 ],
                 pathGroupsExcludedImportTypes: [], // https://github.com/import-js/eslint-plugin-import/issues/2897
                 distinctGroup: false,

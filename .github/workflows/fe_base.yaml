@@ -14,14 +14,14 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - uses: ./.github/actions/fe
-      - run: yarn run vue-tsc
+      - run: yarn run nuxt typecheck
 
   eslint:
     runs-on: ${{ inputs.runs-on }}
     steps:
       - uses: actions/checkout@v5
       - uses: ./.github/actions/fe
-      - run: yarn run eslint .
+      - run: yarn run eslint
 
   stylelint:
     runs-on: ${{ inputs.runs-on }}
@@ -60,6 +60,7 @@ jobs:
           key: ${{ runner.os }}-fe-type-coverage
           restore-keys: ${{ runner.os }}-fe-type-coverage-
 
+      # https://github.com/plantain-00/type-coverage/issues/145
       - run: yarn run type-coverage --show-relative-path --cache --detail --strict --at-least 95
 
       - uses: actions/cache/save@v4
