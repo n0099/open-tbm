@@ -1,5 +1,4 @@
 import type { PluginVisualizerOptions } from 'rollup-plugin-visualizer';
-import { configsPath } from './configs';
 import { keysWithSameValue } from './src/utils';
 import { analyzer } from 'vite-bundle-analyzer';
 import { access, constants } from 'node:fs/promises';
@@ -65,7 +64,7 @@ export default defineNuxtConfig({
     ogImage: { fonts: ['Noto Sans SC'] },
     schemaOrg: { identity: 'Organization' },
     typescript: {
-        nodeTsConfig: { include: configsPath.map(path => `../${path}`) }
+        nodeTsConfig: { include: ['../eslint.config.ts', '../stylelint.config.ts'] }
     },
     sourcemap: true,
     build: {

@@ -1,7 +1,7 @@
+import type { TSESLint } from '@typescript-eslint/utils';
+import type { Linter } from 'eslint';
 // eslint-disable-next-line import-x/extensions
 import { withNuxt } from './.nuxt/eslint.config.mjs';
-// eslint-disable-next-line import-x/extensions
-import { configsPath } from './configs.ts';
 import * as vueESLintParser from 'vue-eslint-parser';
 import { defineConfigWithVueTs, vueTsConfigs } from '@vue/eslint-config-typescript';
 import pluginVue from 'eslint-plugin-vue';
@@ -10,6 +10,7 @@ import pluginStylistic from '@stylistic/eslint-plugin';
 import pluginTanstackQuery from '@tanstack/eslint-plugin-query';
 import * as typescriptESLintParser from '@typescript-eslint/parser';
 import { createTypeScriptImportResolver } from 'eslint-import-resolver-typescript';
+// eslint-disable-next-line import-x/no-unresolved
 import pluginCompat from 'eslint-plugin-compat';
 import { flatConfigs as pluginImportX } from 'eslint-plugin-import-x';
 import pluginPinia from 'eslint-plugin-pinia';
@@ -547,6 +548,10 @@ const rules = {
     },
 };
 
+type PiniaConfig = typeof pluginPinia.configs['all-flat'];
+type PiniaConfigWithRuleEntry = Exclude<PiniaConfig, { plugins: string[] }>
+    & { rules: Record<keyof PiniaConfig['rules'], TSESLint.FlatConfig.RuleEntry> };
+
 export default withNuxt(defineConfigWithVueTs(
     eslintJs.configs.recommended,
     pluginVue.configs['flat/recommended'],
@@ -556,7 +561,7 @@ export default withNuxt(defineConfigWithVueTs(
     pluginImportX.typescript,
     ...pluginTanstackQuery.configs['flat/recommended'],
     pluginUnicorn.configs.recommended,
-    pluginPinia.configs['all-flat'],
+    pluginPinia.configs['all-flat'] as PiniaConfigWithRuleEntry,
     {
         ...pluginCompat.configs['flat/recommended'],
         settings: { lintAllEsApis: true },
@@ -608,18 +613,7 @@ export default withNuxt(defineConfigWithVueTs(
         },
     },
     {
-        files: configsPath,
-        languageOptions: {
-            parser: typescriptESLintParser,
-            parserOptions: {
-                projectService: {
-                    project: './.nuxt/tsconfig.node.json',
-                },
-            },
-        },
-    },
-    {
-        files: ['eslint.config.js', 'stylelint.config.ts'],
+        files: ['eslint.config.ts', 'stylelint.config.ts'],
         plugins: { '@stylistic': pluginStylistic },
         rules: {
             '@stylistic/comma-dangle': ['warn', 'always-multiline'],
@@ -630,4 +624,4 @@ export default withNuxt(defineConfigWithVueTs(
             '@typescript-eslint/no-unsafe-member-access': 'off',
         },
     },
-));
+) as Linter.Config);

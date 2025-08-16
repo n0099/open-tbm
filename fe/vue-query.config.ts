@@ -1,7 +1,7 @@
-import type { PluginHookReturn } from '@n0099/vue-query-nuxt/dist/runtime/types.js';
+import { defineVueQueryPluginHook } from '@n0099/vue-query-nuxt/dist/runtime/composables/defineVueQueryPluginHook.js';
 import { FetchError } from 'ofetch';
 
-export default defineVueQueryPluginHook((): PluginHookReturn => {
+export default defineVueQueryPluginHook(() => {
     return {
         dehydrateOptions: { // https://github.com/Hebilicious/vue-query-nuxt/issues/108#issuecomment-2908075286
             shouldDehydrateQuery: query =>
