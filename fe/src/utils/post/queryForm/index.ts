@@ -61,7 +61,7 @@ export const getQueryFormDeps = () => {
                     // exit early to prevent pushing other route
                     return {
                         name: `posts/${postIDName}`,
-                        params: { [postIDName]: postIDParam[0].value?.toString() }
+                        params: { [postIDName]: postIDParam[0]?.value?.toString() }
                     };
                 }
             }
@@ -72,7 +72,7 @@ export const getQueryFormDeps = () => {
             && fidParams?.length === 1
             // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
             && fidParams.filter(p => !(p.subParam?.not ?? false)).length === 1) { // fid route
-            return { name: 'posts/fid', params: { fid: getFidParams(clearedParams)?.[0].value?.toString() } };
+            return { name: 'posts/fid', params: { fid: getFidParams(clearedParams)?.[0]?.value?.toString() } };
         }
 
         return generateParamRoute(clearedUniqueParams, clearedParams); // param route

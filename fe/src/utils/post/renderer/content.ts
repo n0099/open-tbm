@@ -50,7 +50,7 @@ export const extractTiebaImageFilename = (rawURL: string): string | undefined =>
     if (urlFilename === undefined)
         return undefined;
 
-    return tiebaImageFilenameRegex.exec(urlFilename.split('.')[0])?.[0];
+    return tiebaImageFilenameRegex.exec(urlFilename.split('.')[0] ?? urlFilename)?.[0];
 };
 export const tryExtractTiebaOutboundUrl = (rawURL?: string) => {
     const url = new URL(rawURL ?? '');

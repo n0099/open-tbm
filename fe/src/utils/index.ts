@@ -73,6 +73,10 @@ export const setDateTimeZoneAndLocale = (timezone?: string | Zone, zoneOptions?:
     (dateTime: DateTime) => dateTime
         .setZone(timezone ?? 'Asia/Shanghai', zoneOptions).setLocale(locale ?? 'zh-cn');
 
+// https://github.com/tc39/proposal-throw-expressions
+// eslint-disable-next-line unicorn/error-message
+export const throwError = (error: Error = new Error()) => { throw error };
+
 // https://stackoverflow.com/questions/71075490/how-to-make-a-structuredclone-of-a-proxy-object/77022014#77022014
 // eslint-disable-next-line compat/compat
 export const refDeepClone = <T>(value: T) => structuredClone(toRaw(value));

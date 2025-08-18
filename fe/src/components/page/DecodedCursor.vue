@@ -10,7 +10,7 @@
 
 <script setup lang="ts">
 const { encodedCursor } = defineProps<{ encodedCursor: Cursor }>();
-type DecodedCursorPart = Record<Cursor, { description: PostIDStr | `${PostTypeText}的排序字段值`, decoded: string | bigint }>;
+type DecodedCursorPart = Record<Cursor, { description: PostIDStr | `${PostTypeText}的排序字段值` | undefined, decoded: string | bigint }>;
 const tippyContent = (decoded: ObjValues<DecodedCursorPart>) =>
     `<div class="d-flex align-items-center">${decoded.description}：<code class="user-select-all">${decoded.decoded}</code></div>`;
 const decodeCursor = (cursor: Cursor): DecodedCursorPart | ObjEmpty => { // https://github.com/n0099/open-tbm/blob/d37cd67974090ed3e64d1e5243b7474802a7431d/be/src/PostsQuery/CursorCodec.php#L22
@@ -30,8 +30,14 @@ const decodeCursor = (cursor: Cursor): DecodedCursorPart | ObjEmpty => { // http
     if (parts.length !== 6)
         throw new Error('Cursor should have six parts.');
 
-    return Object.assign({}, ...parts.map((part, index): DecodedCursorPart =>
-        ({ [part]: { description: index % 2 === 0 ? postID[index / 2] : `${postTypeText[(index - 1) / 2]}的排序字段值`, decoded: decodePart(part) } })));
+    return Object.assign({}, ...parts.map((part, index): DecodedCursorPart => ({
+        [part]: {
+            description: index % 2 === 0
+                ? postID[index / 2] ?? throwError()
+                : `${postTypeText[(index - 1) / 2] ?? throwError()}的排序字段值`,
+            decoded: decodePart(part)
+        }
+    })));
 };
 const decodedCursor = computed(() => decodeCursor(encodedCursor));
 </script>
