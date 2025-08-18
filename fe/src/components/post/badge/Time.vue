@@ -1,7 +1,9 @@
 <template>
 <ClientOnly>
     <PostBadgeTimeView
-        v-if="previousTime !== undefined && previousTime < currentTime"
+        v-if="currentDateTime !== undefined
+            && previousTime !== undefined
+            && previousTime < currentTime"
         @mouseenter="previousPost !== undefined
             && highlightPostStore.set(previousPost, currentPostIDKey)"
         @mouseleave="highlightPostStore.unset()"
@@ -11,7 +13,9 @@
         <FontAwesome :icon="faChevronUp" class="align-bottom" />
     </PostBadgeTimeView>
     <PostBadgeTimeView
-        v-else-if="nextTime !== undefined && nextTime < currentTime"
+        v-else-if="currentDateTime !== undefined
+            && nextTime !== undefined
+            && nextTime < currentTime"
         @mouseenter="nextPost !== undefined
             && highlightPostStore.set(nextPost, currentPostIDKey)"
         @mouseleave="highlightPostStore.unset()"
@@ -21,7 +25,9 @@
         <FontAwesome :icon="faChevronDown" class="align-bottom" />
     </PostBadgeTimeView>
     <PostBadgeTimeView
-        v-else-if="parentTime !== undefined && parentTime !== currentTime"
+        v-else-if="currentDateTime !== undefined
+            && parentTime !== undefined
+            && parentTime !== currentTime"
         @mouseenter="parentPost !== undefined
             && parentPostIDKey !== undefined
             && highlightPostStore.set(parentPost, parentPostIDKey)"
@@ -33,6 +39,7 @@
     </PostBadgeTimeView>
 </ClientOnly>
 <PostBadgeTimeView
+    v-if="currentDateTime !== undefined"
     :current="currentDateTime" :postType="postType"
     :timestampType="timestampType" class="text-end"
     :class="{ 'post-badge-time-current-full': hydrationStore.isHydratingOrSSR }" v-bind="$attrs" />
@@ -95,12 +102,12 @@ const parentTime = computed(() => getPostTime(parentPost));
 const currentTime = computed(() => getPostTime(currentPost)!);
 
 const previousDateTime = computed(() =>
-    undefinedOr(previousTime.value, i => DateTime.fromSeconds(i)));
+    undefinedOr(previousTime.value, i => undefinedOrValidDateTime(DateTime.fromSeconds(i))));
 const nextDateTime = computed(() =>
-    undefinedOr(nextTime.value, i => DateTime.fromSeconds(i)));
+    undefinedOr(nextTime.value, i => undefinedOrValidDateTime(DateTime.fromSeconds(i))));
 const parentDateTime = computed(() =>
-    undefinedOr(parentTime.value, i => DateTime.fromSeconds(i)));
-const currentDateTime = computed(() => DateTime.fromSeconds(currentTime.value));
+    undefinedOr(parentTime.value, i => undefinedOrValidDateTime(DateTime.fromSeconds(i))));
+const currentDateTime = computed(() => undefinedOrValidDateTime(DateTime.fromSeconds(currentTime.value)));
 </script>
 
 <style scoped>

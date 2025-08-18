@@ -16,8 +16,8 @@ export const usePostsSchemaOrg = (data: Ref<InfiniteData<ApiPosts['response']> |
             name: `posts/${postIDKey}`,
             params: { [postIDKey]: post[postIDKey] as PostID }
         }).fullPath).value,
-        dateCreated: DateTime.fromSeconds(post.createdAt).toISO(),
-        datePublished: DateTime.fromSeconds(post.postedAt).toISO(),
+        dateCreated: DateTime.fromSeconds(post.createdAt).toISO() ?? undefined,
+        datePublished: DateTime.fromSeconds(post.postedAt).toISO() ?? undefined,
         upvoteCount: post.agreeCount,
         downvoteCount: post.disagreeCount
     });
