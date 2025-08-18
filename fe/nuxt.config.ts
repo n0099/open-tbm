@@ -64,6 +64,7 @@ export default defineNuxtConfig({
     ogImage: { fonts: ['Noto Sans SC'] },
     schemaOrg: { identity: 'Organization' },
     typescript: {
+        tsConfig: { include: ['../vue-query.config.ts'] }, // https://github.com/Hebilicious/vue-query-nuxt/issues/119
         nodeTsConfig: { include: ['../eslint.config.ts', '../stylelint.config.ts'] }
     },
     sourcemap: true,

@@ -59,7 +59,7 @@ export const guessReplyContainIntrinsicBlockSize = (replyElements: HTMLElement[]
     // regex based wcwidth(3)
     // https://en.wikipedia.org/wiki/Duospaced_font also try https://github.com/sindresorhus/get-east-asian-width
     // or https://github.com/tc39/proposal-regexp-unicode-property-escapes/issues/28 when available in the future
-    const scriptRegex: Record<string, [number, RegExp]> = { // https://en.wikipedia.org/wiki/Template:ISO_15924_script_codes_and_related_Unicode_data
+    const scriptRegex: Record<'latin' | 'CJK', [number, RegExp]> = { // https://en.wikipedia.org/wiki/Template:ISO_15924_script_codes_and_related_Unicode_data
 
         // range U+0021-U+007E https://www.compart.com/en/unicode/block/U+0000 aka ASCII
         latin: [0.5, /([\u0021-\u007E]|\p{Script=Latn})+/gu],

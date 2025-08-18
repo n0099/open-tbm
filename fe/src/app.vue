@@ -15,11 +15,6 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import 'noty/lib/noty.css';
 import 'noty/lib/themes/mint.css';
 
-useHead({
-    titleTemplate: '%pageTitle %separator %siteName',
-    templateParams: { separator: '-' }
-});
-
 if (import.meta.client) {
     await import('bootstrap');
     if (import.meta.dev) {
@@ -27,6 +22,11 @@ if (import.meta.client) {
         await import('@/checkCSS');
     }
 }
+
+useHead({
+    titleTemplate: '%pageTitle %separator %siteName',
+    templateParams: { separator: '-' }
+});
 
 /** {@link route.path} should always has leading slash */
 const pageKey = (route: RouteLocationNormalizedLoaded) => route.path.split('/')[1] ?? throwError();

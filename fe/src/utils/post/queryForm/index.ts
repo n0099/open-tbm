@@ -53,7 +53,7 @@ export const getQueryFormDeps = () => {
         const clearedParams = clearedParamsDefaultValue();
         const clearedUniqueParams = clearedUniqueParamsDefaultValue();
         if (_.isEmpty(clearedUniqueParams)) { // check whether query by post id or not
-            for (const postIDName of _.reverse(postID)) {
+            for (const postIDName of _.reverse(postID as Writable<typeof postID>)) {
                 const postIDParam = clearedParams.filter(p => p.name === postIDName);
                 if (_.isEmpty(clearedParams.filter(p => p.name !== postIDName)) // is there no other params
                     && postIDParam.length === 1 // is there only one post id param

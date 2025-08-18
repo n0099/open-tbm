@@ -35,6 +35,14 @@ const config = useRuntimeConfig().public;
 const hydrationStore = useHydrationStore();
 const routeUpdatingStore = useRouteUpdatingStore();
 const globalLoadingStore = useGlobalLoadingStore();
+const appPointerEvents = ref('none');
+if (import.meta.client) {
+    globalLoadingStore.start();
+    onNuxtReady(() => {
+        globalLoadingStore.stop();
+        appPointerEvents.value = 'unset';
+    });
+}
 
 useNoScript(`<style>
     #app-wrapper {
@@ -44,14 +52,6 @@ useNoScript(`<style>
         display: none;
     }
 </style>`);
-const appPointerEvents = ref('none');
-if (import.meta.client) {
-    globalLoadingStore.start();
-    onNuxtReady(() => {
-        globalLoadingStore.stop();
-        appPointerEvents.value = 'unset';
-    });
-}
 </script>
 
 <style scoped>

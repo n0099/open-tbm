@@ -1,4 +1,3 @@
-import { defineVueQueryPluginHook } from '@n0099/vue-query-nuxt/dist/runtime/composables/defineVueQueryPluginHook.js';
 import { FetchError } from 'ofetch';
 
 export default defineVueQueryPluginHook(() => {
