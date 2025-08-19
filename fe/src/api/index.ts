@@ -93,15 +93,14 @@ const useApi = <
         });
         onServerPrefetch(async () => { // https://github.com/TanStack/query/issues/7609
             const enabled = unref(options)?.enabled;
-            if ((_.isFunction(enabled)
+            if (_.isFunction(enabled)
                 ? (enabled as Exclude<Enabled<TResponse, ApiErrorClass>, boolean>)(
                     new QueryObserver<TResponse, ApiErrorClass>(
                         useQueryClient(),
                         { queryKey: [endpoint, queryParam?.value] }
                     ).getCurrentQuery() as unknown as Query<TResponse, ApiErrorClass>
                 )
-                : unref(enabled) ?? true
-            ) === true)
+                : unref(enabled) ?? true)
                 await ret.suspense();
         });
 

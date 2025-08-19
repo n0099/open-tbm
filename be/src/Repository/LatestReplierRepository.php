@@ -4,7 +4,6 @@ namespace App\Repository;
 
 use App\Entity\LatestReplier;
 use Doctrine\Persistence\ManagerRegistry;
-use Illuminate\Support\Collection;
 
 /** @extends BaseRepository<LatestReplier> */
 class LatestReplierRepository extends BaseRepository

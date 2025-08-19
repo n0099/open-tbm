@@ -1,3 +1,5 @@
+import type { TSESLint } from '@typescript-eslint/utils';
+import type { Linter } from 'eslint';
 // eslint-disable-next-line import-x/extensions
 import { withNuxt } from './.nuxt/eslint.config.mjs';
 import * as vueESLintParser from 'vue-eslint-parser';
@@ -7,6 +9,7 @@ import eslintJs from '@eslint/js';
 import pluginStylistic from '@stylistic/eslint-plugin';
 import pluginTanstackQuery from '@tanstack/eslint-plugin-query';
 import * as typescriptESLintParser from '@typescript-eslint/parser';
+import { createTypeScriptImportResolver } from 'eslint-import-resolver-typescript';
 // eslint-disable-next-line import-x/no-unresolved
 import pluginCompat from 'eslint-plugin-compat';
 import { flatConfigs as pluginImportX } from 'eslint-plugin-import-x';
@@ -60,7 +63,7 @@ const rules = {
                     { pattern: 'lodash{,-{es,fp}}{,/**}', group: 'external', position: 'after' }, // lodash
                     { pattern: 'echarts{,/**}', group: 'external', position: 'after' },
                     { pattern: '*vue*{,/**}', group: 'external', position: 'before' }, // ant-design-vue @vueuse/core
-                    { pattern: '*/*vue*{,/**}', group: 'external', position: 'before' }, // @unhead/vue @fortawesome/vue-fontawesome @tanstack/vue-query
+                    { pattern: '*/*vue*{,/**}', group: 'external', position: 'before' }, // @fortawesome/vue-fontawesome @tanstack/vue-query
                 ],
                 pathGroupsExcludedImportTypes: [], // https://github.com/import-js/eslint-plugin-import/issues/2897
                 distinctGroup: false,
@@ -153,7 +156,7 @@ const rules = {
             '@stylistic/brace-style': ['warn', '1tbs', { allowSingleLine: true }],
             '@stylistic/comma-dangle': 'warn',
             '@stylistic/comma-spacing': 'warn',
-            '@stylistic/func-call-spacing': 'warn',
+            '@stylistic/function-call-spacing': 'warn',
             '@stylistic/indent': 'warn',
             '@stylistic/keyword-spacing': 'warn',
             '@stylistic/no-extra-parens': ['warn', 'all', {
@@ -545,6 +548,10 @@ const rules = {
     },
 };
 
+type PiniaConfig = typeof pluginPinia.configs['all-flat'];
+type PiniaConfigWithRuleEntry = Exclude<PiniaConfig, { plugins: string[] }>
+    & { rules: Record<keyof PiniaConfig['rules'], TSESLint.FlatConfig.RuleEntry> };
+
 export default withNuxt(defineConfigWithVueTs(
     eslintJs.configs.recommended,
     pluginVue.configs['flat/recommended'],
@@ -554,7 +561,7 @@ export default withNuxt(defineConfigWithVueTs(
     pluginImportX.typescript,
     ...pluginTanstackQuery.configs['flat/recommended'],
     pluginUnicorn.configs.recommended,
-    pluginPinia.configs['all-flat'],
+    pluginPinia.configs['all-flat'] as PiniaConfigWithRuleEntry,
     {
         ...pluginCompat.configs['flat/recommended'],
         settings: { lintAllEsApis: true },
@@ -567,14 +574,23 @@ export default withNuxt(defineConfigWithVueTs(
             parser: typescriptESLintParser,
             parserOptions: {
                 projectService: true, // https://typescript-eslint.io/blog/announcing-typescript-eslint-v8-beta/#project-service
-                tsconfigRootDir: import.meta.dirname, // https://github.com/typescript-eslint/typescript-eslint/issues/251
             },
         },
-        settings: { 'import-x/resolver': { typescript: true } },
         plugins: { '@stylistic': pluginStylistic },
 
         // https://stackoverflow.com/questions/30221286/how-to-convert-an-array-of-objects-to-an-object-in-lodash/36692117#36692117
         rules: Object.assign({}, ..._.flatMap(Object.values(rules), Object.values)),
+    },
+    { // https://nuxt.com/docs/4.x/guide/concepts/typescript#project-references
+        settings: { 'import-x/resolver-next': [createTypeScriptImportResolver({ project: './.nuxt/tsconfig.shared.json' })] },
+    },
+    {
+        files: ['src/**/*'],
+        settings: { 'import-x/resolver-next': [createTypeScriptImportResolver({ project: './.nuxt/tsconfig.app.json' })] },
+    },
+    {
+        files: ['server/**/*'],
+        settings: { 'import-x/resolver-next': [createTypeScriptImportResolver({ project: './.nuxt/tsconfig.server.json' })] },
     },
     {
         files: ['**/*.js'],
@@ -593,21 +609,11 @@ export default withNuxt(defineConfigWithVueTs(
             parserOptions: {
                 parser: typescriptESLintParserForExtraFiles,
                 projectService: true, // https://typescript-eslint.io/blog/announcing-typescript-eslint-v8-beta/#project-service
-                tsconfigRootDir: import.meta.dirname, // https://github.com/typescript-eslint/typescript-eslint/issues/251
             },
         },
     },
     {
-        files: ['vite.config.ts', 'eslint.config.js'],
-        languageOptions: {
-            parser: typescriptESLintParser,
-            parserOptions: {
-                projectService: true, // https://typescript-eslint.io/blog/announcing-typescript-eslint-v8-beta/#project-service
-            },
-        },
-    },
-    {
-        files: ['eslint.config.js', 'stylelint.config.ts'],
+        files: ['eslint.config.ts', 'stylelint.config.ts'],
         plugins: { '@stylistic': pluginStylistic },
         rules: {
             '@stylistic/comma-dangle': ['warn', 'always-multiline'],
@@ -618,4 +624,4 @@ export default withNuxt(defineConfigWithVueTs(
             '@typescript-eslint/no-unsafe-member-access': 'off',
         },
     },
-));
+) as Linter.Config);

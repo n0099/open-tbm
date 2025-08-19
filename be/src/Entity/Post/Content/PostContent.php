@@ -10,17 +10,8 @@ use TbClient\Wrapper\PostContentWrapper;
 abstract class PostContent
 {
     /** @var ?resource */
-    #[ORM\Column] private $protoBufBytes;
-
-    public function getContent(): ?array
-    {
-        return BlobResourceGetter::protoBufWrapper($this->protoBufBytes, PostContentWrapper::class);
-    }
-
-    /** @param ?resource $protoBufBytes */
-    public function setProtoBufBytes($protoBufBytes): self
-    {
-        $this->protoBufBytes = $protoBufBytes;
-        return $this;
+    #[ORM\Column] public $protoBufBytes;
+    public ?array $content {
+        get => BlobResourceGetter::protoBufWrapper($this->protoBufBytes, PostContentWrapper::class);
     }
 }

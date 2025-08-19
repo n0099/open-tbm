@@ -2,7 +2,7 @@
 
 namespace App\Controller;
 
-use App\Helper;
+use App\Utils;
 use App\Repository\ForumRepository;
 use App\Repository\Post\ThreadRepository;
 use App\Validator\Validator;
@@ -51,7 +51,7 @@ class SitemapController extends AbstractController
             "/sitemaps/forums/$fid/threads?cursor=$cursor",
             function (ItemInterface $item) use ($fid, $cursor) {
                 $item->expiresAfter(self::$cacheAgeSeconds);
-                Helper::abortAPIIfNot(40406, $this->forumRepository->isForumExists($fid));
+                Utils::abortAPIIfNot(40406, $this->forumRepository->isForumExists($fid));
                 return $this->renderXml(
                     'sitemaps/threads.xml.twig',
                     [

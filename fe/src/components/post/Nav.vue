@@ -98,7 +98,7 @@ const threadMenuKey = (cursor: Cursor | undefined, tid: Tid) => `${cursorKey(cur
 const selectThread: ToPromise<MenuClickEventHandler> = async ({ domEvent, key }) => {
     if (!(domEvent.target as Element).classList.contains('post-nav-reply')) { // ignore clicks on reply link
         const [, cursor, tid] = /c(.*)-t(\d+)/u.exec(key.toString()) ?? [];
-        await navigate(cursor, { tid });
+        await navigate(cursor ?? throwError(), { tid });
     }
 };
 

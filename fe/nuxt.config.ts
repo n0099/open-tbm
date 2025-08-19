@@ -6,7 +6,7 @@ import { access, constants } from 'node:fs/promises';
 const tryAccessDevServerCert = async (): Promise<NonNullable<Parameters<typeof defineNuxtConfig>[0]['devServer']>['https']> => {
     // pin https cert to prevent showing https://chromium.googlesource.com/chromium/src/+/lkgr/components/security_interstitials/ after every nuxt restart
     // https://stackoverflow.com/questions/10175812/how-can-i-generate-a-self-signed-ssl-certificate-using-openssl/41366949#41366949
-    // openssl req -x509 -newkey ec -pkeyopt ec_paramgen_curve:secp384r1 -days 365 -nodes -keyout nuxt-dev.key -out nuxt-dev.crt -subj '/CN=localhost'
+    // openssl req -x509 -newkey ed448 -days 365 -noenc -keyout nuxt-dev.key -out nuxt-dev.crt -subj '/CN=localhost'
     const key = './nuxt-dev.key';
     const cert = './nuxt-dev.crt';
     try {
@@ -20,7 +20,7 @@ const tryAccessDevServerCert = async (): Promise<NonNullable<Parameters<typeof d
 };
 
 export default defineNuxtConfig({
-    compatibilityDate: '2025-04-24',
+    compatibilityDate: '2025-08-01',
     devServer: { https: await tryAccessDevServerCert() },
     srcDir: 'src',
     imports: { dirs: ['api/**', 'utils/**'] },
@@ -63,7 +63,10 @@ export default defineNuxtConfig({
     },
     ogImage: { fonts: ['Noto Sans SC'] },
     schemaOrg: { identity: 'Organization' },
-    features: { inlineStyles: false }, // https://github.com/nuxt/nuxt/issues/21821
+    typescript: {
+        tsConfig: { include: ['../vue-query.config.ts'] }, // https://github.com/Hebilicious/vue-query-nuxt/issues/119
+        nodeTsConfig: { include: ['../eslint.config.ts', '../stylelint.config.ts'] }
+    },
     sourcemap: true,
     build: {
         analyze: {
@@ -78,7 +81,6 @@ export default defineNuxtConfig({
             analyzer({ analyzerMode: 'static', fileName: 'vite-bundle-analyzer' })
         ],
         build: { target: 'esnext' },
-        assetsInclude: ['**/*.avifs'],
         $server: { // https://github.com/nuxt/nuxt/issues/32175#issuecomment-2898200099
             build: {
                 rollupOptions: {
@@ -95,7 +97,6 @@ export default defineNuxtConfig({
     },
     experimental: {
         viewTransition: true,
-        respectNoSSRHeader: true,
         componentIslands: true,
         asyncContext: true
     },

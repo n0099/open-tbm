@@ -2,7 +2,7 @@
 
 namespace App\Tests\PostsQuery;
 
-use App\Helper;
+use App\Utils;
 use App\PostsQuery\QueryParam;
 use App\PostsQuery\QueryParams;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -53,7 +53,7 @@ class QueryParamsTest extends TestCase
             [['orderBy' => 'test']],
             [
                 ['orderBy' => 'test', 'direction' => 'ASC'],
-                ['postTypes' => Helper::POST_TYPES],
+                ['postTypes' => Utils::POST_TYPES],
             ],
         ]];
     }

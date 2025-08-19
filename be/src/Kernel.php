@@ -18,6 +18,6 @@ class Kernel extends BaseKernel
         collect([
             'recursive' => Recursive::class,
         ])->reject(fn($class, $macro) => Collection::hasMacro($macro))
-            ->each(fn($class, $macro) => Collection::macro($macro, (new $class())()));
+            ->each(fn($class, $macro) => Collection::macro($macro, new $class()()));
     }
 }

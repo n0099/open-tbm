@@ -488,11 +488,11 @@ const chartLoadder = {
                 const validVotes = _.find(candidateVotes, vote => vote.isValid === 1);
                 const invalidVotes = _.find(candidateVotes, vote => vote.isValid === 0);
                 const officialValidCount = _.find(json.top50CandidatesOfficialValidVoteCount,
-                    { voteFor: candidateVotes[0].voteFor })
+                    { voteFor: candidateVotes[0]?.voteFor ?? throwError() })
                     ?.officialValidCount ?? 0;
 
                 return {
-                    voteFor: formatCandidateName(candidateVotes[0].voteFor),
+                    voteFor: formatCandidateName(candidateVotes[0]?.voteFor ?? throwError()),
                     validCount: validVotes?.count ?? 0,
                     validAvgGrade: validVotes?.voterAvgGrade ?? 0,
                     invalidCount: invalidVotes?.count ?? 0,
@@ -507,10 +507,10 @@ const chartLoadder = {
             label: {
                 show: true,
                 position: 'middle',
-                formatter: (-(count - validCount[index - 1])).toString()
+                formatter: (-(count - (validCount[index - 1] ?? 0))).toString()
             },
             coord: [index, count]
-        }, { coord: [index - 1, validCount[index - 1]] }]);
+        }, { coord: [index - 1, validCount[index - 1] ?? 0] }]);
         validCountDiffWithPrevious.shift(); // first candidate doesn't need to exceed anyone
 
         echartsInstances.top50CandidateCount?.setOption({
@@ -538,7 +538,7 @@ const chartLoadder = {
                 .groupBy('voteFor')
                 .sortBy(group => _.chain(group).map('count').sum().value())
                 .map(candidateVotes => ({
-                    voteFor: formatCandidateName(candidateVotes[0].voteFor),
+                    voteFor: formatCandidateName(candidateVotes[0]?.voteFor ?? throwError()),
                     validCount: findVoteCount(candidateVotes, 1),
                     invalidCount: findVoteCount(candidateVotes, 0),
                     officialValidCount: null
@@ -552,7 +552,7 @@ const chartLoadder = {
                         label: {
                             show: true,
                             position: 'middle',
-                            formatter: (-(count - validCount[index + 1])).toString()
+                            formatter: (-(count - (validCount[index + 1] ?? 0))).toString()
                         },
                         coord: [count, index]
                     }, { coord: [validCount[index + 1], index + 1] }

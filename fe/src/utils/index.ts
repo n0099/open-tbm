@@ -72,6 +72,11 @@ export const undefinedWhenEmpty = <T>(value: T) => (_.isEmpty(value) ? undefined
 export const setDateTimeZoneAndLocale = (timezone?: string | Zone, zoneOptions?: ZoneOptions, locale?: string) =>
     (dateTime: DateTime) => dateTime
         .setZone(timezone ?? 'Asia/Shanghai', zoneOptions).setLocale(locale ?? 'zh-cn');
+export const undefinedOrValidDateTime = (dateTime: DateTime): DateTime<true> | undefined => (dateTime.isValid ? dateTime : undefined);
+
+// https://github.com/tc39/proposal-throw-expressions
+// eslint-disable-next-line unicorn/error-message
+export const throwError = (error: Error = new Error()) => { throw error };
 
 // https://stackoverflow.com/questions/71075490/how-to-make-a-structuredclone-of-a-proxy-object/77022014#77022014
 // eslint-disable-next-line compat/compat

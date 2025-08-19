@@ -33,7 +33,7 @@ class DateTimeRangeValidatorTest extends ConstraintValidatorTestCase
     public function testInvalid($value, string $formattedValue): void
     {
         $this->validator->validate($value, new DateTimeRange());
-        $this->buildViolation((new DateTimeRange())->message)
+        $this->buildViolation(new DateTimeRange()->message)
             ->setParameter('{{ value }}', $formattedValue)
             ->assertRaised();
     }
@@ -49,6 +49,6 @@ class DateTimeRangeValidatorTest extends ConstraintValidatorTestCase
     public function testWrongConstraint(): void
     {
         $this->expectException(UnexpectedTypeException::class);
-        (new DateTimeRangeValidator())->validate(null, new Assert\NotBlank());
+        new DateTimeRangeValidator()->validate(null, new Assert\NotBlank());
     }
 }

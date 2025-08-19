@@ -4,38 +4,31 @@ namespace App;
 
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
-class Helper
+class Utils
 {
     public const array POST_ID = ['tid', 'pid', 'spid'];
-
     public const array POST_TYPES = ['thread', 'reply', 'subReply'];
-
     public const array POST_TYPES_PLURAL = ['threads', 'replies', 'subReplies'];
-
     public const array POST_TYPE_TO_PLURAL = [
         'thread' => 'threads',
         'reply' => 'replies',
         'subReply' => 'subReplies',
     ];
-
     public const array POST_TYPE_PLURAL_TO_SINGULAR = [
         'threads' => 'thread',
         'replies' => 'reply',
         'subReplies' => 'subReply',
     ];
-
     public const array POST_ID_TO_TYPE_PLURAL = [
         'tid' => 'threads',
         'pid' => 'replies',
         'spid' => 'subReplies',
     ];
-
     public const array POST_ID_TO_TYPE = [
         'tid' => 'thread',
         'pid' => 'reply',
         'spid' => 'subReply',
     ];
-
     public const array POST_TYPE_TO_ID = [
         'thread' => 'tid',
         'reply' => 'pid',
@@ -91,5 +84,19 @@ class Helper
         }
         $json = \Safe\json_encode(compact('errorCode', 'errorInfo'));
         throw HttpException::fromStatusCode($statusCode, message: $json, code: $errorCode);
+    }
+
+    public static function copyClass(object $from, string $to): object
+    {
+        $fromClass = new \ReflectionClass($from::class);
+        $toClass = new \ReflectionClass($to);
+        if (!$toClass->isSubclassOf($fromClass)) {
+            throw new \InvalidArgumentException($to . ' should be a subclass of' . $from::class);
+        }
+        $toInstance = new $to;
+        foreach ($fromClass->getProperties() as $property) {
+            $toClass->getProperty($property->name)->setRawValue($toInstance, $property->getRawValue($from));
+        }
+        return $toInstance;
     }
 }

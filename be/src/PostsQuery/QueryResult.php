@@ -3,13 +3,14 @@
 namespace App\PostsQuery;
 
 use App\Doctrine\InterpolateParametersSQLOutputWalker;
+use App\Doctrine\PrefixParameterNameSqlOutputWalker;
 use App\DTO\PostKey\Reply as ReplyKey;
 use App\DTO\PostKey\SubReply as SubReplyKey;
 use App\DTO\PostKey\Thread as ThreadKey;
-use App\Helper;
+use App\Utils;
 use Doctrine\DBAL\Query\QueryBuilder as DBALQueryBuilder;
 use Doctrine\DBAL\Query\UnionType;
-use Doctrine\ORM\AbstractQuery;
+use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Query\Expr\Comparison;
 use Doctrine\ORM\Query\Parser;
 use Doctrine\ORM\Query\ResultSetMapping;
@@ -20,22 +21,27 @@ use Illuminate\Support\Collection;
 use Symfony\Component\DependencyInjection\ParameterBag\ContainerBagInterface;
 use Symfony\Component\Stopwatch\Stopwatch;
 
-/** @psalm-import-type PostsKeyByTypePluralName from CursorCodec */
+/**
+ * @psalm-import-type PostsKeyByTypePluralName from CursorCodec
+ * @psalm-type UnionPostKey = array{
+ *       postType: 'reply'|'subReply'|'thread',
+ *       postId: int,
+ *       fid: int,
+ *       tid: int,
+ *       pid: int,
+ *       orderByField: mixed
+ *  }
+ */
 readonly class QueryResult
 {
     /** @var Collection<int, ThreadKey> */
     public Collection $threads;
-
     /** @var Collection<int, ReplyKey> */
     public Collection $replies;
-
     /** @var Collection<int, SubReplyKey> */
     public Collection $subReplies;
-
     public string $currentCursor;
-
     public ?string $nextCursor;
-
     public array $query;
 
     public function __construct(
@@ -46,19 +52,40 @@ readonly class QueryResult
     ) {}
 
     /** @return array{result: Collection, hasMorePages: bool, queryPlan: array} */
-    public function getQueryResult(AbstractQuery $query, int $limit): array
+    public function getQueryResult(EntityManagerInterface $entityManager, DBALQueryBuilder|QueryBuilder $queryBuilder, ResultSetMapping $rsm, int $limit): array
     {
-        $maxResults = $limit + 1;
-        $explainJSON = \Safe\json_decode($query->getEntityManager()->getConnection()->executeQuery(
-            'EXPLAIN (COSTS, VERBOSE, BUFFERS, FORMAT JSON) ' . $query->getSQL()
-        )->fetchOne(), true);
-        $plansCost = array_sum(array_map(static fn(array $plan) => $plan['Plan']['Total Cost'], $explainJSON));
+        $sql = $queryBuilder instanceof QueryBuilder
+            ? $queryBuilder->getQuery()
+                ->setHint(\Doctrine\ORM\Query::HINT_CUSTOM_OUTPUT_WALKER, PrefixParameterNameSqlOutputWalker::class)
+                ->getSQL()
+            : $queryBuilder->getSQL();
+        $query = $entityManager->createNativeQuery($sql, $rsm);
+        $explainColumnName = 'QUERY PLAN'; // https://www.postgresql.org/docs/current/using-explain.html
+        $explainQuery = $query->getEntityManager()->createNativeQuery(
+            'EXPLAIN (COSTS, VERBOSE, BUFFERS, FORMAT JSON) ' . $query->getSQL(),
+            new ResultSetMapping()->addScalarResult($explainColumnName, $explainColumnName),
+        );
+        if ($queryBuilder instanceof DBALQueryBuilder) {
+            foreach ($queryBuilder->getParameters() as $name => $value) {
+                $query->setParameter($name, $value);
+                $explainQuery->setParameter($name, $value);
+            }
+        } elseif ($queryBuilder instanceof QueryBuilder) {
+            foreach ($queryBuilder->getParameters() as $parameter) {
+                $query->setParameter($parameter->getName(), $parameter->getValue(), $parameter->getType());
+                $explainQuery->setParameter($parameter->getName(), $parameter->getValue(), $parameter->getType());
+            }
+        }
+
+        $explainResult = \Safe\json_decode($explainQuery->getOneOrNullResult()[$explainColumnName], associative: true);
+        $plansCost = array_sum(array_map(static fn(array $plan) => $plan['Plan']['Total Cost'], $explainResult));
         $planCostLimit = $this->containerBag->get('app.query_plan_cost_limit');
         if (!($planCostLimit === null || $planCostLimit === '' || (int)$planCostLimit === 0)) {
-            Helper::abortAPIIf(40006, $plansCost > $planCostLimit);
+            Utils::abortAPIIf(40006, $plansCost > $planCostLimit);
         }
 
         $result = collect($query->getResult());
+        $maxResults = $limit + 1;
         if ($result->count() === $maxResults) {
             $result->pop();
             $hasMorePages = true;
@@ -66,11 +93,11 @@ readonly class QueryResult
         return [
             'result' => $result,
             'hasMorePages' => $hasMorePages ?? false,
-            'queryPlan' => $explainJSON
+            'queryPlan' => $explainResult
         ];
     }
 
-    /** @param Collection<Helper::POST_TYPE, QueryBuilder> $queries */
+    /** @param Collection<Utils::POST_TYPE, QueryBuilder> $queries */
     public function setResult(
         Collection $queries,
         ?string $cursorParamValue,
@@ -97,7 +124,7 @@ readonly class QueryResult
                 // https://mysql.rjweb.org/doc.php/pagination
                 // https://medium.com/swlh/how-to-implement-cursor-pagination-like-a-pro-513140b65f32
                 // https://slack.engineering/evolving-api-pagination-at-slack/
-                ->addOrderBy('t.' . Helper::POST_TYPE_TO_ID[$postType])
+                ->addOrderBy('t.' . Utils::POST_TYPE_TO_ID[$postType])
                 ->setMaxResults($maxResults);
 
             $cursors = $cursorsKeyByPostType->get($postType, collect());
@@ -126,7 +153,7 @@ readonly class QueryResult
         $this->currentCursor = $cursorParamValue ?? '';
         $this->nextCursor = $hasMorePages
             ? $this->cursorCodec->encodeNextCursor($postsKeyByTypePluralName->except(
-                $queryByPostIDParamsName->map(static fn(string $postID) => Helper::POST_ID_TO_TYPE_PLURAL[$postID])
+                $queryByPostIDParamsName->map(static fn(string $postID) => Utils::POST_ID_TO_TYPE_PLURAL[$postID])
             ))
             : null;
         $this->query = ['query' => $rawSQL, 'plan' => $queryPlan];
@@ -135,14 +162,6 @@ readonly class QueryResult
     }
 
     /**
-     * @psalm-type UnionPostKey = array{
-     *      postType: 'reply'|'subReply'|'thread',
-     *      postId: int,
-     *      fid: int,
-     *      tid: int,
-     *      pid: int,
-     *      orderByField: mixed
-     * }
      * @param Collection<Helpecr::POST_TYPE, QueryBuilder> $queries
      * @param bool $isOrderByDesc
      * @param int $maxResults
@@ -150,54 +169,89 @@ readonly class QueryResult
      */
     private function getPostQueriesResult(Collection $queries, bool $isOrderByDesc, int $maxResults): array
     {
-        $getParametersInterpolatedRawSQL = static function (QueryBuilder $queryBuilder) {
-            $query = $queryBuilder->getQuery();
-            $query->setHint(\Doctrine\ORM\Query::HINT_CUSTOM_OUTPUT_WALKER, InterpolateParametersSQLOutputWalker::class);
-            return $query->getSQL();
-        };
         $firstQuery = $queries->first();
         /** @var DBALQueryBuilder|QueryBuilder $flattedQueryBuilder */
         $flattedQueryBuilder = $queries->count() === 1
             ? $firstQuery
             // https://stackoverflow.com/questions/36959801/doctrine-orm-querybuilder-or-dbal-querybuilder
-            : $queries->reduce(function (?DBALQueryBuilder $dbalQueryBuilder, QueryBuilder $ormQueryBuilder) use ($getParametersInterpolatedRawSQL) {
-                $sql = $getParametersInterpolatedRawSQL($ormQueryBuilder);
-                if ($dbalQueryBuilder === null) {
-                    return $ormQueryBuilder->getEntityManager()->getConnection()
-                        ->createQueryBuilder()->union($sql);
+            : $queries->reduce(function (?DBALQueryBuilder $dbalQueryBuilder, QueryBuilder $ormQueryBuilder, string $postType) {
+                $parameterPrefix = $postType . '_';
+                $sql = $ormQueryBuilder->getQuery()
+                    ->setHint(\Doctrine\ORM\Query::HINT_CUSTOM_OUTPUT_WALKER, PrefixParameterNameSqlOutputWalker::class)
+                    ->setHint(PrefixParameterNameSqlOutputWalker::HINT_PARAMETER_PREFIX, $parameterPrefix)
+                    ->getSQL();
+                $unionDbalQueryBuilder = $dbalQueryBuilder === null
+                    ? $ormQueryBuilder->getEntityManager()->getConnection()->createQueryBuilder()->union($sql)
+                    : $dbalQueryBuilder->addUnion($sql, UnionType::ALL);
+                foreach ($ormQueryBuilder->getParameters() as $parameter) {
+                    $unionDbalQueryBuilder->setParameter(
+                        $parameterPrefix . $parameter->getName(),
+                        $parameter->getValue(),
+                        $parameter->getType()
+                    );
                 }
-                return $dbalQueryBuilder->addUnion($sql, UnionType::ALL);
+                return $unionDbalQueryBuilder;
             });
 
         /** @var array{key-of<UnionPostKey>, string} $firstQueryFieldAliases */
         // field name and aliases in the first query in a union will override any other queries in union
-        $firstQueryFieldAliases = array_flip((new Parser($firstQuery->getQuery()))
+        $firstQueryFieldAliases = array_flip(new Parser($firstQuery->getQuery())
             ->parse()->getResultSetMapping()->scalarMappings);
+        $addClausesOnUnionQueryBuilder = static fn(DBALQueryBuilder $queryBuilder) => $queryBuilder
+            ->addOrderBy($firstQueryFieldAliases['orderByField'], $isOrderByDesc === true ? 'DESC' : 'ASC')
+            ->addOrderBy($firstQueryFieldAliases['postId'])
+            ->setMaxResults($maxResults);
         if ($flattedQueryBuilder instanceof DBALQueryBuilder) {
-            $flattedQueryBuilder = $flattedQueryBuilder
-                ->addOrderBy($firstQueryFieldAliases['orderByField'], $isOrderByDesc === true ? 'DESC' : 'ASC')
-                ->addOrderBy($firstQueryFieldAliases['postId'])
-                ->setMaxResults($maxResults);
+            $flattedQueryBuilder = $addClausesOnUnionQueryBuilder($flattedQueryBuilder);
         }
-        $rawSQL = (new SqlFormatter(new NullHighlighter()))->format(match (true) {
-            $flattedQueryBuilder instanceof DBALQueryBuilder => $flattedQueryBuilder->getSQL(),
-            $flattedQueryBuilder instanceof QueryBuilder => $getParametersInterpolatedRawSQL($flattedQueryBuilder)
-        });
-
         $rsm = new ResultSetMapping();
         foreach ($firstQueryFieldAliases as $fieldName => $fieldAlias) {
             $rsm->addScalarResult($fieldAlias, $fieldName);
         }
 
         ['result' => $result, 'hasMorePages' => $hasMorePages, 'queryPlan' => $queryPlan] = $this->getQueryResult(
-            $firstQuery->getEntityManager()->createNativeQuery($rawSQL, $rsm),
-            $this->perPageItems
+            $firstQuery->getEntityManager(),
+            $flattedQueryBuilder,
+            $rsm,
+            $this->perPageItems,
         );
+
+        $interpolateParametersForQueryBuilder = static fn(QueryBuilder $queryBuilder) => $queryBuilder->getQuery()
+            ->setHint(\Doctrine\ORM\Query::HINT_CUSTOM_OUTPUT_WALKER, InterpolateParametersSQLOutputWalker::class)
+            ->getSQL();
+        $interpolateParametersForDBALQueryBuilder = static function () use ($queries, $addClausesOnUnionQueryBuilder, $interpolateParametersForQueryBuilder) {
+            /** @var DBALQueryBuilder $queryBuilder */
+            $queryBuilder = $queries->reduce(
+                function (?DBALQueryBuilder $dbalQueryBuilder, QueryBuilder $ormQueryBuilder) use ($interpolateParametersForQueryBuilder) {
+                    $sql = $interpolateParametersForQueryBuilder($ormQueryBuilder);
+                    return $dbalQueryBuilder === null
+                        ? $ormQueryBuilder->getEntityManager()->getConnection()->createQueryBuilder()->union($sql)
+                        : $dbalQueryBuilder->addUnion($sql, UnionType::ALL);
+                },
+            );
+            return $addClausesOnUnionQueryBuilder($queryBuilder)->getSQL();
+        };
+        $parametersInterpolatedAndFormattedSQL = new SqlFormatter(new NullHighlighter())->format(match (true) {
+            $flattedQueryBuilder instanceof DBALQueryBuilder => $interpolateParametersForDBALQueryBuilder(),
+            $flattedQueryBuilder instanceof QueryBuilder => $interpolateParametersForQueryBuilder($flattedQueryBuilder)
+        });
+
+        return [
+            'rawSQL' => $parametersInterpolatedAndFormattedSQL,
+            'postsKeyByTypePluralName' => $this->getPostsKeyByTypePluralName($result),
+            'hasMorePages' => $hasMorePages,
+            'queryPlan' => $queryPlan
+        ];
+    }
+
+    /** @return PostsKeyByTypePluralName */
+    public function getPostsKeyByTypePluralName(Collection $queryResult): Collection
+    {
         /** @var PostsKeyByTypePluralName $postsKeyByTypePluralName */
-        $postsKeyByTypePluralName = $result
+        $postsKeyByTypePluralName = $queryResult
             ->groupBy(static fn(/** @var UnionPostKey $unionPostKey */ array $unionPostKey) => $unionPostKey['postType'])
             ->mapWithKeys(static fn(Collection $unionPostKeys, /** @var 'reply'|'subReply'|'thread' $postType */ string $postType) =>
-                [Helper::POST_TYPE_TO_PLURAL[$postType] => $unionPostKeys
+                [Utils::POST_TYPE_TO_PLURAL[$postType] => $unionPostKeys
                     ->map(static function (/** @var UnionPostKey $unionPostKey */ array $unionPostKey) use ($postType) {
                         [
                             'postId' => $postId,
@@ -213,13 +267,7 @@ readonly class QueryResult
                         };
                     })
                 ]);
-        Helper::abortAPIIf(40401, $postsKeyByTypePluralName->every(static fn(Collection $i) => $i->isEmpty()));
-
-        return [
-            'rawSQL' => $rawSQL,
-            'postsKeyByTypePluralName' => $postsKeyByTypePluralName,
-            'hasMorePages' => $hasMorePages,
-            'queryPlan' => $queryPlan
-        ];
+        Utils::abortAPIIf(40401, $postsKeyByTypePluralName->every(static fn(Collection $i) => $i->isEmpty()));
+        return $postsKeyByTypePluralName;
     }
 }

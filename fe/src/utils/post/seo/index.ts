@@ -6,22 +6,22 @@ export const usePostsSEO = (
 ) => {
     const route = useRoute();
     const firstPostPage = computed(() => data.value?.pages[0]);
-    const firstPostPageForumName = computed((): string | null => {
+    const firstPostPageForumName = computed((): string | undefined => {
         if (firstPostPage.value?.forums === undefined)
-            return null;
+            return undefined;
 
         const forumNames = Object.values(firstPostPage.value.forums);
         if (forumNames.length === 1)
             return forumNames[0];
 
-        return null;
+        return undefined;
     });
     const firstThread = computed(() => firstPostPage.value?.threads[0]);
     useHead({
         title: computed(() => {
             const titleParts = ['帖子查询'];
             if (currentQueryType.value !== 'empty') {
-                if (['fid', 'postID'].includes(currentQueryType.value) && firstPostPageForumName.value !== null)
+                if (['fid', 'postID'].includes(currentQueryType.value) && firstPostPageForumName.value !== undefined)
                     titleParts.unshift(`${firstPostPageForumName.value}吧`);
                 if (currentQueryType.value === 'postID' && firstThread.value?.title !== undefined)
                     titleParts.unshift(firstThread.value.title);

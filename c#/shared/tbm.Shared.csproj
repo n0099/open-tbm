@@ -1,12 +1,12 @@
 <Project Sdk="Microsoft.NET.Sdk">
     <ItemGroup>
-        <PackageReference Include="Autofac" Version="8.3.0" />
+        <PackageReference Include="Autofac" Version="8.4.0" />
         <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="10.0.0" />
         <PackageReference Include="CommunityToolkit.Diagnostics" Version="8.4.0" />
         <PackageReference Include="EFCore.NamingConventions" Version="9.0.0" />
-        <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.6" />
-        <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.6" />
-        <PackageReference Include="NLog.Extensions.Logging" Version="5.5.0" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.8" />
+        <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.8" />
+        <PackageReference Include="NLog.Extensions.Logging" Version="6.0.3" />
         <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.4" />
         <PackageReference Include="SuperLinq" Version="6.4.0" />
     </ItemGroup>
@@ -18,12 +18,12 @@
                 <PackageReference ExcludeAssets="compile" Include="codecracker.CSharp" Version="1.1.0" />
                 <PackageReference ExcludeAssets="compile" Include="CSharpGuidelinesAnalyzer" Version="3.8.5" />
                 <PackageReference ExcludeAssets="compile" Include="IDisposableAnalyzers" Version="4.0.8" />
-                <PackageReference ExcludeAssets="compile" Include="Meziantou.Analyzer" Version="2.0.201" />
+                <PackageReference ExcludeAssets="compile" Include="Meziantou.Analyzer" Version="2.0.212" />
                 <PackageReference ExcludeAssets="compile" Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="9.0.0" />
                 <PackageReference ExcludeAssets="compile" Include="Microsoft.VisualStudio.Threading.Analyzers" Version="17.14.15" />
-                <PackageReference ExcludeAssets="compile" Include="Roslynator.Analyzers" Version="4.13.1" />
+                <PackageReference ExcludeAssets="compile" Include="Roslynator.Analyzers" Version="4.14.0" />
                 <PackageReference ExcludeAssets="compile" Include="SharpSource" Version="1.27.1" />
-                <PackageReference ExcludeAssets="compile" Include="SonarAnalyzer.CSharp" Version="10.11.0.117924" />
+                <PackageReference ExcludeAssets="compile" Include="SonarAnalyzer.CSharp" Version="10.15.0.120848" />
                 <PackageReference ExcludeAssets="compile" Include="StyleCop.Analyzers.Unstable" Version="1.2.0.556" />
             </ItemGroup>
         </When>

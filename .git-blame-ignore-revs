@@ -1,5 +1,11 @@
+# $ git log --shortstat --oneline <commitId>.. -- <path> | grep -B1 -P '(\d{3,} insertions\(\+\)|\d{3,} deletions\(-\))'
+
 # c#: file scoped namespaces
 2f84a4ab96c07e0e1d7055d945ce9bcae9085a90
+37004f2aaad558f2a5a49ac9ee12c17eee38cc84
+# 6e3d7dddf5130366b4c0f9e206731683a8a2205a
+5071dee42519cf10697896909535e7639aa2ca11
+
 # fe: eslint
 1a2dd15ec0c436dc2ff9b0dbfe253b0eb6f79b1a
 8ec64b05a0276fccae614106cf8f8bfd22a81a59
@@ -9,5 +15,9 @@ fde35106c1059a9201542bbaadb561304e8ce9c5
 4c49c88a14a6796659c7cdb779238332abff01c4
 46336e551ba6b6cd23b0496af0f38119222965b5
 3c332bb80f16cfc975a3f60ed6feee3091bd1b05
+21dabbd7961b92cdaae4f787bb8b3ea9809d1cc7
+b768159dc31c4c52637564f7e0e776c20dfc897b
+
 # be: pint
 59b7ef71d6f38673c7198c26f82f82e685dba915
+6aa5b87c4b7d5b474c086e3c4238d12386ca3913

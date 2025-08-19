@@ -30,7 +30,7 @@ class BlobResourceGetter
         $protoBuf = new $protoBufClass();
         $protoBuf->mergeFromString(self::resource($value));
         // Message->serializeToJsonString() will remove fields with default value
-        return \Safe\json_decode($protoBuf->serializeToJsonString(), assoc: true);
+        return \Safe\json_decode($protoBuf->serializeToJsonString(), associative: true);
     }
 
     /** @param ?resource $value */

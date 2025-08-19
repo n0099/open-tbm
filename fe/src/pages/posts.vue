@@ -86,8 +86,8 @@ watch([dataUpdatedAt, errorUpdatedAt], async (updatedAt: UnixTimestamp[]) => {
         ${isQueriedBySSR ? '使用服务端渲染预请求' : ''}
         后端+网络耗时${_.round(networkDuration / 1000, 2)}s`}`);
 });
-watch(isFetched, async () => {
-    if (isFetched.value && renderType.value === 'list') {
+whenever(isFetched, async () => {
+    if (renderType.value === 'list') {
         await nextTick();
         scrollToPostListItemByRoute(route);
     }

@@ -28,13 +28,21 @@
 </template>
 
 <script setup lang="ts">
-import iconLoadingBlock from 'assets/icon-loading-block.svg';
+import iconLoadingBlock from '@/assets/icon-loading-block.svg';
 import AntdZhCn from 'ant-design-vue/es/locale/zh_CN';
 
 const config = useRuntimeConfig().public;
 const hydrationStore = useHydrationStore();
 const routeUpdatingStore = useRouteUpdatingStore();
 const globalLoadingStore = useGlobalLoadingStore();
+const appPointerEvents = ref('none');
+if (import.meta.client) {
+    globalLoadingStore.start();
+    onNuxtReady(() => {
+        globalLoadingStore.stop();
+        appPointerEvents.value = 'unset';
+    });
+}
 
 useNoScript(`<style>
     #app-wrapper {
@@ -44,14 +52,6 @@ useNoScript(`<style>
         display: none;
     }
 </style>`);
-const appPointerEvents = ref('none');
-if (import.meta.client) {
-    globalLoadingStore.start();
-    onNuxtReady(() => {
-        globalLoadingStore.stop();
-        appPointerEvents.value = 'unset';
-    });
-}
 </script>
 
 <style scoped>

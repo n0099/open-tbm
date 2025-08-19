@@ -1,6 +1,6 @@
 <template>
 <div class="flex flex-row gap-6 justify-between size-screen">
-    <div class="flex-1 flex-col basis-1/2">
+    <div class="flex-1 flex-col basis-1/2 m-4">
         <p>{{ useSiteConfig().name }} {{ routePath }}</p>
         <h2 v-if="firstPostPageForumName !== undefined">{{ firstPostPageForumName }}吧</h2>
         <template v-if="currentQueryType !== 'postID'">

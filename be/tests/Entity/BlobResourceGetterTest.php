@@ -29,7 +29,7 @@ class BlobResourceGetterTest extends TestCase
         $contentProtoBuf->mergeFromJsonString($jsonString);
         $resource = self::makeStreamResource($contentProtoBuf->serializeToString());
         self::assertEquals(
-            \Safe\json_decode($jsonString, assoc: true)['value'],
+            \Safe\json_decode($jsonString, associative: true)['value'],
             BlobResourceGetter::protoBufWrapper($resource, $protoBufClass),
         );
     }

@@ -2,7 +2,7 @@
 
 namespace App\PostsQuery;
 
-use App\Helper;
+use App\Utils;
 use App\Validator\DateTimeRange;
 use App\Validator\Validator;
 use Illuminate\Support\Arr;
@@ -13,14 +13,9 @@ class ParamsValidator
     public const array UNIQUE_PARAMS_NAME = ['postTypes', 'orderBy'];
     public const array USER_GENDER_VALUES = [0, 1, 2, 'NULL'];
 
-    private QueryParams $params;
+    private(set) QueryParams $params;
 
     public function __construct(private readonly Validator $validator) {}
-
-    public function getParams(): QueryParams
-    {
-        return $this->params;
-    }
 
     /** @param array[] $value */
     public function setParams(array $value): static
@@ -36,7 +31,7 @@ class ParamsValidator
         $this->params->addDefaultValueOnParams();
         $this->params->addDefaultValueOnUniqueParams();
         $newPostTypes = $this->setRequiredPostTypesByParams();
-        Helper::abortAPIIf(40003, $newPostTypes === []);
+        Utils::abortAPIIf(40003, $newPostTypes === []);
         $this->params->setUniqueParamValue('postTypes', $newPostTypes);
         $this->validate40004($newPostTypes);
     }
@@ -44,7 +39,7 @@ class ParamsValidator
     private function setRequiredPostTypesByParams(): array
     {
         $currentPostTypes = $this->params->getUniqueParamValue('postTypes');
-        $requiredPostTypes = array_intersect(Helper::POST_TYPES, ...array_values(Arr::only(
+        $requiredPostTypes = array_intersect(Utils::POST_TYPES, ...array_values(Arr::only(
             self::REQUIRED_POST_TYPES_KEY_BY_PARAM_NAME,
             array_map(static fn(QueryParam $p) => $p->name, $this->params->getAll())
         )));
@@ -65,8 +60,8 @@ class ParamsValidator
         $this->validator->validate($param, new Assert\Collection([
             ...$numericParams,
             ...$textParams,
-            'postTypes' => new Assert\All([new Assert\Choice(Helper::POST_TYPES)]),
-            'orderBy' => new Assert\Choice([...Helper::POST_ID, 'postedAt']),
+            'postTypes' => new Assert\All([new Assert\Choice(Utils::POST_TYPES)]),
+            'orderBy' => new Assert\Choice([...Utils::POST_ID, 'postedAt']),
             'direction' => new Assert\Choice(['ASC', 'DESC']),
             'postedAt' => new DateTimeRange(),
             'latestReplyPostedAt' => new DateTimeRange(),
@@ -91,7 +86,7 @@ class ParamsValidator
     private function validate40005(): void
     {
         foreach (self::UNIQUE_PARAMS_NAME as $uniqueParamName) { // is all unique param only appeared once
-            Helper::abortAPIIf(40005, \count($this->params->pick($uniqueParamName)) > 1);
+            Utils::abortAPIIf(40005, \count($this->params->pick($uniqueParamName)) > 1);
         }
     }
 
@@ -127,7 +122,7 @@ class ParamsValidator
     {
         $currentOrderBy = (string) $this->params->getUniqueParamValue('orderBy');
         if (\array_key_exists($currentOrderBy, self::REQUIRED_POST_TYPES_KEY_BY_ORDER_BY_VALUE)) {
-            Helper::abortAPIIfNot(
+            Utils::abortAPIIfNot(
                 40004,
                 self::isRequiredPostTypes(
                     $currentPostTypes,

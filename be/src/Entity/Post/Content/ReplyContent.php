@@ -9,16 +9,5 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\Table(name: '"tbmc_reply_content"')]
 class ReplyContent extends PostContent
 {
-    #[ORM\Column(type: 'bigint'), ORM\Id] private int $pid;
-
-    public function getPid(): int
-    {
-        return $this->pid;
-    }
-
-    public function setPid(int $value): self
-    {
-        $this->pid = $value;
-        return $this;
-    }
+    #[ORM\Column(type: 'bigint'), ORM\Id] public int $pid;
 }

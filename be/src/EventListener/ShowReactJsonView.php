@@ -2,7 +2,6 @@
 
 namespace App\EventListener;
 
-use Symfony\Component\Asset\Packages;
 use Symfony\Component\EventDispatcher\Attribute\AsEventListener;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
@@ -11,8 +10,6 @@ use Symfony\Component\HttpKernel\Event\ResponseEvent;
 #[AsEventListener]
 readonly class ShowReactJsonView
 {
-    public function __construct(private Packages $assets) {}
-
     public function __invoke(ResponseEvent $event): void
     {
         $request = $event->getRequest();
@@ -23,8 +20,7 @@ readonly class ShowReactJsonView
         }
         $json = $response->getContent();
         $jsonLength = mb_strlen($json);
-        $assetsUrl = collect(['react-json-view', 'react', 'react-dom'])
-            ->mapWithKeys(fn($asset) => [$asset => $this->assets->getUrl("/assets/$asset.js")]);
+        $reactJsonViewArtifact = $request->getBaseUrl() . '/react-json-view/dist/index.js';
         $event->setResponse(new Response(<<<HTML
         <html>
             <head>
@@ -34,9 +30,7 @@ readonly class ShowReactJsonView
                 <h4>$jsonLength bytes</h4>
                 <div id="root"></div>
                 <script type="module">
-                    import ReactJsonView from '{$assetsUrl['react-json-view']}';
-                    import { createElement } from '{$assetsUrl['react']}';
-                    import { createRoot } from '{$assetsUrl['react-dom']}';
+                    import { createElement, createRoot, ReactJsonView } from '$reactJsonViewArtifact';
 
                     const root = createRoot(document.getElementById('root'));
                     root.render(createElement(ReactJsonView.default, { src: $json, quotesOnKeys: false }));

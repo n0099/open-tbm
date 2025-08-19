@@ -6,8 +6,12 @@ export const useViewerStore = defineStore('viewer', () => {
     const enable = () => {
         if (isEnabled.value)
             return;
+        const vue = useNuxtApp().vueApp;
 
-        useNuxtApp().vueApp.use(viewer, {
+        // https://github.com/nuxt/nuxt/issues/13382#issuecomment-2192801116
+        if (!import.meta.dev && import.meta.server)
+            vue.directive('viewer', {});
+        vue.use(viewer, {
             defaultOptions: {
                 url: 'data-origin',
                 filter: (img: HTMLElement) => img.classList.contains('tieba-ugc-image')

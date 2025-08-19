@@ -9,6 +9,10 @@
   "labels": ["dependencies"],
   "packageRules": [
     {
+      "matchCategories": ["ci"],
+      "addLabels": ["CI"]
+    },
+    {
       "matchCategories": ["dotnet"],
       "addLabels": ["nuget"]
     },
@@ -21,6 +25,11 @@
       "addLabels": ["yarn"]
     },
     {
+      "matchFileNames": [".github/actions/**", ".github/workflows/**"],
+      "groupName": "CI",
+      "commitMessagePrefix": "deps(CI): "
+    },
+    {
       "matchFileNames": ["c#/**"],
       "groupName": "c#",
       "commitMessagePrefix": "deps(c#): "
@@ -29,6 +38,11 @@
       "matchFileNames": ["be/**"],
       "groupName": "be",
       "commitMessagePrefix": "deps(be): "
+    },
+    {
+      "matchFileNames": ["be/public/react-json-view/**"],
+      "groupName": "be/public/react-json-view",
+      "commitMessagePrefix": "deps(react-json-view): "
     },
     {
       "matchFileNames": ["fe/**"],

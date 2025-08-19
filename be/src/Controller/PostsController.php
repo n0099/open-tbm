@@ -8,6 +8,7 @@ use App\DTO\User\User;
 use App\Entity\LatestReplier;
 use App\Entity\Post\Post;
 use App\Entity\Post\Thread;
+use App\Utils;
 use App\PostsQuery\ParamsValidator;
 use App\PostsQuery\Query;
 use App\Repository\ForumRepository;
@@ -50,8 +51,8 @@ class PostsController extends AbstractController
         ]));
 
         $params = $this->paramsValidator
-            ->setParams(\Safe\json_decode($request->query->get('query'), true))
-            ->getParams();
+            ->setParams(\Safe\json_decode($request->query->get('query'), associative: true))
+            ->params;
         $this->paramsValidator->addDefaultParamsThenValidate();
 
         $this->stopwatch->start('$queryClass->query()');
@@ -64,7 +65,7 @@ class PostsController extends AbstractController
 
         $this->stopwatch->start('queryUsers');
         $latestRepliersIdKeyByFid = $this->query->postsTree->threads
-            ->map(fn(Thread $thread) => ['fid' => $thread->getFid(), 'latestReplierId' => $thread->getLatestReplierId()])
+            ->map(fn(Thread $thread) => ['fid' => $thread->fid, 'latestReplierId' => $thread->latestReplierId])
             ->filter(fn(array $fidAndLatestReplierId) => $fidAndLatestReplierId['latestReplierId'] !== null)
             ->groupBy(fn(array $fidAndLatestReplierId) => $fidAndLatestReplierId['fid'])
             ->map(fn(Collection $fidAndLatestRepliersUid) => $fidAndLatestRepliersUid->pluck('latestReplierId'));
@@ -76,21 +77,21 @@ class PostsController extends AbstractController
         ])->flatten();
         $latestRepliersUidKeyById = collect($latestRepliers)
             ->mapWithKeys(fn(array|LatestReplier $latestReplier) => [
-                is_array($latestReplier) ? $latestReplier['id'] : $latestReplier->getId() =>
-                    is_array($latestReplier) ? $latestReplier['uid'] : $latestReplier->getUid()
+                is_array($latestReplier) ? $latestReplier['id'] : $latestReplier->id =>
+                    is_array($latestReplier) ? $latestReplier['uid'] : $latestReplier->uid
             ])
             ->filter(static fn(?int $uid) => $uid !== null);
         $uids = $posts
-            ->map(fn(Post $post) => $post->getAuthorUid())
+            ->map(fn(Post $post) => $post->authorUid)
             ->concat($latestRepliersUidKeyById)
             ->unique();
         $users = collect($this->userRepository->getUsers($uids))
-            ->mapWithKeys(fn(\App\Entity\User $entity) => [$entity->getUid() => User::fromEntity($entity)]);
+            ->mapWithKeys(fn(\App\Entity\User $entity) => [$entity->uid => Utils::copyClass($entity, User::class)]);
         $this->stopwatch->stop('queryUsers');
 
         $this->stopwatch->start('queryUserRelated');
         $authorsUidKeyByFid = $posts
-            ->map(fn(Post $post) => ['fid' => $post->getFid(), 'authorUid' => $post->getAuthorUid()])
+            ->map(fn(Post $post) => ['fid' => $post->fid, 'authorUid' => $post->authorUid])
             ->groupBy(fn(array $fidAndAuthorId) => $fidAndAuthorId['fid'])
             ->map(fn(Collection $fidAndAuthorsUid) => $fidAndAuthorsUid->pluck('authorUid'));
         $authorExpGrades = collect($this->authorExpGradeRepository->getLatestOfUsers($authorsUidKeyByFid))
@@ -111,14 +112,14 @@ class PostsController extends AbstractController
             ->replace($authorsUidKeyByFid->only($uniqueFidInAuthorsUid));
         $forumModerators = collect($this->forumModeratorRepository->getLatestOfUsers($usersIdKeyByFid
             ->map(fn(Collection $usersId) => $usersId
-                ->map(fn(int $uid) => $users->get($uid)?->getPortrait())
+                ->map(fn(int $uid) => $users->get($uid)?->portrait)
                 ->filter(fn(?string $portrait) => $portrait !== null))
         ))->keyBy(fn(ForumModerator $forumModerator) => $forumModerator->portrait);
 
-        $users = $users->each(fn(User $user) => $user->setForumSpecific([
-            'authorExpGrade' => $authorExpGrades->get($user->getUid()),
-            'forumModerator' => $forumModerators->get($user->getPortrait())
-        ]));
+        $users = $users->each(fn(User $user) => $user->forumSpecific = [
+            'authorExpGrade' => $authorExpGrades->get($user->uid),
+            'forumModerator' => $forumModerators->get($user->portrait)
+        ]);
         $this->stopwatch->stop('queryUserRelated');
 
         return [
@@ -128,12 +129,12 @@ class PostsController extends AbstractController
                 ...$matchQueryPostCounts,
             ],
             'forums' => collect($this->forumRepository
-                ->getForums($posts->map(fn(Post $post) => $post->getFid())->unique())
+                ->getForums($posts->map(fn(Post $post) => $post->fid)->unique())
             )->mapWithKeys(fn(array $forum) => [$forum['fid'] => $forum['name']]),
             'threads' => $this->query->postsTree->reOrderNestedPosts(
                 $this->query->postsTree->nestPostsWithParent(),
-                $this->query->getOrderByField(),
-                $this->query->isOrderByDesc(),
+                $this->query->orderByField,
+                $this->query->isOrderByDesc,
             ),
             'users' => $users->values(),
             'latestRepliers' => $latestRepliers,

@@ -2,7 +2,7 @@
 
 namespace App\EventListener;
 
-use App\Helper;
+use App\Utils;
 use Symfony\Component\EventDispatcher\Attribute\AsEventListener;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpKernel\Event\ExceptionEvent;
@@ -19,7 +19,7 @@ readonly class ExceptionToJsonResponse
     {
         $exception = $event->getThrowable();
         if ($exception instanceof HttpException
-            && collect(Helper::ERROR_STATUS_CODE_INFO)
+            && collect(Utils::ERROR_STATUS_CODE_INFO)
                 ->flatMap(static fn(array $codes) => array_keys($codes))
                 ->contains($exception->getCode())) {
             $event->setResponse(JsonResponse::fromJsonString($exception->getMessage()));

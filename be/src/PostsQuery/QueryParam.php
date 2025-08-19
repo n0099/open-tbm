@@ -5,10 +5,8 @@ namespace App\PostsQuery;
 class QueryParam
 {
     public readonly string $name;
-
     public array|string|int $value;
-
-    protected array $subParams;
+    private(set) array $subParams;
 
     public function __construct(array $param)
     {
@@ -18,11 +16,6 @@ class QueryParam
         }
         $this->value = $param[$this->name];
         $this->subParams = array_slice($param, 1);
-    }
-
-    public function getAllSub(): array
-    {
-        return $this->subParams;
     }
 
     public function getSub(string $name)
