@@ -9,6 +9,7 @@
         "generate": "nuxt generate",
         "preview": "nuxt preview",
         "postinstall": "nuxt prepare",
+        "tsc": "vue-tsc -p .nuxt/tsconfig.app.json",
         "lint": "eslint; stylelint '**/*.vue'; stylelint '**/*.css'"
     },
     "dependencies": {
