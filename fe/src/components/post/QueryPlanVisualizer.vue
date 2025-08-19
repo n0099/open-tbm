@@ -39,6 +39,11 @@ const route = useRoute();
 const selectedPage = ref<Cursor>();
 const [DefinePlan, ReusePlan] = createReusableTemplate<{ query?: ApiPosts['response']['query'] }>();
 const LazyPlan = defineAsyncComponent(async () => {
+    // https://github.com/dalibo/pev2/commit/06dcea951248163fb8974a05eb96577e45059c07
+    useNuxtApp().vueApp.use((await import('vue-tippy')).default, {
+        directive: 'vue-tippy', // prevent conflicated with ./tippy.ts https://github.com/KABBOUCHI/vue-tippy/blob/ca6716c307ad284dd33d8936f67025ada8830637/src/plugin/index.ts#L12
+        defaultProps: { theme: 'light' }
+    });
     await import('pev2/dist/pev2.css');
 
     return (await import('pev2')).Plan;
