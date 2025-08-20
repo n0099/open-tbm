@@ -37,8 +37,9 @@ jobs:
           restore-keys: ${{ runner.os }}-fe-stylelintcache-
 
       - uses: xt0rted/stylelint-problem-matcher@v1
-      - run: yarn run stylelint --cache --custom-formatter stylelint-actions-formatters '**/*.vue'
-      - if: always()
+      - id: firstStylelint
+        run: yarn run stylelint --cache --custom-formatter stylelint-actions-formatters '**/*.vue'
+      - if: always() && (steps.firstStylelint.outcome == 'success' || steps.firstStylelint.outcome == 'failure')
         run: yarn run stylelint --cache --custom-formatter stylelint-actions-formatters '**/*.css'
 
       - uses: actions/cache/save@v4

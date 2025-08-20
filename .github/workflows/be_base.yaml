@@ -16,25 +16,27 @@ jobs:
       - uses: ./.github/actions/be
       - uses: shivammathur/setup-php@v2
         with:
+          php-version: '8.4'
           # https://bugs.php.net/bug.php?id=80608 https://github.com/swoole/swoole-src/issues/3986 https://github.com/php/php-src/pull/6640
           # PHP Warning:  JIT is incompatible with third party extensions that override zend_execute_ex(). JIT disabled.
           ini-values: opcache.jit_buffer_size=0
           coverage: xdebug
       # https://github.com/shivammathur/setup-php/blob/2.31.1/README.md#problem-matchers
       - run: echo "::add-matcher::${{ runner.tool_cache }}/phpunit.json"
-      - run: >
+      - id: phpunit
+        run: >
           ./vendor/bin/phpunit
           --coverage-clover=coverage/clover.xml
           --coverage-xml=coverage/coverage-xml
           --log-junit=coverage/junit.xml
         # https://infection.github.io/guide/command-line-options.html#coverage
-      - if: always()
+      - if: always() && (steps.phpunit.outcome == 'success' || steps.phpunit.outcome == 'failure')
         uses: actions/upload-artifact@v4
         with:
           name: coverage-${{ inputs.runs-on }}
           path: be/coverage/clover.xml
           compression-level: 9
-      - if: always()
+      - if: always() && (steps.phpunit.outcome == 'success' || steps.phpunit.outcome == 'failure')
         run: ./vendor/bin/infection --coverage=coverage --skip-initial-tests
 
   phan:
@@ -79,7 +81,7 @@ jobs:
       - uses: ./.github/actions/be
       - id: run
         run: ./vendor/bin/phpcs --report-full --report-checkstyle=./phpcs-report.xml .
-      - if: always() && steps.run.outcome == 'failure'
+      - if: always() && steps.phpunit.outcome == 'failure'
         run: cs2pr --notices-as-warnings --graceful-warnings --prepend-filename --prepend-source ./phpcs-report.xml
 
   pint:
