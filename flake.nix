@@ -17,17 +17,27 @@
       cs = pkgs.mkShellNoCC {
         packages = [ pkgs.dotnet-sdk_9 ];
         shellHook = ''
-          http_proxy=''${http_proxy/socks5h/socks5} # `error NU1301:   Only the 'http', 'https', 'socks4', 'socks4a' and 'socks5' schemes are allowed for proxies.` while `dotnet restore`
-          (cd c# && dotnet restore)
+          ( http_proxy=''${http_proxy/socks5h/socks5} && # `error NU1301:   Only the 'http', 'https', 'socks4', 'socks4a' and 'socks5' schemes are allowed for proxies.` while `dotnet restore`
+            cd c# &&
+            dotnet restore
+          )
         '';
       };
-      be = pkgs.mkShellNoCC {
-        packages = with pkgs; [
-          php84
-          php84Packages.composer
-        ];
-        shellHook = "(cd be && composer i)";
-      };
+      be =
+        let
+          php = pkgs.php84.buildEnv {
+            # https://wiki.nixos.org/wiki/PHP#Use_php_Packages_with_Extensions_in_a_nix-shell
+            extensions = { enabled, all }: enabled ++ [ all.xdebug ];
+            extraConfig = "xdebug.mode=debug";
+          };
+        in
+        pkgs.mkShellNoCC {
+          packages = [
+            php
+            php.packages.composer
+          ];
+          shellHook = "(cd be && composer i)";
+        };
       fe = pkgs.mkShellNoCC {
         packages = with pkgs; [
           nodejs_24
@@ -35,9 +45,10 @@
         ];
         shellHook = ''
           ( cd fe && yarn &&
-            ( [ ! -f nuxt-dev.key ] &&
-              [ ! -f nuxt-dev.crt ] &&
-              ${lib.getExe pkgs.openssl} req -x509 -newkey rsa:8192 -days 365 -noenc -keyout nuxt-dev.key -out nuxt-dev.crt -subj /CN=localhost &> /dev/null
+            ( if [ ! -f nuxt-dev.key ] && [ ! -f nuxt-dev.crt ]
+              then
+                ${lib.getExe pkgs.openssl} req -x509 -newkey rsa:8192 -days 365 -noenc -keyout nuxt-dev.key -out nuxt-dev.crt -subj /CN=localhost &> /dev/null
+              fi
             )
           )
         '';
@@ -48,10 +59,10 @@
         inputsFrom = [
           # https://gist.github.com/adisbladis/2a44cded73e048458a815b5822eea195
           # https://discourse.nixos.org/t/what-does-mkshells-mergeinputs-actually-do/56156
-          init # https://github.com/NixOS/nixpkgs/blob/0726f235730331846135184e71d1d1bc3a4b49ad/pkgs/build-support/mkshell/default.nix#L54
           cs
           be
           fe
+          init # https://github.com/NixOS/nixpkgs/blob/0726f235730331846135184e71d1d1bc3a4b49ad/pkgs/build-support/mkshell/default.nix#L54
         ];
         shellHook = ''
           git submodule init
