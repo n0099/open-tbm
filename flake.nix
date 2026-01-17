@@ -41,10 +41,12 @@
       fe = pkgs.mkShellNoCC {
         packages = with pkgs; [
           nodejs_24
-          yarn-berry_4
+          corepack_24
         ];
         shellHook = ''
-          ( cd fe && yarn &&
+          ( cd fe &&
+            unset https_proxy && # https://github.com/nodejs/corepack/issues/703
+            yarn &&
             ( if [ ! -f nuxt-dev.key ] && [ ! -f nuxt-dev.crt ]
               then
                 ${lib.getExe pkgs.openssl} req -x509 -newkey rsa:8192 -days 365 -noenc -keyout nuxt-dev.key -out nuxt-dev.crt -subj /CN=localhost &> /dev/null
