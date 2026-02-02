@@ -6,18 +6,22 @@
 }:
 
 let
+  mkTaskBeforeEnterShell = path: {
+    cwd = "${config.git.root}/${path}";
+    before = [ "devenv:enterShell" ];
+  };
   cs = {
     languages.dotnet = {
       enable = true;
       package = pkgs.dotnet-sdk_9;
     };
-    enterShell = /* sh */ ''
-      (
+    tasks."deps:install:cs" = mkTaskBeforeEnterShell "c#" // {
+      exec = /* sh */ ''
         http_proxy=''${http_proxy/socks5h/socks5} && # `error NU1301:   Only the 'http', 'https', 'socks4', 'socks4a' and 'socks5' schemes are allowed for proxies.` while `dotnet restore`
-        cd c# &&
         dotnet restore
-      )
-    '';
+      '';
+      execIfModified = [ "*/packages.lock.json" ];
+    };
   };
   be = {
     languages.php = {
@@ -38,7 +42,10 @@ let
           "pm.max_spare_servers" = nproc;
         };
     };
-    enterShell = /* sh */ "(cd be && composer i)";
+    tasks."deps:install:be" = mkTaskBeforeEnterShell "be" // {
+      exec = /* sh */ "composer i";
+      execIfModified = [ "composer.lock" ];
+    };
     services.nginx = {
       enable = true;
       httpConfig = ''
@@ -75,30 +82,31 @@ let
   };
   fe = {
     languages = {
-      javascript = lib.mkMerge [
-        {
+      javascript = {
+        enable = true;
+        package = pkgs.nodejs-slim_24;
+        yarn = {
           enable = true;
-          package = pkgs.nodejs-slim_24;
-          yarn = {
-            enable = true;
-            package = pkgs.yarn-berry_4;
-          };
-        }
-        {
-          directory = "fe";
-          yarn.install.enable = true;
-        }
-      ];
+          package = pkgs.yarn-berry_4;
+        };
+        directory = "fe";
+      };
       typescript.enable = true;
     };
-    enterShell = /* sh */ ''
-      ( cd fe &&
-        if [ ! -f nuxt-dev.key ] && [ ! -f nuxt-dev.crt ]
-        then
+    tasks = {
+      "deps:install:fe" = mkTaskBeforeEnterShell "fe" // {
+        exec = "yarn";
+        execIfModified = [ "yarn.lock" ];
+      };
+      "fe:gen-nuxt-cert" = mkTaskBeforeEnterShell "fe" // {
+        exec = /* sh */ ''
           ${lib.getExe pkgs.openssl} req -x509 -newkey rsa:8192 -days 365 -noenc -keyout nuxt-dev.key -out nuxt-dev.crt -subj /CN=localhost &> /dev/null
-        fi
-      )
-    '';
+        '';
+        status = /* sh */ ''
+          [ -f nuxt-dev.key ] && [ -f nuxt-dev.crt ]
+        '';
+      };
+    };
   };
 in
 lib.mkMerge [
