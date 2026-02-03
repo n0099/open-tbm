@@ -17,7 +17,7 @@ let
     };
     tasks."deps:install:cs" = mkTaskBeforeEnterShell "c#" // {
       exec = /* sh */ ''
-        http_proxy=''${http_proxy/socks5h/socks5} && # `error NU1301:   Only the 'http', 'https', 'socks4', 'socks4a' and 'socks5' schemes are allowed for proxies.` while `dotnet restore`
+        http_proxy=''${http_proxy/socks5h/socks5} # `error NU1301:   Only the 'http', 'https', 'socks4', 'socks4a' and 'socks5' schemes are allowed for proxies.` while `dotnet restore`
         dotnet restore
       '';
       execIfModified = [ "*/packages.lock.json" ];
@@ -45,7 +45,7 @@ let
       };
     };
     tasks."deps:install:be" = mkTaskBeforeEnterShell "be" // {
-      exec = /* sh */ "composer i";
+      exec = /* sh */ "composer install --no-interaction";
       execIfModified = [ "composer.lock" ];
     };
   };
@@ -68,8 +68,18 @@ let
           server_name localhost;
           index index.php index.html;
 
-          # https://github.com/nginxinc/nginx-wiki/blob/836ecd605a1b9861fb608e848336bca9b8640b54/source/start/topics/examples/phpfcgi.rst
-          location ~ [^/]\.php(/|$) {
+          # https://github.com/n0099/siye-srv-ops/blob/97309d3d3ddb79d198b5fd0e52055106b80942cd/base/s6.nginx.php-fpm/nginx/templates/sub-base-dir.conf
+          # https://github.com/n0099/siye-srv-ops/blob/97309d3d3ddb79d198b5fd0e52055106b80942cd/srv/tbm/v2/.env#L4
+          location /tbm/be/ {
+            # https://serverfault.com/questions/674604/nginx-how-to-strip-location-prefix-in-fastcgi-script-name/690009#690009
+            alias ${config.git.root}/be/public/;
+
+            # https://serverfault.com/questions/455799/how-to-remove-location-block-from-uri-in-nginx-configuration/1172730#1172730
+            # https://stackoverflow.com/questions/20426812/nginx-try-files-alias-directives/35102259#35102259
+            try_files $uri $uri/ /tbm/be/tbm/be/index.php?$query_string;
+
+            # https://github.com/nginxinc/nginx-wiki/blob/836ecd605a1b9861fb608e848336bca9b8640b54/source/start/topics/examples/phpfcgi.rst
+            location ~ [^/]\.php(/|$) {
               fastcgi_index index.php;
               fastcgi_split_path_info ^(.+?\.php)(/.*)$;
               fastcgi_pass unix:${config.env.PHPFPMDIR}/www.sock; # https://github.com/cachix/devenv/blob/a208bf67ac2874fec086aa94cfdead0f40de3613/src/modules/languages/php.nix#L155
@@ -89,6 +99,7 @@ let
               fastcgi_param SCRIPT_FILENAME $request_filename;
               # https://serverfault.com/questions/465607/nginx-document-rootfastcgi-script-name-vs-request-filename
               # fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+            }
           }
         }
       '';
