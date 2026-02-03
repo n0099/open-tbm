@@ -120,6 +120,16 @@ let
       "fe:gen-nuxt-cert"
     ];
   };
+  git_submodule.tasks."git:submodule:init" = mkTaskBeforeEnterShell "tbclient.protobuf" // {
+    exec = /* sh */ ''
+      git submodule init
+      git submodule update
+    '';
+    status = /* sh */ ''
+      # https://superuser.com/questions/352289/bash-scripting-test-for-empty-directory#comment2000147_352387
+      [ ! "$(find -maxdepth 0 -type d -empty | grep -F .)" ]
+    '';
+  };
 in
 lib.mkMerge [
   cs
@@ -127,11 +137,10 @@ lib.mkMerge [
   be_processes
   fe
   fe_processes
+  git_submodule
   {
     packages = with pkgs; [ git ];
     enterShell = /* sh */ ''
-      git submodule init
-      git submodule update
       if [ $DEVENV_CMDLINE != up ] && command -v zsh > /dev/null
       then
         exec zsh
