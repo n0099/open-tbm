@@ -23,6 +23,18 @@ let
       execIfModified = [ "*/packages.lock.json" ];
     };
   };
+  cs_processes = {
+    services.postgres = {
+      enable = true;
+      package = pkgs.postgresql_17;
+      initialDatabases = [
+        {
+          name = "tbm";
+          schema = ./sql/schema.sql;
+        }
+      ];
+    };
+  };
   be = {
     languages.php = {
       enable = true;
@@ -133,6 +145,7 @@ let
 in
 lib.mkMerge [
   cs
+  cs_processes
   be
   be_processes
   fe
