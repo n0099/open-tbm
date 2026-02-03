@@ -110,12 +110,23 @@ let
       };
     };
   };
+  fe_processes = {
+    processes.fe = {
+      exec = "yarn dev";
+      cwd = "${config.git.root}/fe";
+    };
+    tasks."devenv:processes:fe".after = [
+      "deps:install:fe"
+      "fe:gen-nuxt-cert"
+    ];
+  };
 in
 lib.mkMerge [
   cs
   be
   be_processes
   fe
+  fe_processes
   {
     packages = with pkgs; [ git ];
     enterShell = /* sh */ ''
