@@ -31,21 +31,23 @@ let
         extensions = { enabled, all }: enabled ++ [ all.xdebug ];
         extraConfig = "xdebug.mode=debug";
       };
-      fpm.pools.www.settings =
-        let
-          nproc = pkgs.runCommandLocal "nproc" { } "nproc > $out" |> lib.readFile |> lib.toIntBase10;
-        in
-        {
-          pm = "dynamic";
-          "pm.max_children" = nproc * 2;
-          "pm.min_spare_servers" = 1;
-          "pm.max_spare_servers" = nproc;
-        };
     };
     tasks."deps:install:be" = mkTaskBeforeEnterShell "be" // {
       exec = /* sh */ "composer i";
       execIfModified = [ "composer.lock" ];
     };
+  };
+  be_processes = {
+    languages.php.fpm.pools.www.settings =
+      let
+        nproc = pkgs.runCommandLocal "nproc" { } "nproc > $out" |> lib.readFile |> lib.toIntBase10;
+      in
+      {
+        pm = "dynamic";
+        "pm.max_children" = nproc * 2;
+        "pm.min_spare_servers" = 1;
+        "pm.max_spare_servers" = nproc;
+      };
     services.nginx = {
       enable = true;
       httpConfig = ''
@@ -112,6 +114,7 @@ in
 lib.mkMerge [
   cs
   be
+  be_processes
   fe
   {
     packages = with pkgs; [ git ];
