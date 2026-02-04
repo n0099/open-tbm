@@ -6,10 +6,19 @@
 }:
 
 let
-  mkTaskBeforeEnterShell = path: {
-    cwd = "${config.git.root}/${path}";
-    before = [ "devenv:enterShell" ];
+  cfg = {
+    domain = "localhost";
+    port.be = 8080;
+    baseURL.be = "/tbm/be";
+    pgsql.db = "tbm";
   };
+  mkCWD = path: { cwd = "${config.git.root}/${path}"; };
+  mkTaskBeforeEnterShell =
+    path:
+    mkCWD path
+    // {
+      before = [ "devenv:enterShell" ];
+    };
   cs = {
     languages.dotnet = {
       enable = true;
@@ -29,8 +38,12 @@ let
       package = pkgs.postgresql_17;
       initialDatabases = [
         {
-          name = "tbm";
+          name = cfg.pgsql.db;
           schema = ./sql/schema.sql;
+          initialSQL = /* sql */ ''
+            -- https://stackoverflow.com/questions/67578997/postgres-show-altered-role-config-paramenters
+            ALTER ROLE ALL IN DATABASE ${cfg.pgsql.db} SET search_path TO 'tbm';
+          '';
         }
       ];
     };
@@ -64,19 +77,19 @@ let
       enable = true;
       httpConfig = ''
         server {
-          listen 8080;
-          server_name localhost;
+          listen ${toString cfg.port.be};
+          server_name ${cfg.domain};
           index index.php index.html;
 
           # https://github.com/n0099/siye-srv-ops/blob/97309d3d3ddb79d198b5fd0e52055106b80942cd/base/s6.nginx.php-fpm/nginx/templates/sub-base-dir.conf
           # https://github.com/n0099/siye-srv-ops/blob/97309d3d3ddb79d198b5fd0e52055106b80942cd/srv/tbm/v2/.env#L4
-          location /tbm/be/ {
+          location ${cfg.baseURL.be}/ {
             # https://serverfault.com/questions/674604/nginx-how-to-strip-location-prefix-in-fastcgi-script-name/690009#690009
             alias ${config.git.root}/be/public/;
 
             # https://serverfault.com/questions/455799/how-to-remove-location-block-from-uri-in-nginx-configuration/1172730#1172730
             # https://stackoverflow.com/questions/20426812/nginx-try-files-alias-directives/35102259#35102259
-            try_files $uri $uri/ /tbm/be/tbm/be/index.php?$query_string;
+            try_files $uri $uri/ ${cfg.baseURL.be}/${cfg.baseURL.be}/index.php?$query_string;
 
             # https://github.com/nginxinc/nginx-wiki/blob/836ecd605a1b9861fb608e848336bca9b8640b54/source/start/topics/examples/phpfcgi.rst
             location ~ [^/]\.php(/|$) {
@@ -91,10 +104,9 @@ let
               }
               try_files $uri =404;
 
-              # https://httpoxy.org
-              fastcgi_param HTTP_PROXY "";
-
+              fastcgi_param HTTP_PROXY ""; # https://httpoxy.org
               include ${pkgs.nginx}/conf/fastcgi_params;
+
               # https://github.com/nginxinc/nginx-wiki/blob/836ecd605a1b9861fb608e848336bca9b8640b54/source/start/topics/tutorials/config_pitfalls.rst#use-request_filename-for-script_filename
               fastcgi_param SCRIPT_FILENAME $request_filename;
               # https://serverfault.com/questions/465607/nginx-document-rootfastcgi-script-name-vs-request-filename
@@ -125,7 +137,7 @@ let
       };
       "fe:gen-nuxt-cert" = mkTaskBeforeEnterShell "fe" // {
         exec = /* sh */ ''
-          ${lib.getExe pkgs.openssl} req -x509 -newkey rsa:8192 -days 365 -noenc -keyout nuxt-dev.key -out nuxt-dev.crt -subj /CN=localhost &> /dev/null
+          ${lib.getExe pkgs.openssl} req -x509 -newkey rsa:8192 -days 365 -noenc -keyout nuxt-dev.key -out nuxt-dev.crt -subj /CN=${cfg.domain} &> /dev/null
         '';
         status = /* sh */ ''
           [ -f nuxt-dev.key ] && [ -f nuxt-dev.crt ]
@@ -134,9 +146,8 @@ let
     };
   };
   fe_processes = {
-    processes.fe = {
+    processes.fe = mkCWD "fe" // {
       exec = "yarn dev";
-      cwd = "${config.git.root}/fe";
     };
     tasks."devenv:processes:fe".after = [
       "deps:install:fe"
