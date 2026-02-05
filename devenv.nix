@@ -28,6 +28,16 @@ let
     // {
       before = [ "devenv:enterShell" ];
     };
+  mkDotenv = path: text: {
+    exec = /* sh */ ''
+      cat <<'EOF' > ./${path}
+      ${text}
+      EOF
+    '';
+    status = /* sh */ ''
+      [ -f ${path} ]
+    '';
+  };
   cs = {
     languages.dotnet = {
       enable = true;
@@ -71,21 +81,16 @@ let
         exec = /* sh */ "composer install --no-interaction";
         execIfModified = [ "composer.lock" ];
       };
-      "dotenv:be" = mkCWD "be" // {
-        exec = /* sh */ ''
-          cat <<'ENV' > .env.local
-          APP_ENV=dev
-          APP_BASE_URL_BE=http://${cfg.domain}/${cfg.baseURL.be}
-          APP_BASE_URL_FE=https://${cfg.domain}/${cfg.baseURL.fe}
+      "dotenv:be" = mkDotenv "be/.env.local" /* sh */ ''
+        APP_ENV=dev
+        APP_BASE_URL_BE=http://${cfg.domain}/${cfg.baseURL.be}
+        APP_BASE_URL_FE=https://${cfg.domain}/${cfg.baseURL.fe}
 
-          # https://github.com/cachix/devenv/blob/59bdb8c9c9d7fdcfbd15a7c4cfb14fb6c6d5d6ce/src/modules/services/postgres.nix#L408-L416
-          # https://www.postgresql.org/docs/current/libpq-connect.html#LIBPQ-CONNSTRING-URIS
-          # https://unix.stackexchange.com/questions/76354/who-sets-user-and-username-environment-variables
-          DATABASE_URL="postgresql://${cfg.pgsql.db}/?dbname=${cfg.pgsql.db}&host=${config.env.PGHOST}&user=''${USER}&serverVersion=${toString cfg.pgsql.version}&charset=utf8"
-          ENV
-        '';
-        status = /* sh */ "[ -f .env.local ]";
-      };
+        # https://github.com/cachix/devenv/blob/59bdb8c9c9d7fdcfbd15a7c4cfb14fb6c6d5d6ce/src/modules/services/postgres.nix#L408-L416
+        # https://www.postgresql.org/docs/current/libpq-connect.html#LIBPQ-CONNSTRING-URIS
+        # https://unix.stackexchange.com/questions/76354/who-sets-user-and-username-environment-variables
+        DATABASE_URL="postgresql://${cfg.pgsql.db}/?dbname=${cfg.pgsql.db}&host=${config.env.PGHOST}&user=''${USER}&serverVersion=${toString cfg.pgsql.version}&charset=utf8"
+      '';
     };
   };
   be_processes = {
@@ -173,19 +178,14 @@ let
           [ -f nuxt-dev.key ] && [ -f nuxt-dev.crt ]
         '';
       };
-      "dotenv:fe" = mkCWD "fe" // {
-        exec = /* sh */ ''
-          cat <<'ENV' > .env
-          NUXT_APP_BASE_URL=${cfg.baseURL.fe}
-          NUXT_SITE_URL=https://${cfg.domain}:${toString cfg.port.fe} # https://github.com/harlan-zw/nuxt-site-config/issues/32
-          NUXT_PUBLIC_BE_URL=http://${cfg.domain}:${toString cfg.port.be}${cfg.baseURL.be}
-          NUXT_PUBLIC_INSTANCE_NAME=dev
-          NUXT_PUBLIC_FOOTER_TEXT=dev
-          NUXT_PUBLIC_TIEBA_IMAGE_PROXY=https://n0099.com/tbm/imgsrc
-          ENV
-        '';
-        status = /* sh */ "[ -f .env ]";
-      };
+      "dotenv:fe" = mkDotenv "fe/.env" /* sh */ ''
+        NUXT_APP_BASE_URL=${cfg.baseURL.fe}
+        NUXT_SITE_URL=https://${cfg.domain}:${toString cfg.port.fe} # https://github.com/harlan-zw/nuxt-site-config/issues/32
+        NUXT_PUBLIC_BE_URL=http://${cfg.domain}:${toString cfg.port.be}${cfg.baseURL.be}
+        NUXT_PUBLIC_INSTANCE_NAME=dev
+        NUXT_PUBLIC_FOOTER_TEXT=dev
+        NUXT_PUBLIC_TIEBA_IMAGE_PROXY=https://n0099.com/tbm/imgsrc
+      '';
     };
   };
   fe_processes = {
