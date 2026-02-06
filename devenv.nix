@@ -19,7 +19,9 @@ let
     pgsql = {
       version = 17;
       db = "tbm";
+      user = "tbm";
     };
+    dotnet.version = 9;
   };
   mkCWD = path: { cwd = "${config.git.root}/${path}"; };
   mkTaskBeforeEnterShell =
@@ -41,23 +43,39 @@ let
   cs = {
     languages.dotnet = {
       enable = true;
-      package = pkgs.dotnet-sdk_9;
+      package = pkgs."dotnet-sdk_${toString cfg.dotnet.version}";
     };
-    tasks."deps:install:cs" = mkTaskBeforeEnterShell "c#" // {
-      exec = /* sh */ ''
-        http_proxy=''${http_proxy/socks5h/socks5} # `error NU1301:   Only the 'http', 'https', 'socks4', 'socks4a' and 'socks5' schemes are allowed for proxies.` while `dotnet restore`
-        dotnet restore
-      '';
-      execIfModified = [ "*/packages.lock.json" ];
+    tasks = {
+      "deps:install:cs" = mkTaskBeforeEnterShell "c#" // {
+        exec = /* sh */ ''
+          http_proxy=''${http_proxy/socks5h/socks5} # `error NU1301:   Only the 'http', 'https', 'socks4', 'socks4a' and 'socks5' schemes are allowed for proxies.` while `dotnet restore`
+          dotnet restore
+        '';
+        execIfModified = [ "*/packages.lock.json" ];
+      };
+      "dotenv:cs" =
+        mkDotenv "c#/crawler/bin/Debug/net${toString cfg.dotnet.version}.0/appsettings.Development.json"
+          (
+            builtins.toJSON {
+              ConnectionStrings.Main = "Host=${config.env.PGHOST};Username=${cfg.pgsql.user};Database=${cfg.pgsql.db}";
+              ClientRequester.LogTrace = true;
+              ClientRequesterTcs.LogTrace.Enabled = true;
+              CrawlerLocks = lib.genAttrs [ "Thread" "ThreadLate" "Reply" "SubReply" ] (_: {
+                LogTrace.Enable = true;
+              });
+            }
+          );
     };
   };
-  cs_processes = {
+  pgsql = {
     services.postgres = {
       enable = true;
       package = pkgs."postgresql_${toString cfg.pgsql.version}";
       initialDatabases = [
         {
           name = cfg.pgsql.db;
+          inherit (cfg.pgsql) user;
+          pass = ""; # there's should be a line `local all all trust` in https://www.postgresql.org/docs/current/auth-pg-hba-conf.html to skip auth for any connection via UNIX domain socket
           schema = ./sql/schema.sql;
           initialSQL = /* sql */ ''
             -- https://stackoverflow.com/questions/67578997/postgres-show-altered-role-config-paramenters
@@ -88,8 +106,7 @@ let
 
         # https://github.com/cachix/devenv/blob/59bdb8c9c9d7fdcfbd15a7c4cfb14fb6c6d5d6ce/src/modules/services/postgres.nix#L408-L416
         # https://www.postgresql.org/docs/current/libpq-connect.html#LIBPQ-CONNSTRING-URIS
-        # https://unix.stackexchange.com/questions/76354/who-sets-user-and-username-environment-variables
-        DATABASE_URL="postgresql://${cfg.pgsql.db}/?dbname=${cfg.pgsql.db}&host=${config.env.PGHOST}&user=''${USER}&serverVersion=${toString cfg.pgsql.version}&charset=utf8"
+        DATABASE_URL="postgresql://${cfg.pgsql.db}/?dbname=${cfg.pgsql.db}&host=${config.env.PGHOST}&user=${cfg.pgsql.user}&serverVersion=${toString cfg.pgsql.version}&charset=utf8"
       '';
     };
   };
@@ -211,7 +228,7 @@ let
 in
 lib.mkMerge [
   cs
-  cs_processes
+  pgsql
   be
   be_processes
   fe
