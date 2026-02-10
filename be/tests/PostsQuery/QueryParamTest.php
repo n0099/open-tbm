@@ -32,7 +32,7 @@ class QueryParamTest extends TestCase
     }
 
     #[DataProvider('provide')]
-    public function testTooManyNesting(string $name, array|string|int $value, array $subParams): void
+    public function testTooManyNesting(string $name, array|string|int $value, array $subParams, int $_): void
     {
         $this->expectException(\InvalidArgumentException::class);
         new QueryParam([[$name => $value, ...$subParams]]);

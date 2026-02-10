@@ -28,6 +28,7 @@ class ParamsValidatorTest extends KernelTestCase
         try {
             $sut = self::newParamsValidator($params);
             $sut->addDefaultParamsThenValidate();
+            $this->expectNotToPerformAssertions();
         } catch (HttpException $e) {
             self::assertEquals($errorCode, \Safe\json_decode($e->getMessage())->errorCode);
         }
