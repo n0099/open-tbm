@@ -18,11 +18,12 @@ readonly class ExceptionToJsonResponse
     public function __invoke(ExceptionEvent $event): void
     {
         $exception = $event->getThrowable();
+        $errorCode = $exception->getCode();
         if ($exception instanceof HttpException
             && collect(Utils::ERROR_STATUS_CODE_INFO)
                 ->flatMap(static fn(array $codes) => array_keys($codes))
-                ->contains($exception->getCode())) {
-            $event->setResponse(JsonResponse::fromJsonString($exception->getMessage()));
+                ->contains($errorCode)) {
+            $event->setResponse(JsonResponse::fromJsonString($exception->getMessage(), (int) ($errorCode / 100)));
         } elseif ($exception instanceof ValidationFailedException) {
             $event->setResponse(JsonResponse::fromJsonString(
                 // https://github.com/symfony/serializer/blob/7.1/Normalizer/ConstraintViolationListNormalizer.php
@@ -30,6 +31,7 @@ readonly class ExceptionToJsonResponse
                     'errorCode' => 40000,
                     'errorInfo' => $exception->getViolations(),
                 ], 'json'),
+                400,
             ));
         }
     }

@@ -3,6 +3,7 @@
 namespace App\Tests\EventListener;
 
 use App\EventListener\ExceptionToJsonResponse;
+use App\Utils;
 use App\Validator\Validator;
 use PHPUnit\Framework\Attributes\CoversClass;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
@@ -30,14 +31,20 @@ class ExceptionToJsonResponseTest extends KernelTestCase
 
     public function testHttpException(): void
     {
-        $event = new ExceptionEvent(
-            self::$kernel,
-            new Request(),
-            HttpKernelInterface::MAIN_REQUEST,
-            new HttpException(400, message: 'test', code: 40003),
-        );
-        ($this->sut)($event);
-        self::assertEquals('test', $event->getResponse()->getContent());
+        foreach (Utils::ERROR_STATUS_CODE_INFO as $statusCode => $errors) {
+            foreach ($errors as $errorCode => $errorInfo) {
+                $event = new ExceptionEvent(
+                    self::$kernel,
+                    new Request(),
+                    HttpKernelInterface::MAIN_REQUEST,
+                    new HttpException($statusCode, message: $errorInfo, code: $errorCode),
+                );
+                ($this->sut)($event);
+                $response = $event->getResponse();
+                self::assertEquals($errorInfo, $response->getContent());
+                self::assertEquals($statusCode, $response->getStatusCode());
+            }
+        }
     }
 
     public function testValidationFailedException(): void
@@ -47,7 +54,9 @@ class ExceptionToJsonResponseTest extends KernelTestCase
         } catch (ValidationFailedException $e) {
             $event = new ExceptionEvent(self::$kernel, new Request(), HttpKernelInterface::MAIN_REQUEST, $e);
             ($this->sut)($event);
-            $responseJSON = \Safe\json_decode($event->getResponse()->getContent());
+            $response = $event->getResponse();
+            self::assertEquals(400, $response->getStatusCode());
+            $responseJSON = \Safe\json_decode($response->getContent());
             self::assertEquals(40000, $responseJSON->errorCode);
             self::assertEquals('This value should be of type int.', $responseJSON->errorInfo->detail);
         }
