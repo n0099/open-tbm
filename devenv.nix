@@ -101,14 +101,17 @@ let
       };
       "dotenv:be" = mkDotenv "be/.env.local" /* sh */ ''
         APP_ENV=dev
-        APP_BASE_URL_BE=http://${cfg.domain}/${cfg.baseURL.be}
-        APP_BASE_URL_FE=https://${cfg.domain}/${cfg.baseURL.fe}
+        APP_BASE_URL_BE=http://${cfg.domain}${cfg.baseURL.be}
+        APP_BASE_URL_FE=https://${cfg.domain}${cfg.baseURL.fe}
 
         # https://github.com/cachix/devenv/blob/59bdb8c9c9d7fdcfbd15a7c4cfb14fb6c6d5d6ce/src/modules/services/postgres.nix#L408-L416
         # https://www.postgresql.org/docs/current/libpq-connect.html#LIBPQ-CONNSTRING-URIS
         DATABASE_URL="postgresql://${cfg.pgsql.db}/?dbname=${cfg.pgsql.db}&host=${config.env.PGHOST}&user=${cfg.pgsql.user}&serverVersion=${toString cfg.pgsql.version}&charset=utf8"
       '';
     };
+    enterShell = /* sh */ ''
+      export PATH=${config.devenv.root}/be/vendor/bin:"$PATH" # https://github.com/cachix/devenv/blob/d4ffee46c9088df6e000470b998a2d2c16517f62/src/modules/languages/javascript.nix#L352
+    '';
   };
   be_processes = {
     languages.php.fpm.pools.www.settings =
@@ -178,7 +181,7 @@ let
           enable = true;
           package = pkgs.yarn-berry_4;
         };
-        directory = "fe";
+        directory = "${config.devenv.root}/fe";
       };
       typescript.enable = true;
     };
