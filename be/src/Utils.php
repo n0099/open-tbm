@@ -52,7 +52,7 @@ class Utils
     public const array ERROR_STATUS_CODE_INFO = [
         // httpStatusCode => [ errorCode => errorInfo ]
         400 => [
-            // 40000 => App\Exceptions\Handler::convertValidationExceptionToResponse()
+            // 40000 => App\EventListener\ExceptionToJsonResponse::__invoke()
             40003 => '部分查询参数与查询帖子类型要求不匹配',
             40004 => '排序方式与查询帖子类型要求不匹配',
             40005 => '提供了多个唯一查询参数',
