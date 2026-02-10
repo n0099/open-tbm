@@ -27,7 +27,7 @@ class ParamsValidatorTest extends KernelTestCase
     {
         try {
             $sut = self::newParamsValidator($params);
-            $sut->addDefaultParamsThenValidate(shouldSkip40003: false);
+            $sut->addDefaultParamsThenValidate();
         } catch (HttpException $e) {
             self::assertEquals($errorCode, \Safe\json_decode($e->getMessage())->errorCode);
         }
@@ -59,9 +59,10 @@ class ParamsValidatorTest extends KernelTestCase
                 [$name => match ($name) {
                     'latestReplyPostedAt' => '2024-01-01,2024-01-01',
                     'threadProperties' => ['sticky'],
+                    'latestReplierGender' => 0,
                     default => '0',
                 }],
-                ['postTypes' => array_diff(Utils::POST_TYPES, $coverageAndPostTypes[1])],
+                ['postTypes' => array_diff(Utils::POST_TYPES, $coverageAndPostTypes)],
             ])
             ->mapWithKeys(static fn(array $i, string $name) => ["40003, $name" => [40003, $i]])
             ->all();
@@ -72,7 +73,7 @@ class ParamsValidatorTest extends KernelTestCase
         return collect(ParamsValidator::REQUIRED_POST_TYPES_KEY_BY_ORDER_BY_VALUE)
             ->map(static fn(array $coverageAndPostTypes, string $name) => [
                 ['tid' => 0],
-                ['postTypes' => array_diff(Utils::POST_TYPES, $coverageAndPostTypes[1])],
+                ['postTypes' => array_diff(Utils::POST_TYPES, $coverageAndPostTypes)],
                 ['orderBy' => $name],
             ])
             ->mapWithKeys(static fn(array $i, string $name) => ["40004, $name" => [40004, $i]])
@@ -102,7 +103,7 @@ class ParamsValidatorTest extends KernelTestCase
     public function testPostTypesParamValueOrder(array $orderedPostTypes, $shuffledPostTypes): void
     {
         $sut = self::newParamsValidator([['postTypes' => $shuffledPostTypes], ['tid' => 0]]);
-        $sut->addDefaultParamsThenValidate(shouldSkip40003: true);
+        $sut->addDefaultParamsThenValidate();
         self::assertEquals($orderedPostTypes, $sut->params->getUniqueParamValue('postTypes'));
     }
 

@@ -40,9 +40,7 @@ class ShowReactJsonViewTest extends KernelTestCase
                 <h4>15 bytes</h4>
                 <div id="root"></div>
                 <script type="module">
-                    import ReactJsonView from '/assets/react-json-view.js';
-                    import { createElement } from '/assets/react.js';
-                    import { createRoot } from '/assets/react-dom.js';
+                    import { createElement, createRoot, ReactJsonView } from '/react-json-view/dist/index.js';
 
                     const root = createRoot(document.getElementById('root'));
                     root.render(createElement(ReactJsonView.default, { src: {"test":"test"}, quotesOnKeys: false }));

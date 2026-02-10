@@ -3,13 +3,10 @@
 namespace App\Tests\Repository\Post;
 
 use App\Repository\Post\PostRepositoryFactory;
-use App\Repository\RepositoryWithSplitFid;
 use PHPUnit\Framework\Attributes\CoversClass;
-use PHPUnit\Framework\Attributes\DataProvider;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 
 #[CoversClass(PostRepositoryFactory::class)]
-#[CoversClass(RepositoryWithSplitFid::class)]
 class PostRepositoryFactoryTest extends KernelTestCase
 {
     private PostRepositoryFactory $sut;
@@ -21,24 +18,10 @@ class PostRepositoryFactoryTest extends KernelTestCase
         $this->sut = static::getContainer()->get(PostRepositoryFactory::class);
     }
 
-    #[DataProvider('providePostModelFid')]
-    public function testPostModelFid(int $fid): void
+    public function test(): void
     {
-        self::assertEquals($fid, $this->sut->newThread($fid)->fid);
-        self::assertEquals($fid, $this->sut->newReply($fid)->fid);
-        self::assertEquals($fid, $this->sut->newReplyContent($fid)->fid);
-        self::assertEquals($fid, $this->sut->newSubReply($fid)->fid);
-        self::assertEquals($fid, $this->sut->newSubReplyContent($fid)->fid);
-        self::assertEquals($fid, $this->sut->newForumPosts($fid)['thread']->fid);
-        self::assertEquals($fid, $this->sut->newForumPosts($fid)['reply']->fid);
-        self::assertEquals($fid, $this->sut->newForumPosts($fid)['subReply']->fid);
-        self::assertEquals($fid, $this->sut->new($fid, 'thread')->fid);
-        self::assertEquals($fid, $this->sut->new($fid, 'reply')->fid);
-        self::assertEquals($fid, $this->sut->new($fid, 'subReply')->fid);
-    }
-
-    public static function providePostModelFid(): array
-    {
-        return [[0]];
+        self::assertEquals($this->sut->newForumPosts()['thread'], $this->sut->new('thread'));
+        self::assertEquals($this->sut->newForumPosts()['reply'], $this->sut->new('reply'));
+        self::assertEquals($this->sut->newForumPosts()['subReply'], $this->sut->new('subReply'));
     }
 }
