@@ -39,6 +39,10 @@ runs:
         key: ${{ runner.os }}-composer-${{ hashFiles('be/composer.lock') }}
         restore-keys: ${{ runner.os }}-composer-
 
+    - run: corepack enable # https://github.com/n0099/open-tbm/blob/ba8bb8de2d6d58e87b8e765ea142e8fe00ac9619/be/composer.json#L117
+      working-directory: be
+      shell: bash
+
     - run: composer install --no-interaction --no-progress --classmap-authoritative
       working-directory: be
       shell: bash
