@@ -35,7 +35,6 @@
         "doctrine/doctrine-fixtures-bundle": "^4.3.1",
         "friendsofphp/php-cs-fixer": "^3.93.1",
         "infection/infection": "^0.30.3",
-        "laravel/pint": "^1.27.1",
         "phan/phan": "^5.5.2",
         "phpmd/phpmd": "^2.15.0",
         "phpstan/extension-installer": "^1.4.3",
