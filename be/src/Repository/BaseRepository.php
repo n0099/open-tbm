@@ -19,7 +19,8 @@ abstract class BaseRepository extends ServiceEntityRepository
         return $this->getEntityManager()->createQuery($dql);
     }
 
-    protected function createQueryWithParams(string $dql, array|\ArrayAccess $parameters): Query {
+    protected function createQueryWithParams(string $dql, array|\ArrayAccess $parameters): Query
+    {
         return $this->createQuery($dql)->setParameters($parameters);
     }
 

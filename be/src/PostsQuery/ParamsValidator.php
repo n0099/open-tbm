@@ -13,7 +13,7 @@ class ParamsValidator
     public const array UNIQUE_PARAMS_NAME = ['postTypes', 'orderBy'];
     public const array USER_GENDER_VALUES = [0, 1, 2, 'NULL'];
 
-    private(set) QueryParams $params;
+    public private(set) QueryParams $params;
 
     public function __construct(private readonly Validator $validator) {}
 
@@ -41,7 +41,7 @@ class ParamsValidator
         $currentPostTypes = $this->params->getUniqueParamValue('postTypes');
         $requiredPostTypes = array_intersect(Utils::POST_TYPES, ...array_values(Arr::only(
             self::REQUIRED_POST_TYPES_KEY_BY_PARAM_NAME,
-            array_map(static fn(QueryParam $p) => $p->name, $this->params->getAll())
+            array_map(static fn(QueryParam $p) => $p->name, $this->params->getAll()),
         )));
         return collect($currentPostTypes)->intersect($requiredPostTypes)->sort()->values()->toArray();
     }

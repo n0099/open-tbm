@@ -101,13 +101,13 @@ class CursorCodec
                 })
                 ->chunk(2) // split six values into three post type pairs
                 ->map(static fn(Collection $i) => $i->values())) // reorder keys after chunk
-            ->mapWithKeys(fn(Collection $cursors, string $postType) =>
-                [$postType =>
-                    $cursors->mapWithKeys(fn(int|string|null $cursor, int $index) =>
-                        [$index === 0 ? Utils::POST_TYPE_TO_ID[$postType] : $orderByField => $cursor]),
+            ->mapWithKeys(fn(Collection $cursors, string $postType)
+                => [$postType
+                    => $cursors->mapWithKeys(fn(int|string|null $cursor, int $index)
+                        => [$index === 0 ? Utils::POST_TYPE_TO_ID[$postType] : $orderByField => $cursor]),
                 ])
             // filter out cursors with all fields value being null, '' or 0 with their encoded cursor ',,'
-            ->reject(static fn(Collection $cursors) =>
-                $cursors->every(static fn(int|string|null $cursor) => empty($cursor)));
+            ->reject(static fn(Collection $cursors)
+                => $cursors->every(static fn(int|string|null $cursor) => empty($cursor)));
     }
 }

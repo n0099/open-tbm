@@ -56,7 +56,7 @@ class Utils
             40003 => '部分查询参数与查询帖子类型要求不匹配',
             40004 => '排序方式与查询帖子类型要求不匹配',
             40005 => '提供了多个唯一查询参数',
-            40006 => '查询计划预估成本过高'
+            40006 => '查询计划预估成本过高',
         ],
         404 => [
             40401 => '帖子查询结果为空',
@@ -89,7 +89,7 @@ class Utils
         if (!$toClass->isSubclassOf($fromClass)) {
             throw new \InvalidArgumentException($to . ' should be a subclass of' . $from::class);
         }
-        $toInstance = new $to;
+        $toInstance = new $to();
         foreach ($fromClass->getProperties() as $property) {
             $toClass->getProperty($property->name)->setRawValue($toInstance, $property->getRawValue($from));
         }

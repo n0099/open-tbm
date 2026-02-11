@@ -6,7 +6,7 @@ class QueryParam
 {
     public readonly string $name;
     public array|string|int $value;
-    private(set) array $subParams;
+    public private(set) array $subParams;
 
     public function __construct(array $param)
     {

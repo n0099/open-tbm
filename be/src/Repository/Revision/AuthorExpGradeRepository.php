@@ -30,15 +30,15 @@ class AuthorExpGradeRepository extends BaseRepository
             ->addSelect('OVER(ROW_NUMBER(), PARTITION BY t.uid ORDER BY t.discoveredAt DESC) AS rn');
         /** @var QueryBuilder $query */
         $query = $authorsIdKeyByFid->reduce(
-            fn(QueryBuilder $query, Collection $uids, int $fid) =>
-                $query->orWhere($query->expr()->andX(
+            fn(QueryBuilder $query, Collection $uids, int $fid)
+                => $query->orWhere($query->expr()->andX(
                     $query->expr()->eq('t.fid', ":fid_$fid"),
-                    $query->expr()->in('t.uid', ":fid_{$fid}_uids")
+                    $query->expr()->in('t.uid', ":fid_{$fid}_uids"),
                 ))
                     ->setParameter("fid_$fid", $fid)
                     // doctrine cannot infer the right array type from its first element with laravel Collection
                     ->setParameter("fid_{$fid}_uids", $uids->toArray()),
-            $query
+            $query,
         );
 
         return ConvertORMQueryBuilderToDBAL::getDenormalizedResult(
@@ -47,7 +47,7 @@ class AuthorExpGradeRepository extends BaseRepository
             static fn(DBALQueryBuilder $query, array $fieldAliases) => $query
                 ->select('t.*')
                 ->where("t.{$fieldAliases['rn']} = 1"),
-            AuthorExpGradeDTO::class
+            AuthorExpGradeDTO::class,
         );
     }
 }

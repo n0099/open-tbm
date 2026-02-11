@@ -80,7 +80,7 @@ readonly class QueryResult
         $explainResult = \Safe\json_decode($explainQuery->getOneOrNullResult()[$explainColumnName], associative: true);
         $plansCost = array_sum(array_map(static fn(array $plan) => $plan['Plan']['Total Cost'], $explainResult));
         $planCostLimit = $this->containerBag->get('app.query_plan_cost_limit');
-        if (!($planCostLimit === null || $planCostLimit === '' || (int)$planCostLimit === 0)) {
+        if (!($planCostLimit === null || $planCostLimit === '' || (int) $planCostLimit === 0)) {
             Utils::abortAPIIf(40006, $plansCost > $planCostLimit);
         }
 
@@ -93,7 +93,7 @@ readonly class QueryResult
         return [
             'result' => $result,
             'hasMorePages' => $hasMorePages ?? false,
-            'queryPlan' => $explainResult
+            'queryPlan' => $explainResult,
         ];
     }
 
@@ -137,14 +137,14 @@ readonly class QueryResult
                     : $qb->expr()->gt("t.$fieldName", ":cursor_$fieldName"),
             );
             $qb->andWhere($qb->expr()->orX(...$comparisons));
-            $cursors->mapWithKeys(fn($fieldValue, string $fieldName) =>
-                $qb->setParameter("cursor_$fieldName", $fieldValue)); // prevent overwriting existing param
+            $cursors->mapWithKeys(fn($fieldValue, string $fieldName)
+                => $qb->setParameter("cursor_$fieldName", $fieldValue)); // prevent overwriting existing param
         });
         [
             'rawSQL' => $rawSQL,
             'postsKeyByTypePluralName' => $postsKeyByTypePluralName,
             'hasMorePages' => $hasMorePages,
-            'queryPlan' => $queryPlan
+            'queryPlan' => $queryPlan,
         ] = $this->getPostQueriesResult($queries, $isOrderByDesc, $maxResults);
 
         $this->threads = $postsKeyByTypePluralName->get('threads', collect());
@@ -153,7 +153,7 @@ readonly class QueryResult
         $this->currentCursor = $cursorParamValue ?? '';
         $this->nextCursor = $hasMorePages
             ? $this->cursorCodec->encodeNextCursor($postsKeyByTypePluralName->except(
-                $queryByPostIDParamsName->map(static fn(string $postID) => Utils::POST_ID_TO_TYPE_PLURAL[$postID])
+                $queryByPostIDParamsName->map(static fn(string $postID) => Utils::POST_ID_TO_TYPE_PLURAL[$postID]),
             ))
             : null;
         $this->query = ['query' => $rawSQL, 'plan' => $queryPlan];
@@ -187,7 +187,7 @@ readonly class QueryResult
                     $unionDbalQueryBuilder->setParameter(
                         $parameterPrefix . $parameter->getName(),
                         $parameter->getValue(),
-                        $parameter->getType()
+                        $parameter->getType(),
                     );
                 }
                 return $unionDbalQueryBuilder;
@@ -233,14 +233,14 @@ readonly class QueryResult
         };
         $parametersInterpolatedAndFormattedSQL = new SqlFormatter(new NullHighlighter())->format(match (true) {
             $flattedQueryBuilder instanceof DBALQueryBuilder => $interpolateParametersForDBALQueryBuilder(),
-            $flattedQueryBuilder instanceof QueryBuilder => $interpolateParametersForQueryBuilder($flattedQueryBuilder)
+            $flattedQueryBuilder instanceof QueryBuilder => $interpolateParametersForQueryBuilder($flattedQueryBuilder),
         });
 
         return [
             'rawSQL' => $parametersInterpolatedAndFormattedSQL,
             'postsKeyByTypePluralName' => $this->getPostsKeyByTypePluralName($result),
             'hasMorePages' => $hasMorePages,
-            'queryPlan' => $queryPlan
+            'queryPlan' => $queryPlan,
         ];
     }
 
@@ -250,22 +250,22 @@ readonly class QueryResult
         /** @var PostsKeyByTypePluralName $postsKeyByTypePluralName */
         $postsKeyByTypePluralName = $queryResult
             ->groupBy(static fn(/** @var UnionPostKey $unionPostKey */ array $unionPostKey) => $unionPostKey['postType'])
-            ->mapWithKeys(static fn(Collection $unionPostKeys, /** @var 'reply'|'subReply'|'thread' $postType */ string $postType) =>
-                [Utils::POST_TYPE_TO_PLURAL[$postType] => $unionPostKeys
+            ->mapWithKeys(static fn(Collection $unionPostKeys, /** @var 'reply'|'subReply'|'thread' $postType */ string $postType)
+                => [Utils::POST_TYPE_TO_PLURAL[$postType] => $unionPostKeys
                     ->map(static function (/** @var UnionPostKey $unionPostKey */ array $unionPostKey) use ($postType) {
                         [
                             'postId' => $postId,
                             'fid' => $fid,
                             'tid' => $tid,
                             'pid' => $pid,
-                            'orderByField' => $orderByFieldValue
+                            'orderByField' => $orderByFieldValue,
                         ] = $unionPostKey;
                         return match ($postType) {
                             'thread' => new ThreadKey($fid, $postId, $orderByFieldValue),
                             'reply' => new ReplyKey($fid, $tid, $postId, $orderByFieldValue),
-                            'subReply' => new SubReplyKey($fid, $tid, $pid, $postId, $orderByFieldValue)
+                            'subReply' => new SubReplyKey($fid, $tid, $pid, $postId, $orderByFieldValue),
                         };
-                    })
+                    }),
                 ]);
         Utils::abortAPIIf(40401, $postsKeyByTypePluralName->every(static fn(Collection $i) => $i->isEmpty()));
         return $postsKeyByTypePluralName;

@@ -4,8 +4,8 @@ namespace App\PostsQuery;
 
 abstract readonly class BaseQuery
 {
-    private(set) string $orderByField;
-    private(set) bool $isOrderByDesc;
+    public private(set) string $orderByField;
+    public private(set) bool $isOrderByDesc;
 
     public function __construct(
         public QueryResult $queryResult,

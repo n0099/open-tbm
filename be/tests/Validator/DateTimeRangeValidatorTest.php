@@ -42,7 +42,7 @@ class DateTimeRangeValidatorTest extends ConstraintValidatorTestCase
     {
         return [
             [20200101, '20200101'],
-            ['2025-01-01,2020-01-01', '"2025-01-01,2020-01-01"']
+            ['2025-01-01,2020-01-01', '"2025-01-01,2020-01-01"'],
         ];
     }
 
