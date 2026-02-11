@@ -8,8 +8,7 @@ use Symfony\Component\HttpKernel\Event\ViewEvent;
 use Symfony\Component\Serializer\SerializerInterface;
 
 // phpcs:disable Generic.Files.LineLength
-// https://github.com/symfony/twig-bridge/blob/d63fde6a6142ffbab5fe6ee252b668b9485bfc0d/EventListener/TemplateAttributeListener.php#L66
-#[AsEventListener(priority: -129)]
+#[AsEventListener(priority: -129)] // https://github.com/symfony/twig-bridge/blob/d63fde6a6142ffbab5fe6ee252b668b9485bfc0d/EventListener/TemplateAttributeListener.php#L66
 readonly class SerializeToJson
 {
     public function __construct(private SerializerInterface $serializer) {}

@@ -1,7 +1,7 @@
 {
-    "name": "n0099/tbm",
-    "license": "AGPL-3.0-or-later",
     "type": "project",
+    "name": "n0099/open-tbm",
+    "license": "AGPL-3.0-or-later",
     "minimum-stability": "stable",
     "prefer-stable": true,
     "require": {
