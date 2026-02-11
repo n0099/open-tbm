@@ -9,17 +9,17 @@ class ResultSetScalarMappingNameConverter implements NameConverterInterface
 {
     private array $flippedScalarMappings;
 
-    public function __construct(private ResultSetMapping $resultSetMapping)
+    public function __construct(private readonly ResultSetMapping $resultSetMapping)
     {
         $this->flippedScalarMappings = array_flip($resultSetMapping->scalarMappings);
     }
 
-    public function normalize(string $propertyName): string
+    public function normalize(string $propertyName, ?string $class = null, ?string $format = null, array $context = []): string
     {
         return $this->flippedScalarMappings[$propertyName];
     }
 
-    public function denormalize(string $propertyName): string
+    public function denormalize(string $propertyName, ?string $class = null, ?string $format = null, array $context = []): string
     {
         return $this->resultSetMapping->scalarMappings[$propertyName];
     }
