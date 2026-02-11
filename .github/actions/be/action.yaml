@@ -9,7 +9,7 @@ runs:
 
     - uses: shivammathur/setup-php@v2
       with:
-        php-version: '8.3'
+        php-version: '8.4'
         tools: cs2pr
         coverage: none # https://github.com/shivammathur/setup-php/blob/2.31.1/README.md#disable-coverage
         # https://github.com/shivammathur/setup-php/blob/2.31.1/README.md#jit-configuration
