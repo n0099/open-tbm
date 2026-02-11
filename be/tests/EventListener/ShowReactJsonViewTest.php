@@ -34,7 +34,7 @@ class ShowReactJsonViewTest extends KernelTestCase
         );
         ($this->sut)($event);
         self::assertEquals(<<<HTML
-        <html>
+        <html lang="en">
             <head>
                 <title>15 bytes of json response for route /</title>
             </head>
