@@ -50,8 +50,7 @@
         "symfony/maker-bundle": "^1.66.0",
         "symfony/phpunit-bridge": "^7.4.3",
         "symfony/web-profiler-bundle": "^7.4.4",
-        "thecodingmachine/phpstan-safe-rule": "^1.4.3",
-        "vimeo/psalm": "^6.7"
+        "thecodingmachine/phpstan-safe-rule": "^1.4.3"
     },
     "repositories": [
         {
