@@ -2,12 +2,16 @@
 name: be
 on:
   push:
-    paths: [be/**]
+    paths:
+      - be/**
 jobs:
   runs-on:
     strategy:
       matrix:
-        runs-on: [ubuntu-latest, windows-latest, macos-latest]
+        runs-on:
+          - ubuntu-latest
+          - windows-latest
+          - macos-latest
       fail-fast: false
     uses: ./.github/workflows/be_base.yaml
     with:
