@@ -44,10 +44,13 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - uses: ./.github/actions/be
-      - if: runner.os == 'Windows'
+      - if: runner.os == 'Windows' || runner.os == 'macOS'
         uses: shivammathur/setup-php@v2
-        with: # https://github.com/shivammathur/setup-php/wiki/Php-extensions-loaded-on-windows-2022/aee619eb6d77e86b17a76d458316b41e58a3b677
-          extensions: ast # phan/phan requires https://github.com/nikic/php-ast but it's not enabled by default on windows
+        with:
+          # `phan/phan` requires https://github.com/nikic/php-ast but it's not installed by default on the Windows and macOS images of hosted runner
+          # https://github.com/shivammathur/setup-php/wiki/Php-extensions-loaded-on-windows-2025/298f253ff19de7820dddf397ba52c7fa82a7a3eb
+          # https://github.com/shivammathur/setup-php/wiki/Php-extensions-loaded-on-macos-15/74bc20f907f0a580e8f5cd949c9d872a5193f970
+          extensions: ast
       - run: >
           ./vendor/bin/phan --output-mode checkstyle --config-file phan.php --analyze-twice --no-progress-bar
             | tee >(cs2pr --notices-as-warnings --graceful-warnings --prepend-filename --prepend-source)

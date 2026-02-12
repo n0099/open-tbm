@@ -16,9 +16,7 @@ runs:
         ini-values: >
           opcache.enable_cli=1, opcache.memory_consumption=256,
           opcache.jit=tracing, opcache.jit_buffer_size=64M
-        # https://github.com/shivammathur/setup-php/wiki/Php-extensions-loaded-on-windows-2022/aee619eb6d77e86b17a76d458316b41e58a3b677
-        # league/flysystem-local@3.28.0 requires ext-fileinfo but it's not enabled by default on windows
-        extensions: ${{ runner.os == 'Windows' && 'intl, fileinfo' || '' }}
+        extensions: ${{ runner.os == 'Windows' && 'intl' || '' }} # https://github.com/shivammathur/setup-php/wiki/Php-extensions-loaded-on-windows-2025/298f253ff19de7820dddf397ba52c7fa82a7a3eb
       env:
         update: 'true' # https://github.com/shivammathur/setup-php/blob/2.31.1/README.md#force-update-setup
     # https://github.com/shivammathur/setup-php/blob/2.31.1/README.md#problem-matchers
