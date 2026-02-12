@@ -4,6 +4,8 @@ on:
   push:
     paths:
       - c#/**
+      - .github/workflows/c#*.yaml
+      - .github/actions/c#/action.yaml
 jobs:
   runs-on:
     strategy:

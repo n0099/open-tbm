@@ -4,6 +4,8 @@ on:
   push:
     paths:
       - be/**
+      - .github/workflows/be*.yaml
+      - .github/actions/be/action.yaml
 jobs:
   runs-on:
     strategy:

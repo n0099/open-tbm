@@ -4,6 +4,8 @@ on:
   push:
     paths:
       - fe/**
+      - .github/workflows/fe*.yaml
+      - .github/actions/fe/action.yaml
 jobs:
   runs-on:
     strategy:
