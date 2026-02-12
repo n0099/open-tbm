@@ -421,12 +421,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:^24.10.13":
-  version: 24.10.13
-  resolution: "@types/node@npm:24.10.13"
+"@types/node@npm:^25.2.3":
+  version: 25.2.3
+  resolution: "@types/node@npm:25.2.3"
   dependencies:
     undici-types: "npm:~7.16.0"
-  checksum: 10c0/4ff0b9b060b5477c0fec5b11a176f294be588104ab546295db65b17a92ba0a6077b52ad92dd3c0d2154198c7f9d0021e6c1d42b00c9ac7ebfd85632afbcc48a4
+  checksum: 10c0/925833029ce0bb4a72c36f90b93287184d3511aeb0fa60a994ae94b5430c22f9be6693d67d210df79267cb54c6f6978caaefb149d99ab5f83af5827ba7cb9822
   languageName: node
   linkType: hard
 
@@ -1341,13 +1341,13 @@ __metadata:
   resolution: "root-workspace-0b6124@workspace:."
   dependencies:
     "@microlink/react-json-view": "npm:^1.27.1"
-    "@types/node": "npm:^24.10.13"
+    "@types/node": "npm:^25.2.3"
     "@types/react": "npm:^19.2.14"
     "@types/react-dom": "npm:^19.2.3"
     react: "npm:^19.2.4"
     react-dom: "npm:^19.2.4"
     typescript: "npm:^5.9.3"
-    vite: "npm:^7.1.2"
+    vite: "npm:^7.3.1"
   languageName: unknown
   linkType: soft
 
@@ -1607,7 +1607,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"vite@npm:^7.1.2":
+"vite@npm:^7.3.1":
   version: 7.3.1
   resolution: "vite@npm:7.3.1"
   dependencies:
