@@ -12,25 +12,25 @@ jobs:
   tsc:
     runs-on: ${{ inputs.runs-on }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: ./.github/actions/fe
       - run: yarn run vue-tsc -p .nuxt/tsconfig.app.json
 
   eslint:
     runs-on: ${{ inputs.runs-on }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: ./.github/actions/fe
       - run: yarn run eslint
 
   stylelint:
     runs-on: ${{ inputs.runs-on }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: ./.github/actions/fe
 
       - id: cache-restore
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5
         with:
           path: ${{ github.workspace }}/fe/.stylelintcache
           key: ${{ runner.os }}-fe-stylelintcache
@@ -42,7 +42,7 @@ jobs:
       - if: always() && (steps.firstStylelint.outcome == 'success' || steps.firstStylelint.outcome == 'failure')
         run: yarn run stylelint --cache --custom-formatter stylelint-actions-formatters '**/*.css'
 
-      - uses: actions/cache/save@v4
+      - uses: actions/cache/save@v5
         if: always() && steps.cache-restore.outputs.cache-hit != 'true'
         with:
           path: ${{ github.workspace }}/fe/.stylelintcache
@@ -51,11 +51,11 @@ jobs:
   type-coverage:
     runs-on: ${{ inputs.runs-on }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: ./.github/actions/fe
 
       - id: cache-restore
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5
         with:
           path: ${{ github.workspace }}/fe/.type-coverage
           key: ${{ runner.os }}-fe-type-coverage
@@ -64,7 +64,7 @@ jobs:
       # https://github.com/plantain-00/type-coverage/issues/145
       - run: yarn run type-coverage --show-relative-path --cache --detail --strict --at-least 95
 
-      - uses: actions/cache/save@v4
+      - uses: actions/cache/save@v5
         if: always() && steps.cache-restore.outputs.cache-hit != 'true'
         with:
           path: ${{ github.workspace }}/fe/.type-coverage

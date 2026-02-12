@@ -22,7 +22,7 @@ jobs:
     env:
       NUGET_PACKAGES: ${{ github.workspace }}/.nuget/packages
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: ./.github/actions/c#
       - run: dotnet build --no-restore -c Release ${{ matrix.project }}
 
@@ -31,11 +31,11 @@ jobs:
     env:
       NUGET_PACKAGES: ${{ github.workspace }}/.nuget/packages
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: ./.github/actions/c#
 
       - id: cache-restore
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5
         with:
           path: |
             ${{ github.workspace }}/.resharper
@@ -52,7 +52,7 @@ jobs:
           cachesHome: ${{ github.workspace }}/.resharper
 
       # https://github.com/actions/runner/issues/1478
-      - uses: actions/cache/save@v4
+      - uses: actions/cache/save@v5
         if: always() && steps.cache-restore.outputs.cache-hit != 'true'
         with:
           path: |
