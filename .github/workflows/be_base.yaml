@@ -12,7 +12,7 @@ jobs:
   phpunit-infection:
     runs-on: ${{ inputs.runs-on }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: ./.github/actions/be
       - uses: shivammathur/setup-php@v2
         with:
@@ -31,7 +31,7 @@ jobs:
           --log-junit=coverage/junit.xml
         # https://infection.github.io/guide/command-line-options.html#coverage
       - if: always() && (steps.phpunit.outcome == 'success' || steps.phpunit.outcome == 'failure')
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: coverage-${{ inputs.runs-on }}
           path: be/coverage/clover.xml
@@ -42,7 +42,7 @@ jobs:
   phan:
     runs-on: ${{ inputs.runs-on }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: ./.github/actions/be
       - if: runner.os == 'Windows' || runner.os == 'macOS'
         uses: shivammathur/setup-php@v2
@@ -60,7 +60,7 @@ jobs:
   phpstan:
     runs-on: ${{ inputs.runs-on }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: ./.github/actions/be
       - run: >
           ./vendor/bin/phpstan analyze --error-format=checkstyle
@@ -70,7 +70,7 @@ jobs:
   psalm:
     runs-on: ${{ inputs.runs-on }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: ./.github/actions/be
       - run: >
           ./vendor/bin/psalm --output-format=checkstyle
@@ -80,7 +80,7 @@ jobs:
   phpcs:
     runs-on: ${{ inputs.runs-on }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: ./.github/actions/be
       - id: run
         run: ./vendor/bin/phpcs --report-full --report-checkstyle=./phpcs-report.xml .
@@ -90,7 +90,7 @@ jobs:
   php-cs-fixer:
     runs-on: ${{ inputs.runs-on }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: ./.github/actions/be
       - run: >
           ./vendor/bin/php-cs-fixer fix --dry-run --format=checkstyle
@@ -100,7 +100,7 @@ jobs:
   phpmd:
     runs-on: ${{ inputs.runs-on }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: ./.github/actions/be
       - run: >
           ./vendor/bin/phpmd . checkstyle phpmd.xml
