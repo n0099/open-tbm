@@ -52,7 +52,7 @@ jobs:
           # https://github.com/shivammathur/setup-php/wiki/Php-extensions-loaded-on-macos-15/74bc20f907f0a580e8f5cd949c9d872a5193f970
           extensions: ast
       - run: >
-          ./vendor/bin/phan --output-mode checkstyle --config-file phan.php --analyze-twice --no-progress-bar
+          ./vendor/bin/phan --output-mode checkstyle --config-file phan.php --analyze-twice
             | tee >(cs2pr --notices-as-warnings --graceful-warnings --prepend-filename --prepend-source)
         # https://github.com/staabm/annotate-pull-request-from-checkstyle
         shell: bash
@@ -63,7 +63,7 @@ jobs:
       - uses: actions/checkout@v5
       - uses: ./.github/actions/be
       - run: >
-          ./vendor/bin/phpstan analyze --error-format=checkstyle
+          ./vendor/bin/phpstan analyze --error-format=checkstyle --no-interaction
             | tee >(cs2pr --notices-as-warnings --graceful-warnings --prepend-filename --prepend-source)
         shell: bash
 
@@ -93,7 +93,7 @@ jobs:
       - uses: actions/checkout@v5
       - uses: ./.github/actions/be
       - run: >
-          ./vendor/bin/php-cs-fixer fix --dry-run --format=checkstyle
+          ./vendor/bin/php-cs-fixer fix --dry-run --format=checkstyle --no-interaction --show-progress dots
             | tee >(cs2pr --notices-as-warnings --graceful-warnings --prepend-filename --prepend-source)
         shell: bash
 

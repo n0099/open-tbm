@@ -45,7 +45,7 @@ runs:
       working-directory: be
       shell: bash
 
-    - run: composer install --no-interaction --no-progress --classmap-authoritative
+    - run: composer install --classmap-authoritative
       working-directory: be
       shell: bash
 
