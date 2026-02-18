@@ -24,7 +24,7 @@ export default defineNuxtConfig({
     compatibilityDate: '2025-08-01',
     devServer: { https: await tryAccessDevServerCert() },
     srcDir: 'src',
-    imports: { dirs: ['api/**', 'utils/**', 'stores/**'] },
+    imports: { dirs: ['api/**', 'utils/**'] },
     modules: [
         '@nuxt/eslint',
         '@pinia/nuxt',
@@ -34,7 +34,7 @@ export default defineNuxtConfig({
         '@vesp/nuxt-fontawesome',
         '@nuxtjs/seo'
     ],
-    pinia: { storesDirs: ['src/stores/**'] },
+    pinia: { storesDirs: ['stores/**'] },
     eslint: { config: { standalone: false } },
     vueQuery: {
         queryClientOptions: {
