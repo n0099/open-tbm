@@ -162,6 +162,16 @@ let
               fastcgi_param SCRIPT_FILENAME $request_filename;
               # https://serverfault.com/questions/465607/nginx-document-rootfastcgi-script-name-vs-request-filename
               # fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+
+              # https://github.com/monsur/enable-cors.org/commit/ad7acaa164bd551d716b9c1ce9dcf72515236481
+              add_header 'Access-Control-Allow-Origin' 'https://${cfg.domain}:${toString cfg.port.fe}' always;
+              add_header 'Access-Control-Allow-Methods' 'GET, POST, PUT, DELETE, OPTIONS' always;
+              add_header 'Access-Control-Allow-Headers' 'DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization' always;
+              add_header 'Vary' 'Origin' always;
+              if ($request_method = 'OPTIONS') {
+                add_header 'Access-Control-Max-Age' 86400;
+                return 204;
+              }
             }
           }
         }
