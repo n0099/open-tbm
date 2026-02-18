@@ -1,4 +1,3 @@
-
 import Stats from 'stats.js';
 
 const document = globalThis.document;
