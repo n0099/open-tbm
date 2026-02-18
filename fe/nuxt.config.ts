@@ -24,7 +24,7 @@ export default defineNuxtConfig({
     compatibilityDate: '2025-08-01',
     devServer: { https: await tryAccessDevServerCert() },
     srcDir: 'src',
-    imports: { dirs: ['api/**', 'utils/**'] },
+    imports: { dirs: ['api/**', 'utils/**', 'stores/**'] },
     modules: [
         '@nuxt/eslint',
         '@pinia/nuxt',
