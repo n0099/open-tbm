@@ -9,7 +9,8 @@
     "enabled": true,
     // https://github.com/renovatebot/config-help/issues/89
     // https://github.com/renovatebot/renovate/discussions/15899
-    "branchTopic": "lock-file-maintenance/{{groupSlug}}"
+    "additionalBranchPrefix": "lock-file-maintenance",
+    "branchTopic": "{{{groupSlug}}}"
   },
   "labels": ["dependencies"],
   "packageRules": [
@@ -46,7 +47,7 @@
     },
     {
       "matchFileNames": ["be/public/react-json-view/**"],
-      "groupName": "be/public/react-json-view",
+      "groupName": "react-json-view",
       "commitMessagePrefix": "deps(react-json-view): "
     },
     {
