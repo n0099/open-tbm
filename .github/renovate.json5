@@ -46,7 +46,7 @@
     },
     {
       "matchFileNames": ["be/public/react-json-view/**"],
-      "groupName": "be/public/react-json-view",
+      "groupName": "react-json-view",
       "commitMessagePrefix": "deps(react-json-view): "
     },
     {
