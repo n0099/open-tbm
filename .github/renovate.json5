@@ -54,9 +54,9 @@
       "groupName": "fe",
       "commitMessagePrefix": "deps(fe): "
     },
-    {
+    { // https://github.com/renovatebot/renovate/discussions/27906
       "matchCategories": ["php"],
-      "matchPackageNames": ["php"],
+      "matchDepNames": ["php"],
       "enabled": false,
       "dependencyDashboardApproval": true
     }
