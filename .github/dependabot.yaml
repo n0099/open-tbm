@@ -1,6 +1,16 @@
 # https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
 version: 2
 updates:
+  - package-ecosystem: github-actions
+    directories:
+      - .github/actions
+      - .github/workflows
+    schedule:
+      interval: daily
+    labels:
+      - CI
+      - dependencies
+    open-pull-requests-limit: 0 # https://stackoverflow.com/questions/64047526/how-to-get-dependabot-to-trigger-for-security-updates-only#comment123070708_68254421
   - package-ecosystem: nuget
     directory: /c#
     schedule:
@@ -8,13 +18,21 @@ updates:
     labels:
       - nuget
       - dependencies
-    open-pull-requests-limit: 0 # https://stackoverflow.com/questions/64047526/how-to-get-dependabot-to-trigger-for-security-updates-only#comment123070708_68254421
+    open-pull-requests-limit: 0
   - package-ecosystem: composer
     directory: /be
     schedule:
       interval: daily
     labels:
       - composer
+      - dependencies
+    open-pull-requests-limit: 0
+  - package-ecosystem: npm
+    directory: /be/public/react-json-view
+    schedule:
+      interval: daily
+    labels:
+      - yarn
       - dependencies
     open-pull-requests-limit: 0
   - package-ecosystem: npm
