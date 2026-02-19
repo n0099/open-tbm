@@ -11,6 +11,7 @@
     // https://github.com/renovatebot/renovate/discussions/15899
     "branchTopic": "lock-file-maintenance/{{groupSlug}}"
   },
+  "commitMessagePrefix": "deps({{{groupName}}}): ",
   "labels": ["dependencies"],
   "packageRules": [
     {
@@ -31,28 +32,23 @@
     },
     {
       "matchFileNames": [".github/actions/**", ".github/workflows/**"],
-      "groupName": "CI",
-      "commitMessagePrefix": "deps(CI): "
+      "groupName": "CI"
     },
     {
       "matchFileNames": ["c#/**"],
-      "groupName": "c#",
-      "commitMessagePrefix": "deps(c#): "
+      "groupName": "c#"
     },
     {
       "matchFileNames": ["be/**"],
-      "groupName": "be",
-      "commitMessagePrefix": "deps(be): "
+      "groupName": "be"
     },
     {
       "matchFileNames": ["be/public/react-json-view/**"],
-      "groupName": "be/public/react-json-view",
-      "commitMessagePrefix": "deps(react-json-view): "
+      "groupName": "be/public/react-json-view"
     },
     {
       "matchFileNames": ["fe/**"],
-      "groupName": "fe",
-      "commitMessagePrefix": "deps(fe): "
+      "groupName": "fe"
     },
     { // https://github.com/renovatebot/renovate/discussions/27906
       "matchCategories": ["php"],
