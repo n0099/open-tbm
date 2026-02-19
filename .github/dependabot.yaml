@@ -2,7 +2,7 @@
 version: 2
 updates:
   - package-ecosystem: nuget
-    directory: /
+    directory: /c#
     schedule:
       interval: daily
     labels:
@@ -10,7 +10,7 @@ updates:
       - dependencies
     open-pull-requests-limit: 0 # https://stackoverflow.com/questions/64047526/how-to-get-dependabot-to-trigger-for-security-updates-only#comment123070708_68254421
   - package-ecosystem: composer
-    directory: /
+    directory: /be
     schedule:
       interval: daily
     labels:
@@ -18,7 +18,7 @@ updates:
       - dependencies
     open-pull-requests-limit: 0
   - package-ecosystem: npm
-    directory: /
+    directory: /fe
     schedule:
       interval: daily
     labels:
