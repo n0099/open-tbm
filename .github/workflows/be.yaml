@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - be/**
+      - '!be/public/react-json-view/**'
       - .github/workflows/be*.yaml
       - .github/actions/be/action.yaml
 jobs:
