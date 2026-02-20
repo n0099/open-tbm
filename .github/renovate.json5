@@ -5,12 +5,7 @@
   ],
   "rangeStrategy": "bump",
   "separateMajorMinor": false,
-  "lockFileMaintenance": {
-    "enabled": true,
-    // https://github.com/renovatebot/config-help/issues/89
-    // https://github.com/renovatebot/renovate/discussions/15899
-    "branchTopic": "lock-file-maintenance/{{groupSlug}}"
-  },
+  "lockFileMaintenance": { "enabled": true },
   "labels": ["dependencies"],
   "packageRules": [
     {
