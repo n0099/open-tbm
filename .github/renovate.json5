@@ -49,8 +49,10 @@
       "groupName": "fe",
       "commitMessagePrefix": "deps(fe): "
     },
-    { // https://github.com/renovatebot/renovate/discussions/27906
+    {
       "matchCategories": ["php"],
+      // https://github.com/renovatebot/renovate/discussions/27906#discussioncomment-15052440
+      // https://www.jvt.me/posts/2025/05/21/renovate-depname-packagename/
       "matchDepNames": ["php"],
       "enabled": false
     },
@@ -59,7 +61,7 @@
       // https://docs.renovatebot.com/configuration-options/#constraintsfiltering
       // https://stackoverflow.com/questions/75507822/how-to-prevent-renovate-from-updating-dependencies-which-are-not-compatible-with
       "matchCategories": ["dotnet"],
-      "matchPackageNames": [
+      "matchDepNames": [
         "dotnet-sdk",
         "Microsoft.EntityFrameworkCore",
         "EFCore.NamingConventions",
