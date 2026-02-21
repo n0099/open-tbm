@@ -52,14 +52,12 @@
     { // https://github.com/renovatebot/renovate/discussions/27906
       "matchCategories": ["php"],
       "matchDepNames": ["php"],
-      "enabled": false,
-      "dependencyDashboardApproval": true
+      "enabled": false
     },
     {
       "matchCategories": ["dotnet"],
       "matchPackageNames": ["dotnet-sdk"],
-      "enabled": false,
-      "dependencyDashboardApproval": true
+      "enabled": false
     }
   ]
 }
