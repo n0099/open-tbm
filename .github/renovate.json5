@@ -54,6 +54,12 @@
       "matchDepNames": ["php"],
       "enabled": false,
       "dependencyDashboardApproval": true
+    },
+    {
+      "matchCategories": ["dotnet"],
+      "matchPackageNames": ["dotnet-sdk"],
+      "enabled": false,
+      "dependencyDashboardApproval": true
     }
   ]
 }
