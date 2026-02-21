@@ -7,6 +7,8 @@ updates:
       - .github/workflows
     schedule:
       interval: daily
+    commit-message:
+      prefix: deps(CI)
     labels:
       - CI
       - dependencies
@@ -15,6 +17,8 @@ updates:
     directory: /c#
     schedule:
       interval: daily
+    commit-message:
+      prefix: deps(c#)
     labels:
       - nuget
       - dependencies
@@ -23,6 +27,8 @@ updates:
     directory: /be
     schedule:
       interval: daily
+    commit-message:
+      prefix: deps(be)
     labels:
       - composer
       - dependencies
@@ -31,6 +37,8 @@ updates:
     directory: /be/public/react-json-view
     schedule:
       interval: daily
+    commit-message:
+      prefix: deps(react-json-view)
     labels:
       - yarn
       - dependencies
@@ -39,6 +47,8 @@ updates:
     directory: /fe
     schedule:
       interval: daily
+    commit-message:
+      prefix: deps(fe)
     labels:
       - yarn
       - dependencies
