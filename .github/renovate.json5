@@ -55,17 +55,12 @@
       "enabled": false
     },
     {
-      "matchCategories": ["dotnet"],
-      "matchPackageNames": ["dotnet-sdk"],
-      "enabled": false
-    },
-    {
       // https://docs.renovatebot.com/language-constraints-and-upgrading/
       // https://docs.renovatebot.com/configuration-options/#constraintsfiltering
       // https://stackoverflow.com/questions/75507822/how-to-prevent-renovate-from-updating-dependencies-which-are-not-compatible-with
       "matchCategories": ["dotnet"],
       "matchPackageNames": [
-        // https://github.com/n0099/open-tbm/pull/110#issuecomment-3517921738
+        "dotnet-sdk",
         "Microsoft.EntityFrameworkCore",
         "EFCore.NamingConventions",
         "Npgsql.EntityFrameworkCore.PostgreSQL",
