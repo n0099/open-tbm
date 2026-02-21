@@ -3,8 +3,8 @@ version: 2
 updates:
   - package-ecosystem: github-actions
     directories:
-      - .github/actions
-      - .github/workflows
+      - /.github/actions
+      - /.github/workflows
     schedule:
       interval: daily
     commit-message:
@@ -25,6 +25,8 @@ updates:
     open-pull-requests-limit: 0
   - package-ecosystem: composer
     directory: /be
+    exclude-paths:
+     - /be/public/react-json-view
     schedule:
       interval: daily
     commit-message:
