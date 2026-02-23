@@ -1,5 +1,5 @@
 <template>
-<div v-viewer.static>
+<div v-viewer>
     <!-- eslint-disable-next-line vue/no-unused-vars -->
     <DefineUGCImage v-slot="{ $slots, src, ...attrs }">
         <NuxtLink v-if="hydrationStore.isHydratingOrSSR" :to="src" target="_blank">
