@@ -567,7 +567,7 @@ export default withNuxt(defineConfigWithVueTs(
         settings: { lintAllEsApis: true },
     },
     { languageOptions: { ecmaVersion: 'latest' } },
-    { ignores: ['node_modules/', '.nuxt/', '.yarn/', '.pnp.*'] },
+    { ignores: ['node_modules/', '.nuxt/', '.output/', '.yarn/', '.pnp.*'] },
     { linterOptions: { reportUnusedDisableDirectives: 'error' } },
     {
         languageOptions: {
