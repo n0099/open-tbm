@@ -28,8 +28,7 @@ const nestedPosts = computed(() => {
                     // https://github.com/microsoft/TypeScript/issues/13778
                     const previousSubReply = subReplies[index - 1] as SubReply | undefined;
 
-                    if (previousSubReply !== undefined
-                        && subReply.authorUid === previousSubReply.authorUid)
+                    if (subReply.authorUid === previousSubReply?.authorUid)
                         groupedSubReplies.at(-1)?.push(subReply); // append to last group
                     else
                         groupedSubReplies.push([subReply]); // new group

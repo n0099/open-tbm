@@ -101,8 +101,7 @@ export const useQueryForm = <
         _.filter(object, i => i !== undefined) as R[];
     const flattenParams = (): ObjUnknown[] => {
         const flattenParam = (param: Partial<UnknownParam>) => {
-            const flatted: ObjUnknown = {};
-            flatted[param.name ?? 'undef'] = param.value;
+            const flatted: ObjUnknown = { [param.name ?? 'undef']: param.value };
 
             return { ...flatted, ...param.subParam };
         };

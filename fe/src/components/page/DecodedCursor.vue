@@ -25,7 +25,7 @@ const decodeCursor = (cursor: Cursor): DecodedCursorPart | ObjEmpty => { // http
             // https://stackoverflow.com/questions/24288111/why-does-32-not-result-in-0-in-javascript/79665336#79665336
             // https://stackoverflow.com/questions/7334832/are-addition-and-bitwise-or-the-same-in-this-case
             // eslint-disable-next-line no-bitwise
-            .reduce((acc, uint8, index) => acc | (BigInt(uint8) << BigInt(index * 8)), BigInt(0));
+            .reduce((acc, uint8, index) => acc | (BigInt(uint8) << BigInt(index * 8)), 0n);
     const parts = cursor.split(',');
     if (parts.length !== 6)
         throw new Error('Cursor should have six parts.');

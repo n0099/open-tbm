@@ -104,7 +104,7 @@ const parseRouteThenFetch = (newRoute: RouteLocationNormalizedLoaded, isTriggere
         queryParam.value = newQueryParam;
         const dehydratedVueQuery = useState('vue-query-nuxt').value as ReturnType<typeof dehydrate> | undefined;
         const postQuery = dehydratedVueQuery?.queries.find(query => _.isEqual(query.queryKey, [apiPostsEndpoint, newQueryParam]));
-        if (isTriggeredByQueryForm || postQuery === undefined || postQuery.state.status !== 'error')
+        if (isTriggeredByQueryForm || postQuery?.state.status !== 'error')
             shouldFetch.value = newQueryParam !== undefined;
     };
     const flattenParams = parseRouteToGetFlattenParams(newRoute);
