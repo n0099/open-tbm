@@ -1,5 +1,5 @@
 using System.Collections.ObjectModel;
-using LinqToDB.Extensions;
+using LinqToDB.Internal.Extensions;
 
 namespace tbm.Crawler;
 

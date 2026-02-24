@@ -22,7 +22,6 @@ global using CommunityToolkit.Diagnostics;
 global using Google.Protobuf;
 global using Google.Protobuf.Collections;
 global using Humanizer;
-global using Humanizer.Localisation;
 global using LinqToDB;
 global using LinqToDB.EntityFrameworkCore;
 global using Microsoft.EntityFrameworkCore;
