@@ -49,6 +49,7 @@ export default defineNuxtConfig({
         },
         vueQueryPluginOptions: { enableDevtoolsV6Plugin: true }
     },
+    fontawesome: { addCss: false },
     site: {
         name: `open-tbm${
             process.env.NUXT_PUBLIC_INSTANCE_NAME === undefined

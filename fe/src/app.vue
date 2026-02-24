@@ -14,6 +14,7 @@ import { VueQueryDevtools } from '@tanstack/vue-query-devtools';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'noty/lib/noty.css';
 import 'noty/lib/themes/mint.css';
+import '@fortawesome/fontawesome-svg-core/styles.css';
 
 if (import.meta.client) {
     await import('bootstrap');
