@@ -11,5 +11,6 @@ class SubReply extends SubReplyEntity implements SortablePost
     use PostWithContent;
 
     #[Ignore] public int $fid;
-    #[Ignore] public bool $isMatchQuery { get => true; set {} }
+    #[Ignore] public bool $isMatchQuery { get => true; set {
+    } }
 }
