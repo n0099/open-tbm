@@ -54,7 +54,7 @@
       // https://github.com/renovatebot/renovate/discussions/27906#discussioncomment-15052440
       // https://www.jvt.me/posts/2025/05/21/renovate-depname-packagename/
       "matchDepNames": ["php"],
-      "allowedVersions": "<={{major}}.{{minor}}"
+      "enabled": false
     },
     {
       // https://docs.renovatebot.com/language-constraints-and-upgrading/
