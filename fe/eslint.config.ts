@@ -141,7 +141,6 @@ const rules = {
                     after: false,
                 },
             }],
-            '@stylistic/no-confusing-arrow': 'warn',
             '@stylistic/rest-spread-spacing': 'warn',
             '@stylistic/template-curly-spacing': 'warn',
             '@stylistic/yield-star-spacing': 'warn',
@@ -159,9 +158,10 @@ const rules = {
             '@stylistic/function-call-spacing': 'warn',
             '@stylistic/indent': 'warn',
             '@stylistic/keyword-spacing': 'warn',
+            '@stylistic/no-confusing-arrow': 'warn',
             '@stylistic/no-extra-parens': ['warn', 'all', {
                 ignoreJSX: 'multi-line',
-                enforceForArrowConditionals: false, // https://github.com/eslint/eslint/issues/6196#issuecomment-333344466
+                ignoredNodes: ['ArrowFunctionExpression[body.type=ConditionalExpression]'], // https://github.com/eslint/eslint/issues/6196#issuecomment-333344466
                 nestedBinaryExpressions: false, // https://github.com/eslint/eslint/issues/8891#issuecomment-313618753
             }],
             '@stylistic/object-curly-spacing': ['warn', 'always'],
@@ -492,7 +492,7 @@ const rules = {
             'vue/no-empty-pattern': 'error',
             'vue/no-extra-parens': ['error', 'all', {
                 ignoreJSX: 'multi-line',
-                enforceForArrowConditionals: false, // https://github.com/eslint/eslint/issues/6196#issuecomment-333344466
+                ignoredNodes: ['ArrowFunctionExpression[body.type=ConditionalExpression]'], // https://github.com/eslint/eslint/issues/6196#issuecomment-333344466
                 nestedBinaryExpressions: false, // https://github.com/eslint/eslint/issues/8891#issuecomment-313618753
             }],
             'vue/no-irregular-whitespace': 'error',
