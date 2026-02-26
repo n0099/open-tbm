@@ -1,15 +1,16 @@
 root = true
 # To learn more about .editorconfig see https://aka.ms/editorconfigdocs
+
 ###############################
 # Core EditorConfig Options   #
 ###############################
 # All files
 [*]
 # Standard properties
-indent_style = space
 end_of_line = lf
 charset = utf-8
 indent_size = 4
+indent_style = space
 insert_final_newline = true
 
 # ReSharper properties
@@ -125,7 +126,7 @@ dotnet_style_qualification_for_field = false:suggestion
 dotnet_style_qualification_for_method = false:suggestion
 dotnet_style_qualification_for_property = false:suggestion
 
-dotnet_diagnostic.CS1591.severity = none
+dotnet_diagnostic.CS1591.severity = none # https://stackoverflow.com/questions/74615149/suppressmessage-compiler-warning-cs1591-for-generated-code-xsd-exe
 
 # ReSharper inspection severities
 # https://youtrack.jetbrains.com/issue/RSRP-463998
@@ -193,7 +194,7 @@ dotnet_naming_rule.constant_fields_should_be_pascal_case.style = upper_camel_cas
 dotnet_naming_symbols.constant_fields.applicable_kinds = field
 dotnet_naming_symbols.constant_fields.applicable_accessibilities = *
 dotnet_naming_symbols.constant_fields.required_modifiers = const
-end_of_line = lf
+
 ###############################
 # C# Coding Conventions       #
 ###############################
@@ -252,6 +253,7 @@ csharp_style_namespace_declarations = block_scoped:silent
 csharp_style_prefer_method_group_conversion = true:silent
 csharp_style_prefer_top_level_statements = true:silent
 csharp_style_prefer_primary_constructors = true:suggestion
+
 ###############################
 # VB Coding Conventions       #
 ###############################
@@ -260,7 +262,5 @@ csharp_style_prefer_primary_constructors = true:suggestion
 visual_basic_preferred_modifier_order = Partial,Default,Private,Protected,Public,Friend,NotOverridable,Overridable,MustOverride,Overloads,Overrides,MustInherit,NotInheritable,Static,Shared,Shadows,ReadOnly,WriteOnly,Dim,Const,WithEvents,Widening,Narrowing,Custom,Async:suggestion
 
 [*.{appxmanifest,asax,ascx,aspx,axaml,axml,build,config,cs,cshtml,csproj,css,dbml,discomap,dtd,htm,html,js,json,jsproj,jsx,lsproj,master,njsproj,nuspec,paml,proj,props,proto,razor,resjson,resw,resx,skin,StyleCop,targets,tasks,ts,tsx,vb,vbproj,xaml,xamlx,xml,xoml,xsd}]
-indent_style = space
-indent_size = 4
 tab_width = 4
 dotnet_style_operator_placement_when_wrapping = beginning_of_line
