@@ -18,7 +18,7 @@ public static partial class ExtensionMethods
     public static ushort RoundToUshort(this double number) => (ushort)Math.Round(number);
 
     /// <see>https://stackoverflow.com/questions/13158121/how-to-add-a-range-of-items-to-an-ilist/33104162#33104162</see>
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1618:Generic type parameters should be documented")]
+    [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1618:Generic type parameters should be documented")]
     public static void AddRange<T>(this IList<T> list, IEnumerable<T> items)
     {
         if (list is List<T> asList) asList.AddRange(items);
@@ -26,7 +26,7 @@ public static partial class ExtensionMethods
     }
 
     /// <see>https://stackoverflow.com/questions/1474863/addrange-to-a-collection/26360010#26360010</see>
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1618:Generic type parameters should be documented")]
+    [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1618:Generic type parameters should be documented")]
     public static void AddRange<T>(this ICollection<T> list, IEnumerable<T> items)
     {
         if (list is List<T> asList) asList.AddRange(items);
