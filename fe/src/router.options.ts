@@ -1,5 +1,5 @@
 import type { RouterConfig } from 'nuxt/schema';
-import type { RouteLocation, RouteRecordRaw, RouteRecordRedirect, RouteRecordSingleViewWithChildren, RouterScrollBehavior } from 'vue-router';
+import type { RouteLocation, RouteLocationNormalized, RouteLocationNormalizedLoaded, RouteRecordRaw, RouteRecordRedirect, RouteRecordSingleViewWithChildren, RouterScrollBehavior } from 'vue-router';
 import _ from 'lodash';
 
 const withCursorRoute = (component: RouteRecordSingleViewWithChildren['component']) =>
@@ -55,7 +55,7 @@ export default {
         const user = _routes.find(p => p.path === '/users');
         if (user === undefined)
             throw new Error('pages/users.vue doesn\'t exists');
-        const postRootCursor = withCursorRoute(post.component)('', 'posts').children;
+        const postRootCursor = withCursorRoute(post.component as RouteRecordSingleViewWithChildren['component'])('', 'posts').children;
 
         return [
             ..._routes,
@@ -72,7 +72,7 @@ export default {
         const routeScrollBehavior = useRouteScrollBehaviorStore();
         if (routeScrollBehavior.get !== undefined) {
             const ret: ReturnType<RouterScrollBehavior> | undefined =
-                routeScrollBehavior.get(to, from, savedPosition);
+                routeScrollBehavior.get(to as RouteLocationNormalized, from as RouteLocationNormalizedLoaded, savedPosition);
             if (ret !== undefined)
                 return ret;
         }
