@@ -33,7 +33,7 @@
             && highlightPostStore.set(parentPost, parentPostIDKey)"
         @mouseleave="highlightPostStore.unset()"
         :current="currentDateTime" :relativeTo="parentDateTime"
-        :relativeToText="`相对于所属${postTypeText[postTypeText.indexOf(postType) - 1]}${timestampType}`"
+        :relativeToText="`相对于所属${postTypeTexts[postTypeTexts.indexOf(postType) - 1]}${timestampType}`"
         :postType="postType" :timestampType="timestampType" v-bind="$attrs">
         <FontAwesome :icon="faAnglesUp" class="align-bottom" />
     </PostBadgeTimeView>

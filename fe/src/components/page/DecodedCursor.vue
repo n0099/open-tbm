@@ -33,8 +33,8 @@ const decodeCursor = (cursor: Cursor): DecodedCursorPart | ObjEmpty => { // http
     return Object.assign({}, ...parts.map((part, index): DecodedCursorPart => ({
         [part]: {
             description: index % 2 === 0
-                ? postID[index / 2] ?? throwError()
-                : `${postTypeText[(index - 1) / 2] ?? throwError()}的排序字段值`,
+                ? postIDs[index / 2] ?? throwError()
+                : `${postTypeTexts[(index - 1) / 2] ?? throwError()}的排序字段值`,
             decoded: decodePart(part)
         }
     })));
