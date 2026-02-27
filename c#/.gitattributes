@@ -1,3 +1,5 @@
+*/packages.lock.json binary
+
 # https://github.com/gitattributes/gitattributes/blob/master/CSharp.gitattributes
 # Auto detect text files and perform LF normalization
 *          text=auto
