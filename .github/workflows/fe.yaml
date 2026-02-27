@@ -2,12 +2,18 @@
 name: fe
 on:
   push:
-    paths: [fe/**]
+    paths:
+      - fe/**
+      - .github/workflows/fe*.yaml
+      - .github/actions/fe/action.yaml
 jobs:
   runs-on:
     strategy:
       matrix:
-        runs-on: [ubuntu-latest, windows-latest, macos-latest]
+        runs-on:
+          - ubuntu-latest
+          - windows-latest
+          - macos-latest
       fail-fast: false
     uses: ./.github/workflows/fe_base.yaml
     with:

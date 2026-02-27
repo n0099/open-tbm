@@ -3,8 +3,8 @@
     <div class="container">
         <PlaceholderError
             :error="new ApiResponseError(
-                error.statusCode,
-                _.isEmpty(error.statusMessage) || error.statusMessage === undefined ? error.message : error.statusMessage
+                error.status,
+                _.isEmpty(error.statusText) || error.statusText === undefined ? error.message : error.statusText
             )" />
         <!-- eslint-disable-next-line vue/no-v-html -->
         <pre v-if="'stack' in error" v-html="error.stack" />

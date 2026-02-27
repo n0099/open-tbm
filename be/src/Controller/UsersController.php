@@ -49,7 +49,7 @@ class UsersController extends AbstractController
                         : $queryBuilder->andWhere("t.$paramName = :$paramName")
                             ->setParameter($paramName, $paramValue);
                 },
-                $this->userRepository->createQueryBuilder('t')
+                $this->userRepository->createQueryBuilder('t'),
             );
         $queryBuilder = $queryBuilder->orderBy('t.uid', 'DESC');
 
@@ -57,7 +57,7 @@ class UsersController extends AbstractController
             $queryBuilder->getEntityManager(),
             $queryBuilder,
             new Parser($queryBuilder->getQuery())->parse()->getResultSetMapping(),
-            $this->perPageItems
+            $this->perPageItems,
         );
         $resultCount = $result->count();
         Utils::abortAPIIf(40402, $resultCount === 0);

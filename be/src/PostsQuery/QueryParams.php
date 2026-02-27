@@ -85,7 +85,7 @@ class QueryParams
             $value = $this->getUniqueParamValue($name) ?? $default['value'];
             $subParams = [
                 ...$default['subParam'] ?? [],
-                ...Arr::first($this->pick($name))?->subParams ?? []
+                ...Arr::first($this->pick($name))?->subParams ?? [],
             ];
             $paramFilledWithDefaults = new QueryParam([$name => $value, ...$subParams]);
 
@@ -130,8 +130,8 @@ class QueryParams
     public function addDefaultValueOnParams(): void
     {
         $subParamsDefaultValue = collect(self::PARAM_NAME_KEY_BY_TYPE)
-            ->mapWithKeys(static fn(array $names, string $type) =>
-                array_fill_keys($names, self::PARAM_DEFAULT_VALUE_KEY_BY_TYPE[$type]));
+            ->mapWithKeys(static fn(array $names, string $type)
+                => array_fill_keys($names, self::PARAM_DEFAULT_VALUE_KEY_BY_TYPE[$type]));
         foreach ($this->params as $param) { // set sub params with default value
             foreach ($subParamsDefaultValue->get($param->name, []) as $name => $value) {
                 if ($param->getSub($name) === null) {

@@ -10,7 +10,6 @@ import pluginStylistic from '@stylistic/eslint-plugin';
 import pluginTanstackQuery from '@tanstack/eslint-plugin-query';
 import * as typescriptESLintParser from '@typescript-eslint/parser';
 import { createTypeScriptImportResolver } from 'eslint-import-resolver-typescript';
-// eslint-disable-next-line import-x/no-unresolved
 import pluginCompat from 'eslint-plugin-compat';
 import { flatConfigs as pluginImportX } from 'eslint-plugin-import-x';
 import pluginPinia from 'eslint-plugin-pinia';
@@ -141,7 +140,6 @@ const rules = {
                     after: false,
                 },
             }],
-            '@stylistic/no-confusing-arrow': 'warn',
             '@stylistic/rest-spread-spacing': 'warn',
             '@stylistic/template-curly-spacing': 'warn',
             '@stylistic/yield-star-spacing': 'warn',
@@ -159,9 +157,10 @@ const rules = {
             '@stylistic/function-call-spacing': 'warn',
             '@stylistic/indent': 'warn',
             '@stylistic/keyword-spacing': 'warn',
+            '@stylistic/no-confusing-arrow': 'warn',
             '@stylistic/no-extra-parens': ['warn', 'all', {
                 ignoreJSX: 'multi-line',
-                enforceForArrowConditionals: false, // https://github.com/eslint/eslint/issues/6196#issuecomment-333344466
+                ignoredNodes: ['ArrowFunctionExpression[body.type=ConditionalExpression]'], // https://github.com/eslint/eslint/issues/6196#issuecomment-333344466
                 nestedBinaryExpressions: false, // https://github.com/eslint/eslint/issues/8891#issuecomment-313618753
             }],
             '@stylistic/object-curly-spacing': ['warn', 'always'],
@@ -492,7 +491,7 @@ const rules = {
             'vue/no-empty-pattern': 'error',
             'vue/no-extra-parens': ['error', 'all', {
                 ignoreJSX: 'multi-line',
-                enforceForArrowConditionals: false, // https://github.com/eslint/eslint/issues/6196#issuecomment-333344466
+                ignoredNodes: ['ArrowFunctionExpression[body.type=ConditionalExpression]'], // https://github.com/eslint/eslint/issues/6196#issuecomment-333344466
                 nestedBinaryExpressions: false, // https://github.com/eslint/eslint/issues/8891#issuecomment-313618753
             }],
             'vue/no-irregular-whitespace': 'error',
@@ -567,7 +566,7 @@ export default withNuxt(defineConfigWithVueTs(
         settings: { lintAllEsApis: true },
     },
     { languageOptions: { ecmaVersion: 'latest' } },
-    { ignores: ['node_modules/', '.nuxt/', '.yarn/', '.pnp.*'] },
+    { ignores: ['node_modules/', '.nuxt/', '.output/', '.yarn/', '.pnp.*'] },
     { linterOptions: { reportUnusedDisableDirectives: 'error' } },
     {
         languageOptions: {

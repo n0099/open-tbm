@@ -33,10 +33,10 @@ class CursorCodecTest extends TestCase
         return [[
             'AQ,0,Ag,-:____fw,Aw,S:test',
             collect([
-                'threads' => collect([new Thread(0, 1, 'postedAt', 0)]),
-                'replies' => collect([new Reply(0, 1, 2, 'postedAt', -2147483649)]),
-                'subReplies' => collect([new SubReply(0, 1, 2, 3, 'postedAt', 'test')]),
-            ]),
+                'threads' => [new Thread(0, 1, 0)],
+                'replies' => [new Reply(0, 1, 2, -2147483649)],
+                'subReplies' => [new SubReply(0, 1, 2, 3, 'test')],
+            ])->map(collect(...)),
         ]];
     }
 
@@ -54,7 +54,7 @@ class CursorCodecTest extends TestCase
                 'thread' => ['tid' => 1, 'postedAt' => 0],
                 'reply' => ['pid' => 2, 'postedAt' => -2147483649],
                 'subReply' => ['spid' => 3, 'postedAt' => 'test'],
-            ]),
+            ])->map(collect(...)),
         ], [
             ',,,,0,0',
             collect(),

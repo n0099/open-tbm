@@ -4,12 +4,12 @@
         <label class="col-1 col-form-label text-center">帖子类型</label>
         <div class="col">
             <div class="input-group">
-                <div v-for="(postType, index) in postType" :key="postType" class="form-check form-check-inline">
+                <div v-for="(postType, index) in postTypes" :key="postType" class="form-check form-check-inline">
                     <input
                         v-model="uniqueParams.postTypes.value" :id="`paramPostTypes${_.upperFirst(postType)}`"
                         type="checkbox" :value="postType" class="form-check-input" />
                     <label class="form-check-label" :for="`paramPostTypes${_.upperFirst(postType)}`">
-                        {{ postTypeText[index] }}
+                        {{ postTypeTexts[index] }}
                     </label>
                 </div>
             </div>
@@ -28,8 +28,8 @@
                     </option>
                     <option value="postedAt">发帖时间</option>
                     <optgroup label="帖子ID">
-                        <option v-for="(postID, index) in postID" :key="postID" :value="postID">
-                            {{ postTypeText[index] }}{{ postID }}
+                        <option v-for="(postID, index) in postIDs" :key="postID" :value="postID">
+                            {{ postTypeTexts[index] }}{{ postID }}
                         </option>
                     </optgroup>
                 </select>

@@ -24,15 +24,17 @@ class ShowReactJsonViewTest extends KernelTestCase
 
     public function testShowing(): void
     {
+        $baseUrl = '/base/url';
         $event = new ResponseEvent(
             self::$kernel,
-            new Request(server: ['HTTP_ACCEPT' => 'text/html']),
+            new Request(server: ['HTTP_ACCEPT' => 'text/html']
+                + array_fill_keys(['SCRIPT_FILENAME', 'SCRIPT_NAME', 'REQUEST_URI'], $baseUrl)),
             HttpKernelInterface::MAIN_REQUEST,
             JsonResponse::fromJsonString(\Safe\json_encode(['test' => 'test'])),
         );
         ($this->sut)($event);
-        self::assertEquals(<<<'HTML'
-        <html>
+        self::assertEquals(<<<HTML
+        <html lang="en">
             <head>
                 <title>15 bytes of json response for route /</title>
             </head>
@@ -40,9 +42,7 @@ class ShowReactJsonViewTest extends KernelTestCase
                 <h4>15 bytes</h4>
                 <div id="root"></div>
                 <script type="module">
-                    import ReactJsonView from '/assets/react-json-view.js';
-                    import { createElement } from '/assets/react.js';
-                    import { createRoot } from '/assets/react-dom.js';
+                    import { createElement, createRoot, ReactJsonView } from '$baseUrl/react-json-view/dist/index.js';
 
                     const root = createRoot(document.getElementById('root'));
                     root.render(createElement(ReactJsonView.default, { src: {"test":"test"}, quotesOnKeys: false }));

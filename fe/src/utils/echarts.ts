@@ -36,18 +36,18 @@ export const timeGranularityAxisType: Record<TimeGranularity, 'category' | 'time
 };
 export const timeGranularityAxisPointerLabelFormatter: (dateTimeTransformer: (dateTime: DateTime) => DateTime) =>
 Record<TimeGranularity, (params: { value: Date | number | string }) => string> =
-(dateTimeTransformer = i => i) => ({
-    minute: ({ value }) => (_.isNumber(value)
-        ? dateTimeTransformer(DateTime.fromMillis(value)).toLocaleString(DateTime.DATETIME_SHORT)
-        : ''),
-    hour: ({ value }) => (_.isNumber(value)
-        ? dateTimeTransformer(DateTime.fromMillis(value))
-            .toLocaleString({ year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric' })
-        : ''),
-    day: ({ value }) => (_.isNumber(value)
-        ? dateTimeTransformer(DateTime.fromMillis(value)).toLocaleString(DateTime.DATE_MED_WITH_WEEKDAY)
-        : ''),
-    week: ({ value }) => (_.isString(value) ? value : ''),
-    month: ({ value }) => (_.isString(value) ? value : ''),
-    year: ({ value }) => (_.isString(value) ? value : '')
-});
+    dateTimeTransformer => ({
+        minute: ({ value }) => (_.isNumber(value)
+            ? dateTimeTransformer(DateTime.fromMillis(value)).toLocaleString(DateTime.DATETIME_SHORT)
+            : ''),
+        hour: ({ value }) => (_.isNumber(value)
+            ? dateTimeTransformer(DateTime.fromMillis(value))
+                .toLocaleString({ year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric' })
+            : ''),
+        day: ({ value }) => (_.isNumber(value)
+            ? dateTimeTransformer(DateTime.fromMillis(value)).toLocaleString(DateTime.DATE_MED_WITH_WEEKDAY)
+            : ''),
+        week: ({ value }) => (_.isString(value) ? value : ''),
+        month: ({ value }) => (_.isString(value) ? value : ''),
+        year: ({ value }) => (_.isString(value) ? value : '')
+    });

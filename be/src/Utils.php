@@ -52,19 +52,15 @@ class Utils
     public const array ERROR_STATUS_CODE_INFO = [
         // httpStatusCode => [ errorCode => errorInfo ]
         400 => [
-            // 40000 => App\Exceptions\Handler::convertValidationExceptionToResponse()
+            // 40000 => App\EventListener\ExceptionToJsonResponse::__invoke()
             40003 => '部分查询参数与查询帖子类型要求不匹配',
             40004 => '排序方式与查询帖子类型要求不匹配',
             40005 => '提供了多个唯一查询参数',
-            40006 => '查询计划预估成本过高'
-        ],
-        401 => [
-            40101 => 'Google reCAPTCHA 验证未通过 请刷新页面/更换设备/网络环境后重试',
+            40006 => '查询计划预估成本过高',
         ],
         404 => [
             40401 => '帖子查询结果为空',
             40402 => '用户查询结果为空',
-            40403 => '吧帖量统计查询结果为空',
             40406 => '指定查询的贴吧不存在',
         ],
     ];
@@ -93,7 +89,7 @@ class Utils
         if (!$toClass->isSubclassOf($fromClass)) {
             throw new \InvalidArgumentException($to . ' should be a subclass of' . $from::class);
         }
-        $toInstance = new $to;
+        $toInstance = new $to();
         foreach ($fromClass->getProperties() as $property) {
             $toClass->getProperty($property->name)->setRawValue($toInstance, $property->getRawValue($from));
         }

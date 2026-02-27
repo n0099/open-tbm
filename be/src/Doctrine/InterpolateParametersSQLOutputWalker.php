@@ -26,13 +26,13 @@ class InterpolateParametersSQLOutputWalker extends SqlOutputWalker
         /** @see \Doctrine\ORM\Query\ParameterTypeInferer::inferType() */
         $typeName = $parameter->getType();
         $platform = $this->getConnection()->getDatabasePlatform();
-        $processParameterType = static fn(ParameterType $type) => static fn($value): string =>
-            (match ($type) { /** @see Type::getBindingType() */
+        $processParameterType = static fn(ParameterType $type) => static fn($value): string
+            => (match ($type) { /** @see Type::getBindingType() */
                 ParameterType::NULL => 'NULL',
                 ParameterType::INTEGER => $value,
                 ParameterType::BOOLEAN => new BooleanType()->convertToDatabaseValue($value, $platform),
                 ParameterType::STRING, ParameterType::ASCII => $platform->quoteStringLiteral($value),
-                default => throw new ValueNotConvertible($value, $type->name)
+                default => throw new ValueNotConvertible($value, $type->name),
             });
 
         if (is_string($typeName) && Type::hasType($typeName)) {

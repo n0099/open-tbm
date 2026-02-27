@@ -2,7 +2,7 @@
 
 return new PhpCsFixer\Config()
     ->setRules([
-        '@PER-CS2.0' => true,
+        '@PER-CS' => true,
     ])
     ->setFinder(new PhpCsFixer\Finder()
         ->in(__DIR__)

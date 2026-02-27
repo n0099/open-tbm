@@ -3,22 +3,20 @@ description: be/init
 runs:
   using: composite
   steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
       with:
         submodules: true
 
     - uses: shivammathur/setup-php@v2
       with:
-        php-version: '8.3'
+        php-version: '8.4'
         tools: cs2pr
         coverage: none # https://github.com/shivammathur/setup-php/blob/2.31.1/README.md#disable-coverage
         # https://github.com/shivammathur/setup-php/blob/2.31.1/README.md#jit-configuration
         ini-values: >
           opcache.enable_cli=1, opcache.memory_consumption=256,
           opcache.jit=tracing, opcache.jit_buffer_size=64M
-        # https://github.com/shivammathur/setup-php/wiki/Php-extensions-loaded-on-windows-2022/aee619eb6d77e86b17a76d458316b41e58a3b677
-        # league/flysystem-local@3.28.0 requires ext-fileinfo but it's not enabled by default on windows
-        extensions: ${{ runner.os == 'Windows' && 'intl, fileinfo' || '' }}
+        extensions: ${{ runner.os == 'Windows' && 'intl' || '' }} # https://github.com/shivammathur/setup-php/wiki/Php-extensions-loaded-on-windows-2025/298f253ff19de7820dddf397ba52c7fa82a7a3eb
       env:
         update: 'true' # https://github.com/shivammathur/setup-php/blob/2.31.1/README.md#force-update-setup
     # https://github.com/shivammathur/setup-php/blob/2.31.1/README.md#problem-matchers
@@ -33,19 +31,27 @@ runs:
       working-directory: be
       shell: bash
     - id: cache-restore
-      uses: actions/cache/restore@v4
+      uses: actions/cache/restore@v5
       with:
         path: ${{ steps.get-composer-cache-dir.outputs.path }}
         key: ${{ runner.os }}-composer-${{ hashFiles('be/composer.lock') }}
         restore-keys: ${{ runner.os }}-composer-
 
-    - run: composer install --no-interaction --no-progress --classmap-authoritative
+    - if: runner.os == 'Windows' # https://github.com/actions/runner-images/issues/12310
+      run: npm install --global --force corepack
+      working-directory: be
+      shell: bash
+    - run: corepack enable # https://github.com/n0099/open-tbm/blob/ba8bb8de2d6d58e87b8e765ea142e8fe00ac9619/be/composer.json#L117
+      working-directory: be
+      shell: bash
+
+    - run: composer install --classmap-authoritative
       working-directory: be
       shell: bash
 
     # https://github.com/actions/runner/issues/1478
     # https://github.com/actions/setup-node/issues/410#issuecomment-1939482965
-    - uses: actions/cache/save@v4
+    - uses: actions/cache/save@v5
       if: ${{ steps.cache-restore.outputs.cache-hit != 'true' }}
       with:
         path: ${{ steps.get-composer-cache-dir.outputs.path }}

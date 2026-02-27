@@ -1,4 +1,0 @@
-{
-    "preset": "per",
-    "exclude": ["var"]
-}

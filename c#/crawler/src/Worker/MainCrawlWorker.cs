@@ -18,10 +18,10 @@ public class MainCrawlWorker(
         ([EnumeratorCancellation] CancellationToken stoppingToken = default)
     {
         await using var dbFactory = dbContextFactory();
-        var forums = (
+        var forums = await (
             from f in dbFactory.Value().Forums.AsNoTracking()
             where f.IsCrawling
-            select new FidAndName(f.Fid, f.Name)).ToList();
+            select new FidAndName(f.Fid, f.Name)).ToListAsync(cancellationToken: stoppingToken);
         var yieldInterval = SyncCrawlIntervalWithConfig() / (float)forums.Count;
         foreach (var fidAndName in forums)
         {

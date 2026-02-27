@@ -45,7 +45,8 @@ class PostsController extends AbstractController
             'cursor' => new Assert\Optional(new Assert\Regex(
                 // https://stackoverflow.com/questions/475074/regex-to-parse-or-validate-base64-data
                 // (,|$)|,){5,6} means allow at most 5~6 parts of base64 segment or empty string to exist
-                /** @lang RegExp */'/^(([A-Za-z0-9-_]{4})*([A-Za-z0-9-_]{2,3})(,|$)|,){5,6}$/',
+                /* @lang RegExp */
+                '/^(([A-Za-z0-9-_]{4})*([A-Za-z0-9-_]{2,3})(,|$)|,){5,6}$/',
             )),
             'query' => new Assert\Required(new Assert\Json()),
         ]));
@@ -73,12 +74,12 @@ class PostsController extends AbstractController
         $posts = collect([
             $this->query->postsTree->threads,
             $this->query->postsTree->replies,
-            $this->query->postsTree->subReplies
+            $this->query->postsTree->subReplies,
         ])->flatten();
         $latestRepliersUidKeyById = collect($latestRepliers)
             ->mapWithKeys(fn(array|LatestReplier $latestReplier) => [
-                is_array($latestReplier) ? $latestReplier['id'] : $latestReplier->id =>
-                    is_array($latestReplier) ? $latestReplier['uid'] : $latestReplier->uid
+                is_array($latestReplier) ? $latestReplier['id'] : $latestReplier->id
+                    => is_array($latestReplier) ? $latestReplier['uid'] : $latestReplier->uid,
             ])
             ->filter(static fn(?int $uid) => $uid !== null);
         $uids = $posts
@@ -102,23 +103,24 @@ class PostsController extends AbstractController
         [$intersectedFidInUsersId, $uniqueFidInAuthorsUid] = $authorsUidKeyByFid->keys()
             ->partition(fn(int $fid) => $latestRepliersIdKeyByFid->keys()->contains($fid));
         $usersIdKeyByFid = $intersectedFidInUsersId
-            ->mapWithKeys(fn(int $fid) => [$fid =>
-                $latestRepliersIdKeyByFid[$fid]
+            ->mapWithKeys(fn(int $fid) => [$fid
+                => $latestRepliersIdKeyByFid[$fid]
                     ->map(fn(int $latestReplierId) => $latestRepliersUidKeyById->get($latestReplierId))
                     ->filter(fn(?int $latestReplierUid) => $latestReplierUid !== null)
                     ->merge($authorsUidKeyByFid[$fid])
                     ->unique()
                     ->values()])
             ->replace($authorsUidKeyByFid->only($uniqueFidInAuthorsUid));
-        $forumModerators = collect($this->forumModeratorRepository->getLatestOfUsers($usersIdKeyByFid
+        $forumModerators = collect($this->forumModeratorRepository->getLatestOfUsers(
+            $usersIdKeyByFid
             ->map(fn(Collection $usersId) => $usersId
                 ->map(fn(int $uid) => $users->get($uid)?->portrait)
-                ->filter(fn(?string $portrait) => $portrait !== null))
+                ->filter(fn(?string $portrait) => $portrait !== null)),
         ))->keyBy(fn(ForumModerator $forumModerator) => $forumModerator->portrait);
 
         $users = $users->each(fn(User $user) => $user->forumSpecific = [
             'authorExpGrade' => $authorExpGrades->get($user->uid),
-            'forumModerator' => $forumModerators->get($user->portrait)
+            'forumModerator' => $forumModerators->get($user->portrait),
         ]);
         $this->stopwatch->stop('queryUserRelated');
 
@@ -128,8 +130,9 @@ class PostsController extends AbstractController
                 'nextCursor' => $this->query->queryResult->nextCursor,
                 ...$matchQueryPostCounts,
             ],
-            'forums' => collect($this->forumRepository
-                ->getForums($posts->map(fn(Post $post) => $post->fid)->unique())
+            'forums' => collect(
+                $this->forumRepository
+                ->getForums($posts->map(fn(Post $post) => $post->fid)->unique()),
             )->mapWithKeys(fn(array $forum) => [$forum['fid'] => $forum['name']]),
             'threads' => $this->query->postsTree->reOrderNestedPosts(
                 $this->query->postsTree->nestPostsWithParent(),

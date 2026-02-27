@@ -41,7 +41,7 @@
     },
     {
       "matchFileNames": ["be/public/react-json-view/**"],
-      "groupName": "be/public/react-json-view",
+      "groupName": "react-json-view",
       "commitMessagePrefix": "deps(react-json-view): "
     },
     {
@@ -51,9 +51,27 @@
     },
     {
       "matchCategories": ["php"],
-      "matchPackageNames": ["php"],
-      "enabled": false,
-      "dependencyDashboardApproval": true
+      // https://github.com/renovatebot/renovate/discussions/27906#discussioncomment-15052440
+      // https://www.jvt.me/posts/2025/05/21/renovate-depname-packagename/
+      "matchDepNames": ["php"],
+      "enabled": false
+    },
+    {
+      // https://docs.renovatebot.com/language-constraints-and-upgrading/
+      // https://docs.renovatebot.com/configuration-options/#constraintsfiltering
+      // https://stackoverflow.com/questions/75507822/how-to-prevent-renovate-from-updating-dependencies-which-are-not-compatible-with
+      "matchCategories": ["dotnet"],
+      "matchDepNames": [
+        "dotnet-sdk",
+        "Microsoft.EntityFrameworkCore",
+        "EFCore.NamingConventions",
+        "Npgsql.EntityFrameworkCore.PostgreSQL",
+        "Npgsql.EntityFrameworkCore.PostgreSQL.NetTopologySuite",
+        "LinqKit.Microsoft.EntityFrameworkCore",
+        "linq2db.EntityFrameworkCore"
+      ],
+      "separateMajorMinor": true,
+      "separateMultipleMajor": true
     }
   ]
 }

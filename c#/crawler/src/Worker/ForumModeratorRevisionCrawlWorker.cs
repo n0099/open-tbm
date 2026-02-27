@@ -77,7 +77,7 @@ public class ForumModeratorRevisionCrawlWorker
                 // is same with div.bawu_single_type in the response HTML
                 ModeratorTypes = string.Join(',', g.Select(t => t.Type))
             }).ToList();
-        var existingLatestRevisions = (
+        var existingLatestRevisions = await (
                 from rev in db.ForumModeratorRevisions.AsNoTracking()
                 where rev.Fid == fid
                 select new
@@ -86,7 +86,7 @@ public class ForumModeratorRevisionCrawlWorker
                     rev.ModeratorTypes,
                     Rank = Sql.Ext.Rank().Over().PartitionBy(rev.Portrait).OrderByDesc(rev.DiscoveredAt).ToValue()
                 }).Where(e => e.Rank == 1)
-            .ToLinqToDB().ToList();
+            .ToLinqToDB().ToListAsync(cancellationToken: stoppingToken);
 
         await db.ForumModeratorRevisions.AddRangeAsync(revisions.ExceptBy(
             existingLatestRevisions.Select(e => (e.Portrait, e.ModeratorTypes)),

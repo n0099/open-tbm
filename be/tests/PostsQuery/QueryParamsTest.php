@@ -69,8 +69,8 @@ class QueryParamsTest extends TestCase
     public static function provideAddDefaultValueOnParams(): array
     {
         return collect(QueryParams::PARAM_NAME_KEY_BY_TYPE)
-            ->flatMap(static fn(array $names, string $type) =>
-                array_map(static fn(string $name) => [$type, $name], $names))
+            ->flatMap(static fn(array $names, string $type)
+                => array_map(static fn(string $name) => [$type, $name], $names))
             ->mapWithKeys(static fn(array $typeAndName) => [$typeAndName[1] => $typeAndName])
             ->map(static function (array $typeAndName) {
                 /** @var 'numeric' | 'text' $name */

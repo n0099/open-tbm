@@ -59,8 +59,8 @@ readonly class PostsTree
             ->unique();
         $this->threads = collect($postModels['thread']->getPosts($parentThreadsID->concat($tids)))
             ->map(fn(\App\Entity\Post\Thread $entity) => Utils::copyClass($entity, Thread::class))
-            ->each(static fn(Thread $thread) => // prevent early exit of `Collection::each()` due to the assignment return false
-                ($thread->isMatchQuery = $tids->contains($thread->tid)) || true);
+            ->each(static fn(Thread $thread) // prevent early exit of `Collection::each()` due to the assignment return false
+                => ($thread->isMatchQuery = $tids->contains($thread->tid)) || true);
         $this->stopwatch->stop('fillWithThreadsFields');
 
         $this->stopwatch->start('fillWithRepliesFields');
@@ -69,8 +69,8 @@ readonly class PostsTree
         $allRepliesId = $parentRepliesID->concat($pids);
         $this->replies = collect($postModels['reply']->getPosts($allRepliesId))
             ->map(fn(\App\Entity\Post\Reply $entity) => Utils::copyClass($entity, Reply::class))
-            ->each(static fn(Reply $reply) => // prevent early exit of `Collection::each()` due to the assignment return false
-                ($reply->isMatchQuery = $pids->contains($reply->pid)) || true);
+            ->each(static fn(Reply $reply) // prevent early exit of `Collection::each()` due to the assignment return false
+                => ($reply->isMatchQuery = $pids->contains($reply->pid)) || true);
         $this->stopwatch->stop('fillWithRepliesFields');
 
         $this->stopwatch->start('fillWithSubRepliesFields');
@@ -82,13 +82,13 @@ readonly class PostsTree
         // not using one-to-one association due to relying on PostRepository->getTableNameSuffix()
         $replyContents = collect($this->replyContentRepository->getPostsContent($allRepliesId))
             ->mapWithKeys(fn(ReplyContent $content) => [$content->pid => $content->content]);
-        $this->replies->each(fn(Reply $reply) =>
-            $reply->content = $replyContents->get($reply->pid));
+        $this->replies->each(fn(Reply $reply)
+            => $reply->content = $replyContents->get($reply->pid));
 
         $subReplyContents = collect($this->subReplyContentRepository->getPostsContent($spids))
             ->mapWithKeys(fn(SubReplyContent $content) => [$content->spid => $content->content]);
-        $this->subReplies->each(fn(SubReply $subReply) =>
-            $subReply->content = $subReplyContents->get($subReply->spid));
+        $this->subReplies->each(fn(SubReply $subReply)
+            => $subReply->content = $subReplyContents->get($subReply->spid));
         $this->stopwatch->stop('parsePostContentProtoBufBytes');
 
         return [
@@ -108,11 +108,12 @@ readonly class PostsTree
     {
         $replies = $this->replies->groupBy(fn(Reply $reply) => $reply->tid);
         $subReplies = $this->subReplies->groupBy(fn(SubReply $subReply) => $subReply->pid);
-        return $this->threads->each(fn(Thread $thread) =>
-            $thread->replies = $replies
+        return $this->threads->each(
+            fn(Thread $thread)
+            => $thread->replies = $replies
                 ->get($thread->tid, collect())
-                ->each(fn(Reply $reply) =>
-                    $reply->subReplies = $subReplies->get($reply->pid, collect()))
+                ->each(fn(Reply $reply)
+                    => $reply->subReplies = $subReplies->get($reply->pid, collect())),
         );
     }
 
@@ -137,7 +138,7 @@ readonly class PostsTree
                             descending: $isOrderByDesc,
                         )->values(); // reset keys
                         return $this->setSortingKeyForSortablePost($reply, $reply->subReplies, $orderByField, $isOrderByDesc);
-                    }
+                    },
                 ));
                 $this->setSortingKeyForSortablePost($thread, $thread->replies, $orderByField, $isOrderByDesc);
                 return $thread;

@@ -40,30 +40,30 @@ class PostsTreeTest extends KernelTestCase
                         $value->postedAt = 2;
                         $value->isMatchQuery = true;
                         $value->subReplies = collect([
-                            tap(new SubReply(), static fn(SubReply $value) =>
-                                $value->postedAt = 30),
+                            tap(new SubReply(), static fn(SubReply $value)
+                                => $value->postedAt = 30),
                         ]);
                     }),
                     tap(new Reply(), static function (Reply $value) {
                         $value->postedAt = 20;
                         $value->isMatchQuery = false;
                         $value->subReplies = collect([
-                            tap(new SubReply(), static fn(SubReply $value) =>
-                                $value->postedAt = 3),
+                            tap(new SubReply(), static fn(SubReply $value)
+                                => $value->postedAt = 3),
                         ]);
                     }),
                     tap(new Reply(), static function (Reply $value) {
                         $value->postedAt = 4;
                         $value->isMatchQuery = false;
                         $value->subReplies = collect([
-                            tap(new SubReply(), static fn(SubReply $value) =>
-                                $value->postedAt = 5),
+                            tap(new SubReply(), static fn(SubReply $value)
+                                => $value->postedAt = 5),
                             tap(new SubReply(), static function (SubReply $value) {
                                 $value->postedAt = 33;
                                 $value->isMatchQuery = false;
                             }),
-                            tap(new SubReply(), static fn(SubReply $value) =>
-                                $value->postedAt = 60),
+                            tap(new SubReply(), static fn(SubReply $value)
+                                => $value->postedAt = 60),
                         ]);
                     }),
                 ]);
@@ -89,8 +89,8 @@ class PostsTreeTest extends KernelTestCase
                         $value->postedAt = 2;
                         $value->isMatchQuery = true;
                         $value->subReplies = collect([
-                            tap(new SubReply(), static fn(SubReply $value) =>
-                            $value->postedAt = 30),
+                            tap(new SubReply(), static fn(SubReply $value)
+                            => $value->postedAt = 30),
                         ]);
                         $value->sortingKey = 2;
                     }),
@@ -98,8 +98,8 @@ class PostsTreeTest extends KernelTestCase
                         $value->postedAt = 20;
                         $value->isMatchQuery = false;
                         $value->subReplies = collect([
-                            tap(new SubReply(), static fn(SubReply $value) =>
-                            $value->postedAt = 3),
+                            tap(new SubReply(), static fn(SubReply $value)
+                            => $value->postedAt = 3),
                         ]);
                         $value->sortingKey = 3;
                     }),
@@ -107,14 +107,14 @@ class PostsTreeTest extends KernelTestCase
                         $value->postedAt = 4;
                         $value->isMatchQuery = false;
                         $value->subReplies = collect([
-                            tap(new SubReply(), static fn(SubReply $value) =>
-                                $value->postedAt = 5),
+                            tap(new SubReply(), static fn(SubReply $value)
+                                => $value->postedAt = 5),
                             tap(new SubReply(), static function (SubReply $value) {
                                 $value->postedAt = 33;
                                 $value->isMatchQuery = false;
                             }),
-                            tap(new SubReply(), static fn(SubReply $value) =>
-                                $value->postedAt = 60),
+                            tap(new SubReply(), static fn(SubReply $value)
+                                => $value->postedAt = 60),
                         ]);
                         $value->sortingKey = 5;
                     }),
@@ -144,14 +144,14 @@ class PostsTreeTest extends KernelTestCase
                         $value->postedAt = 4;
                         $value->isMatchQuery = false;
                         $value->subReplies = collect([
-                            tap(new SubReply(), static fn(SubReply $value) =>
-                                $value->postedAt = 60),
+                            tap(new SubReply(), static fn(SubReply $value)
+                                => $value->postedAt = 60),
                             tap(new SubReply(), static function (SubReply $value) {
                                 $value->postedAt = 33;
                                 $value->isMatchQuery = false;
                             }),
-                            tap(new SubReply(), static fn(SubReply $value) =>
-                                $value->postedAt = 5),
+                            tap(new SubReply(), static fn(SubReply $value)
+                                => $value->postedAt = 5),
                         ]);
                         $value->sortingKey = 60;
                     }),
@@ -159,8 +159,8 @@ class PostsTreeTest extends KernelTestCase
                         $value->postedAt = 2;
                         $value->isMatchQuery = true;
                         $value->subReplies = collect([
-                            tap(new SubReply(), static fn(SubReply $value) =>
-                            $value->postedAt = 30),
+                            tap(new SubReply(), static fn(SubReply $value)
+                            => $value->postedAt = 30),
                         ]);
                         $value->sortingKey = 30;
                     }),
@@ -168,8 +168,8 @@ class PostsTreeTest extends KernelTestCase
                         $value->postedAt = 20;
                         $value->isMatchQuery = false;
                         $value->subReplies = collect([
-                            tap(new SubReply(), static fn(SubReply $value) =>
-                            $value->postedAt = 3),
+                            tap(new SubReply(), static fn(SubReply $value)
+                            => $value->postedAt = 3),
                         ]);
                         $value->sortingKey = 3;
                     }),

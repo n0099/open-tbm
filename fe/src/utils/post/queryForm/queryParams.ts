@@ -156,7 +156,7 @@ const paramMetadataKeyByType: Record<'array' | 'numeric' | 'text' | 'dateTime' |
 };
 const paramsDefaultValue = {
     fid: { value: 0, subParam: {} },
-    postTypes: { value: postType, subParam: {} },
+    postTypes: { value: postTypes, subParam: {} },
     orderBy: { value: 'default', subParam: { direction: 'default' } },
     threadProperties: { value: [] },
     authorManagerType: { value: 'NULL' },

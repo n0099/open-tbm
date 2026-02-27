@@ -22,7 +22,7 @@ readonly class ShowReactJsonView
         $jsonLength = mb_strlen($json);
         $reactJsonViewArtifact = $request->getBaseUrl() . '/react-json-view/dist/index.js';
         $event->setResponse(new Response(<<<HTML
-        <html>
+        <html lang="en">
             <head>
                 <title>$jsonLength bytes of json response for route {$request->getPathInfo()}</title>
             </head>
@@ -42,6 +42,6 @@ readonly class ShowReactJsonView
                 </style>
             </body>
         </html>
-        HTML));
+        HTML, $response->getStatusCode()));
     }
 }

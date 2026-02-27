@@ -4,7 +4,7 @@ import _ from 'lodash';
 
 export type Param = ObjValues<KnownParams>;
 export const isPostIDParam = (param: Param): param is AddNameToParam<PostIDStr, NamelessParamNumeric> =>
-    (postID as Writable<typeof postID> as string[]).includes(param.name);
+    (postIDs as Writable<typeof postIDs> as string[]).includes(param.name);
 export const isTextParam = (param: Param): param is KnownTextParams =>
     (paramNamesKeyByType.text as Writable<typeof paramNamesKeyByType.text> as string[]).includes(param.name);
 export const isDateTimeParam = (param: Param): param is KnownDateTimeParams =>
@@ -53,7 +53,7 @@ export const getQueryFormDeps = () => {
         const clearedParams = clearedParamsDefaultValue();
         const clearedUniqueParams = clearedUniqueParamsDefaultValue();
         if (_.isEmpty(clearedUniqueParams)) { // check whether query by post id or not
-            for (const postIDName of _.reverse(postID as Writable<typeof postID>)) {
+            for (const postIDName of _.reverse(postIDs as Writable<typeof postIDs>)) {
                 const postIDParam = clearedParams.filter(p => p.name === postIDName);
                 if (_.isEmpty(clearedParams.filter(p => p.name !== postIDName)) // is there no other params
                     && postIDParam.length === 1 // is there only one post id param
@@ -120,7 +120,7 @@ export const getQueryFormDeps = () => {
         assertRouteNameIsStr(route.name);
         params.value = [];
 
-        ([...postID, 'fid'] as const).forEach((name: PostIDStr | 'fid') => {
+        ([...postIDs, 'fid'] as const).forEach((name: PostIDStr | 'fid') => {
             const paramValue = route.params[name];
             if (routeNameWithoutCursor(route.name) === `posts/${name}` && !_.isArray(paramValue))
                 params.value = [fillParamDefaultValue({ name, value: Number(paramValue), subParam: {} })];

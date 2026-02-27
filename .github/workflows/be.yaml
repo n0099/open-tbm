@@ -2,12 +2,19 @@
 name: be
 on:
   push:
-    paths: [be/**]
+    paths:
+      - be/**
+      - '!be/public/react-json-view/**'
+      - .github/workflows/be*.yaml
+      - .github/actions/be/action.yaml
 jobs:
   runs-on:
     strategy:
       matrix:
-        runs-on: [ubuntu-latest, windows-latest, macos-latest]
+        runs-on:
+          - ubuntu-latest
+          - windows-latest
+          - macos-latest
       fail-fast: false
     uses: ./.github/workflows/be_base.yaml
     with:

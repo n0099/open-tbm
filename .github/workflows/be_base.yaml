@@ -12,102 +12,97 @@ jobs:
   phpunit-infection:
     runs-on: ${{ inputs.runs-on }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: ./.github/actions/be
       - uses: shivammathur/setup-php@v2
         with:
+          php-version: '8.4'
           # https://bugs.php.net/bug.php?id=80608 https://github.com/swoole/swoole-src/issues/3986 https://github.com/php/php-src/pull/6640
           # PHP Warning:  JIT is incompatible with third party extensions that override zend_execute_ex(). JIT disabled.
           ini-values: opcache.jit_buffer_size=0
           coverage: xdebug
       # https://github.com/shivammathur/setup-php/blob/2.31.1/README.md#problem-matchers
       - run: echo "::add-matcher::${{ runner.tool_cache }}/phpunit.json"
-      - run: >
+      - id: phpunit
+        run: >
           ./vendor/bin/phpunit
           --coverage-clover=coverage/clover.xml
           --coverage-xml=coverage/coverage-xml
           --log-junit=coverage/junit.xml
         # https://infection.github.io/guide/command-line-options.html#coverage
-      - if: always()
-        uses: actions/upload-artifact@v4
+      - if: always() && (steps.phpunit.outcome == 'success' || steps.phpunit.outcome == 'failure')
+        uses: actions/upload-artifact@v6
         with:
           name: coverage-${{ inputs.runs-on }}
           path: be/coverage/clover.xml
           compression-level: 9
-      - if: always()
+      - if: always() && (steps.phpunit.outcome == 'success' || steps.phpunit.outcome == 'failure')
         run: ./vendor/bin/infection --coverage=coverage --skip-initial-tests
 
   phan:
     runs-on: ${{ inputs.runs-on }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: ./.github/actions/be
-      - if: runner.os == 'Windows'
+      - if: runner.os == 'Windows' || runner.os == 'macOS'
         uses: shivammathur/setup-php@v2
-        with: # https://github.com/shivammathur/setup-php/wiki/Php-extensions-loaded-on-windows-2022/aee619eb6d77e86b17a76d458316b41e58a3b677
-          extensions: ast # phan/phan requires https://github.com/nikic/php-ast but it's not enabled by default on windows
+        with:
+          # `phan/phan` requires https://github.com/nikic/php-ast but it's not installed by default on the Windows and macOS images of hosted runner
+          # https://github.com/shivammathur/setup-php/wiki/Php-extensions-loaded-on-windows-2025/298f253ff19de7820dddf397ba52c7fa82a7a3eb
+          # https://github.com/shivammathur/setup-php/wiki/Php-extensions-loaded-on-macos-15/74bc20f907f0a580e8f5cd949c9d872a5193f970
+          extensions: ast
       - run: >
-          ./vendor/bin/phan --output-mode checkstyle --config-file phan.php --analyze-twice --no-progress-bar
-          | tee >(cs2pr --notices-as-warnings --graceful-warnings --prepend-filename --prepend-source)
+          ./vendor/bin/phan --output-mode checkstyle --config-file phan.php --analyze-twice
+            | tee >(cs2pr --notices-as-warnings --graceful-warnings --prepend-filename --prepend-source)
         # https://github.com/staabm/annotate-pull-request-from-checkstyle
         shell: bash
 
   phpstan:
     runs-on: ${{ inputs.runs-on }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: ./.github/actions/be
       - run: >
-          ./vendor/bin/phpstan analyze --error-format=checkstyle
-          | tee >(cs2pr --notices-as-warnings --graceful-warnings --prepend-filename --prepend-source)
+          ./vendor/bin/phpstan analyze --error-format=checkstyle --no-interaction
+            | tee >(cs2pr --notices-as-warnings --graceful-warnings --prepend-filename --prepend-source)
         shell: bash
 
   psalm:
     runs-on: ${{ inputs.runs-on }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: ./.github/actions/be
       - run: >
           ./vendor/bin/psalm --output-format=checkstyle
-          | tee >(cs2pr --notices-as-warnings --graceful-warnings --prepend-filename --prepend-source)
+            | tee >(cs2pr --notices-as-warnings --graceful-warnings --prepend-filename --prepend-source)
         shell: bash
 
   phpcs:
     runs-on: ${{ inputs.runs-on }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: ./.github/actions/be
       - id: run
         run: ./vendor/bin/phpcs --report-full --report-checkstyle=./phpcs-report.xml .
       - if: always() && steps.run.outcome == 'failure'
         run: cs2pr --notices-as-warnings --graceful-warnings --prepend-filename --prepend-source ./phpcs-report.xml
 
-  pint:
-    runs-on: ${{ inputs.runs-on }}
-    steps:
-      - uses: actions/checkout@v5
-      - uses: ./.github/actions/be
-      - run: >
-          ./vendor/bin/pint --test --format=checkstyle
-          | tee >(cs2pr --notices-as-warnings --graceful-warnings --prepend-filename --prepend-source)
-        shell: bash
-
   php-cs-fixer:
     runs-on: ${{ inputs.runs-on }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: ./.github/actions/be
       - run: >
-          ./vendor/bin/php-cs-fixer fix --dry-run --format=checkstyle
-          | tee >(cs2pr --notices-as-warnings --graceful-warnings --prepend-filename --prepend-source)
+          ./vendor/bin/php-cs-fixer fix --dry-run --format=checkstyle --no-interaction --show-progress dots
+            | tee >(cs2pr --notices-as-warnings --graceful-warnings --prepend-filename --prepend-source)
         shell: bash
 
   phpmd:
     runs-on: ${{ inputs.runs-on }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: ./.github/actions/be
       - run: >
           ./vendor/bin/phpmd . checkstyle phpmd.xml
-          | tee >(cs2pr --notices-as-warnings --graceful-warnings --prepend-filename --prepend-source)
+            | tee >(cs2pr --notices-as-warnings --graceful-warnings --prepend-filename --prepend-source)
         shell: bash

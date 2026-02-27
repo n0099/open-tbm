@@ -23,9 +23,8 @@ class ConvertORMQueryBuilderToDBAL
         Connection $connection,
         QueryBuilder $query,
         callable $buildDBALQuery,
-        string $denormalizeClass
-    ): array
-    {
+        string $denormalizeClass,
+    ): array {
         $parsedQuery = new Parser($query->getQuery())->parse();
         $queryParametersMapping = $parsedQuery->getParameterMappings();
         $resultSetMapping = $parsedQuery->getResultSetMapping();
@@ -34,20 +33,20 @@ class ConvertORMQueryBuilderToDBAL
             ->keyBy(fn(Parameter $param) => $param->getName())
             ->flatMap(fn(Parameter $param) => array_map(
                 static fn(int $position) => ['position' => $position, 'value' => $param->getValue(), 'type' => $param->getType()],
-                $queryParametersMapping[$param->getName()]
+                $queryParametersMapping[$param->getName()],
             ));
         $dbalQuery = $buildDBALQuery(
             $connection->createQueryBuilder()->from('(' . $query->getQuery()->getSQL() . ')', 't'),
-            array_flip($resultSetMapping->scalarMappings)
+            array_flip($resultSetMapping->scalarMappings),
         )->setParameters(
             $dbalQueryParams->mapWithKeys(fn(array $param) => [$param['position'] => $param['value']])->toArray(),
-            $dbalQueryParams->mapWithKeys(fn(array $param) => [$param['position'] => $param['type']])->toArray()
+            $dbalQueryParams->mapWithKeys(fn(array $param) => [$param['position'] => $param['type']])->toArray(),
         );
 
         $normalizer = new ObjectNormalizer(nameConverter: new ResultSetScalarMappingNameConverter($resultSetMapping));
         return array_map(
             static fn(array $row) => $normalizer->denormalize($row, $denormalizeClass),
-            $dbalQuery->executeQuery()->fetchAllAssociative()
+            $dbalQuery->executeQuery()->fetchAllAssociative(),
         );
     }
 }

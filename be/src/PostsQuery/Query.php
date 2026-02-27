@@ -34,7 +34,7 @@ readonly class Query extends BaseQuery
             collect($params->pick(...Utils::POST_ID))
                 ->filter(static fn(QueryParam $p) => $p->getSub('range') === '=')
                 ->map(static fn(QueryParam $p) => $p->name)
-                ->toArray()
+                ->toArray(),
         )) // we need the next cursor for post type that has multiple param
             ->filter(static fn(int $counts) => $counts === 1)
             ->keys();
@@ -50,7 +50,7 @@ readonly class Query extends BaseQuery
             $cursor,
             $this->orderByField,
             $this->isOrderByDesc,
-            $queryByPostIDParamsName
+            $queryByPostIDParamsName,
         );
     }
 
@@ -113,8 +113,8 @@ readonly class Query extends BaseQuery
 
         $userTypeOfUserParams = str_starts_with($name, 'author') ? 'author' : 'latestReplier';
         $fieldNameOfUserNameParams = str_ends_with($name, 'DisplayName') ? 'displayName' : 'name';
-        $getAndCacheUserQuery =
-            static function (QueryBuilder $newQueryWhenCacheMiss) use (&$outCachedUserQueryResult): array {
+        $getAndCacheUserQuery
+            = static function (QueryBuilder $newQueryWhenCacheMiss) use (&$outCachedUserQueryResult): array {
                 // $outCachedUserQueryResult === null means it's the first call
                 $outCachedUserQueryResult ??= $newQueryWhenCacheMiss->getQuery()->getResult();
                 return $outCachedUserQueryResult;
@@ -130,9 +130,9 @@ readonly class Query extends BaseQuery
             // numeric
             'fid', 'tid', 'pid', 'spid',
             'authorUid', 'authorExpGrade', 'latestReplierUid',
-            'threadViewCount', 'threadShareCount', 'threadReplyCount', 'replySubReplyCount' =>
+            'threadViewCount', 'threadShareCount', 'threadReplyCount', 'replySubReplyCount'
                 // phpcs:disable Generic.WhiteSpace.ScopeIndent
-                match ($sub['range']) {
+                => match ($sub['range']) {
                     'IN' => $query->andWhere("t.$fieldNameOfNumericParams $not IN (:$sqlParamName)")
                         ->setParameter($sqlParamName, explode(',', $value)),
                     'BETWEEN' => $whereBetween($fieldNameOfNumericParams),
@@ -143,8 +143,8 @@ readonly class Query extends BaseQuery
                     )->setParameter($sqlParamName, $value),
                 },
             // textMatch
-            'threadTitle', 'postContent' =>
-                self::applyTextMatchParamOnQuery(
+            'threadTitle', 'postContent'
+                => self::applyTextMatchParamOnQuery(
                     $query,
                     $name === 'threadTitle' ? 'title' : 'content',
                     $value,
@@ -163,8 +163,8 @@ readonly class Query extends BaseQuery
                 }
                 return $query;
             })(),
-            'authorName', 'latestReplierName', 'authorDisplayName', 'latestReplierDisplayName' =>
-                $query->andWhere("t.{$userTypeOfUserParams}Uid $not IN (:$sqlParamName)")
+            'authorName', 'latestReplierName', 'authorDisplayName', 'latestReplierDisplayName'
+                => $query->andWhere("t.{$userTypeOfUserParams}Uid $not IN (:$sqlParamName)")
                     ->setParameter(
                         $sqlParamName,
                         $getAndCacheUserQuery(self::applyTextMatchParamOnQuery(
@@ -188,8 +188,8 @@ readonly class Query extends BaseQuery
                     ->andWhere("t.{$userTypeOfUserParams}Uid $not IN (:$sqlParamName)")
                     ->setParameter($sqlParamName, $getAndCacheUserQuery($newUserQuery));
             })(),
-            'authorManagerType' =>
-                $value === 'NULL'
+            'authorManagerType'
+                => $value === 'NULL'
                     ? $query->andWhere("t.authorManagerType IS $not NULL")
                     : $query->andWhere('t.authorManagerType ' . ($sub['not'] ? '!=' : '=') . " :$sqlParamName")
                         ->setParameter($sqlParamName, $value),

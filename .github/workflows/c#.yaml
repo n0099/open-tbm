@@ -2,12 +2,18 @@
 name: c#
 on:
   push:
-    paths: [c#/**]
+    paths:
+      - c#/**
+      - .github/workflows/c#*.yaml
+      - .github/actions/c#/action.yaml
 jobs:
   runs-on:
     strategy:
       matrix:
-        runs-on: [ubuntu-latest, windows-latest, macos-latest]
+        runs-on:
+          - ubuntu-latest
+          - windows-latest
+          - macos-latest
       fail-fast: false
     uses: ./.github/workflows/c#_base.yaml
     with:

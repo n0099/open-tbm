@@ -631,6 +631,7 @@ const chartLoadder = {
             }
         }));
 
+        // eslint-disable-next-line unicorn/no-array-sort
         const timelineRanges = _.chain(json.top10CandidatesTimeline).map('endTime').sort().sortedUniq().value();
         timelineRanges.push(1552292800); // 2019-03-11T18:26:40+08:00 is the showtime of official votes count
         echartsInstances.top10CandidatesTimeline?.setOption<ChartOptionTop10CandidatesTimeline>({
@@ -654,6 +655,7 @@ const chartLoadder = {
             ? json.top5CandidatesVoteCountGroupByMinute
             : json.top5CandidatesVoteCountGroupByHour;
         const top5CandidatesIndex = _.chain(top5CandidateCountGroupByTime)
+            // eslint-disable-next-line unicorn/no-array-sort
             .filter({ isValid: 1 }).map('voteFor').sort().sortedUniq().value(); // not order by votes count
         const validVotes = top5CandidateCountGroupByTime.filter(vote => vote.isValid === 1);
         const invalidVotes = top5CandidateCountGroupByTime.filter(vote => vote.isValid === 0);

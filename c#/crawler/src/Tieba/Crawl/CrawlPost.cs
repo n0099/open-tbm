@@ -27,9 +27,9 @@ public class CrawlPost(
             // and needs a full table scan on db
             // https://stackoverflow.com/questions/341264/max-or-default
             await using var dbFactory = dbContextFactory();
-            maxLatestReplyPostedAtOccurInPreviousCrawl = dbFactory.Value().Threads
+            maxLatestReplyPostedAtOccurInPreviousCrawl = await dbFactory.Value().Threads
                 .Where(t => t.Fid == fid)
-                .Max(th => (Time?)th.LatestReplyPostedAt) ?? Time.MaxValue;
+                .MaxAsync(th => (Time?)th.LatestReplyPostedAt, cancellationToken: stoppingToken) ?? Time.MaxValue;
         }
         var savedThreads = new List<SaverChangeSet<ThreadPost, ThreadPost.Parsed>>();
         var minLatestReplyPostedAt = Time.MaxValue;

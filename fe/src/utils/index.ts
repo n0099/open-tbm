@@ -29,15 +29,15 @@ export type ArrayElement<ArrayType extends readonly unknown[]> =
     ArrayType extends ReadonlyArray<infer ElementType> ? ElementType : never;
 
 export type Post = Reply | SubReply | Thread;
-export const postType = ['thread', 'reply', 'subReply'] as const;
-export type PostType = ArrayElement<typeof postType>;
-export const postTypeText = ['主题帖', '回复帖', '楼中楼'] as const;
-export type PostTypeText = ArrayElement<typeof postTypeText>;
+export const postTypes = ['thread', 'reply', 'subReply'] as const;
+export type PostType = ArrayElement<typeof postTypes>;
+export const postTypeTexts = ['主题帖', '回复帖', '楼中楼'] as const;
+export type PostTypeText = ArrayElement<typeof postTypeTexts>;
 export type PostTypeTextOf<T> = T extends Thread ? '主题帖'
     : T extends Reply ? '回复帖'
         : T extends SubReply ? '楼中楼' : never;
-export const postID = ['tid', 'pid', 'spid'] as const;
-export type PostIDStr = ArrayElement<typeof postID>;
+export const postIDs = ['tid', 'pid', 'spid'] as const;
+export type PostIDStr = ArrayElement<typeof postIDs>;
 export type PostIDOf<T> = T extends Thread ? 'tid' : T extends Reply ? 'pid' : T extends SubReply ? 'spid' : never;
 export type Fid = UInt;
 export type Tid = UInt;
