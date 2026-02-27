@@ -18,9 +18,10 @@ export class ApiResponseError extends Error {
 }
 
 [FetchError, ApiResponseError].forEach(error => {
-    type BaseErrorConstructor = Parameters<typeof addKnownErrorConstructor>[0];
     try {
-        addKnownErrorConstructor(error as BaseErrorConstructor);
+        addKnownErrorConstructor(error, () => (error instanceof FetchError
+            ? new FetchError('')
+            : new ApiResponseError()));
 
     // https://github.com/sindresorhus/serialize-error/blob/4d0f3b27d618739c3a3868fd5b4d619b4ea03ad8/error-constructors.js#L31C19-L31C70
     // eslint-disable-next-line no-empty
