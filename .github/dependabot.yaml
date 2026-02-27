@@ -26,7 +26,7 @@ updates:
   - package-ecosystem: composer
     directory: /be
     exclude-paths:
-     - /be/public/react-json-view
+     - be/public/react-json-view
     schedule:
       interval: daily
     commit-message:
