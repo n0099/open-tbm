@@ -3,8 +3,8 @@ version: 2
 updates:
   - package-ecosystem: github-actions
     directories:
-      - /.github/actions
-      - /.github/workflows
+      - .github/actions
+      - .github/workflows
     schedule:
       interval: daily
     commit-message:
@@ -14,7 +14,7 @@ updates:
       - dependencies
     open-pull-requests-limit: 0 # https://stackoverflow.com/questions/64047526/how-to-get-dependabot-to-trigger-for-security-updates-only#comment123070708_68254421
   - package-ecosystem: nuget
-    directory: /c#
+    directory: c#
     schedule:
       interval: daily
     commit-message:
@@ -24,9 +24,9 @@ updates:
       - dependencies
     open-pull-requests-limit: 0
   - package-ecosystem: composer
-    directory: /be
+    directory: be
     exclude-paths:
-     - /be/public/react-json-view
+     - be/public/react-json-view
     schedule:
       interval: daily
     commit-message:
@@ -36,7 +36,7 @@ updates:
       - dependencies
     open-pull-requests-limit: 0
   - package-ecosystem: npm
-    directory: /be/public/react-json-view
+    directory: be/public/react-json-view
     schedule:
       interval: daily
     commit-message:
@@ -46,7 +46,7 @@ updates:
       - dependencies
     open-pull-requests-limit: 0
   - package-ecosystem: npm
-    directory: /fe
+    directory: fe
     schedule:
       interval: daily
     commit-message:

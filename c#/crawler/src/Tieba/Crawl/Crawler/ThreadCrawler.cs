@@ -31,9 +31,9 @@ public class ThreadCrawler(string forumName) : BaseCrawler<ThreadResponse, Threa
         {
             Kw = forumName,
             Pn = (int)page,
-            Rn = 13,
-            RnNeed = 13,
-            SortType = 5
+            Rn = 30,
+            RnNeed = 35,
+            SortType = 6
         };
         return
         [
