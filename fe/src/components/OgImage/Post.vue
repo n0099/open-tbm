@@ -11,15 +11,15 @@
         <NewlineToBr is="h3" :text="firstPostContentTexts" wrapInSpan class="h-auto" />
         <template v-for="author in [firstPostAuthor]">
             <div :key="author.uid" v-if="author !== undefined" class="m-auto">
-                <UserPortrait :user="author" class="size-24" />
+                <SkippableImage :src="toUserPortraitImageUrl(author.portrait)" />
                 <span v-if="author.name !== null">{{ author.name }}</span>
                 <span v-if="author.displayName !== null">{{ author.displayName }}</span>
                 <span v-if="author.name === null && author.displayName === null">{{ author.uid }}</span>
             </div>
         </template>
     </div>
-    <div v-if="firstImage !== undefined" class="flex-auto basis-1/4">
-        <img :src="toTiebaImageUrl(firstImage?.originSrc)" class="h-screen object-contain" />
+    <div v-if="firstImageUrl !== undefined" class="flex-auto basis-1/4">
+        <SkippableImage :src="firstImageUrl" class="h-screen object-contain" />
     </div>
 </div>
 </template>
@@ -48,4 +48,5 @@ const firstImage = computed(() => firstPostPage
         thread.replies.flatMap(reply =>
             reply.content?.find(i => i.type === 3)))
     .find(i => i !== undefined));
+const firstImageUrl = computed(() => toTiebaImageUrl(firstImage.value?.originSrc));
 </script>
