@@ -1,12 +1,17 @@
 <template>
+<!-- not using onload & onerror native events as they're never get triggered in this nuxt island component -->
 <img v-if="imageBase64 !== null" :src="imageBase64" />
 </template>
 
 <script setup lang="ts">
 const { src } = defineProps<{ src: string }>();
 const fetchImageAsBase64 = async (url: string): Promise<string | null> => {
+    // eslint-disable-next-line @typescript-eslint/init-declarations
+    let timeoutId: NodeJS.Timeout;
+    const abortController = new AbortController();
+
     return Promise.race([
-        new Promise<null>(resolve => { setTimeout(() => { resolve(null) }, 1000) }),
+        new Promise<null>(resolve => { timeoutId = setTimeout(() => { resolve(null) }, 5000) }),
         (async () => {
             try {
                 // https://github.com/vercel/satori/issues/626#issuecomment-2401402201
@@ -20,7 +25,7 @@ const fetchImageAsBase64 = async (url: string): Promise<string | null> => {
                 return null;
             }
         })()
-    ]);
+    ]).finally(() => { clearTimeout(timeoutId); abortController.abort() });
 };
 const imageBase64 = ref(await fetchImageAsBase64(src));
 </script>
