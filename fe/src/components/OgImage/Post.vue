@@ -7,7 +7,7 @@
             <p class="m-0">右侧为查询结果中第一张图片（不一定来自第一条帖子）</p>
             <p class="m-0">下方为查询结果中第一条主题帖/回复帖/楼中楼</p>
         </template>
-        <h1>{{ firstThread?.title }}</h1>
+        <h1>{{ firstThreadTitle }}</h1>
         <NewlineToBr is="h3" :text="firstPostContentTexts" wrapInSpan class="h-auto" />
         <template v-for="author in [firstPostAuthor]">
             <div :key="author.uid" v-if="author !== undefined" class="m-auto">
@@ -27,26 +27,13 @@
 <script setup lang="ts">
 import type { UnwrapRef } from 'vue';
 
-const { firstThread, firstPostPage } = defineProps<{
+defineProps<{
     routePath: string,
-    firstPostPage?: ApiPosts['response'],
+    currentQueryType: UnwrapRef<QueryFormDeps['currentQueryType']>,
     firstPostPageForumName?: string,
-    firstThread?: ArrayElement<ApiPosts['response']['threads']>,
-    currentQueryType: UnwrapRef<QueryFormDeps['currentQueryType']>
+    firstThreadTitle?: string,
+    firstPostContentTexts: string,
+    firstPostAuthor?: User,
+    firstImageUrl?: string
 }>();
-const firstReplyContent = computed(() => firstThread?.replies[0]);
-const firstSubReplyContent = computed(() => firstReplyContent.value?.subReplies[0]);
-const firstPostContentTexts = computed(() =>
-    extractContentTexts((firstSubReplyContent.value ?? firstReplyContent.value)?.content));
-const getUser = computed(() => baseGetUser(firstPostPage?.users ?? []));
-const firstPostAuthor = computed(() => undefinedOr(
-    (firstSubReplyContent.value ?? firstReplyContent.value)?.authorUid,
-    uid => getUser.value(uid)
-));
-const firstImage = computed(() => firstPostPage
-    ?.threads.flatMap(thread =>
-        thread.replies.flatMap(reply =>
-            reply.content?.find(i => i.type === 3)))
-    .find(i => i !== undefined));
-const firstImageUrl = computed(() => toTiebaImageUrl(firstImage.value?.originSrc));
 </script>
