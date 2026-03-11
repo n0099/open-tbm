@@ -3,11 +3,9 @@
     <div class="flex-1 flex-col basis-1/2 m-4">
         <p>{{ useSiteConfig().name }} {{ routePath }}</p>
         <h2 v-if="firstPostPageForumName !== undefined">{{ firstPostPageForumName }}吧</h2>
-        <template v-if="currentQueryType !== 'postID'">
-            <p class="m-0">右侧为查询结果中第一张图片（不一定来自第一条帖子）</p>
-            <p class="m-0">下方为查询结果中第一条主题帖/回复帖/楼中楼</p>
-        </template>
-        <h1>{{ firstThreadTitle }}</h1>
+        <p>右侧为查询结果中第一张图片（不一定来自第一条帖子）</p>
+        <p v-if="currentQueryType !== 'postID'" class="m-0">下方为查询结果中第一条主题帖/回复帖/楼中楼</p>
+        <h1 v-if="firstThreadTitle !== undefined">{{ firstThreadTitle }}</h1>
         <NewlineToBr is="h3" :text="firstPostContentTexts" wrapInSpan class="h-auto" />
         <template v-for="author in [firstPostAuthor]">
             <div :key="author.uid" v-if="author !== undefined" class="m-auto">
