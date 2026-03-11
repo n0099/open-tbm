@@ -31,6 +31,7 @@ export const usePostsSEO = (
     });
     (() => {
         const route = useRoute();
+        const firstThreadTitle = computed(() => firstThread.value?.title);
         const firstReplyContent = computed(() => firstThread.value?.replies[0]);
         const firstSubReplyContent = computed(() => firstReplyContent.value?.subReplies[0]);
         const firstPostContentTexts = computed(() =>
@@ -53,7 +54,7 @@ export const usePostsSEO = (
             routePath: route.path,
             currentQueryType,
             firstPostPageForumName,
-            firstThreadTitle: firstThread.value?.title,
+            firstThreadTitle,
             firstPostContentTexts,
             firstPostAuthor,
             firstImageUrl
