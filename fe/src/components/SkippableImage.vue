@@ -5,6 +5,7 @@
 
 <script setup lang="ts">
 const { src } = defineProps<{ src: string }>();
+const emit = defineEmits<{ failToLoad: [] }>();
 const fetchImageAsBase64 = async (url: string): Promise<string | null> => {
     // eslint-disable-next-line @typescript-eslint/init-declarations
     let timeoutId: NodeJS.Timeout;
@@ -25,7 +26,14 @@ const fetchImageAsBase64 = async (url: string): Promise<string | null> => {
                 return null;
             }
         })()
-    ]).finally(() => { clearTimeout(timeoutId); abortController.abort() });
+    ])
+        .then(resolved => {
+            if (resolved === null)
+                emit('failToLoad');
+
+            return resolved;
+        })
+        .finally(() => { clearTimeout(timeoutId); abortController.abort() });
 };
 const imageBase64 = ref(await fetchImageAsBase64(src));
 </script>

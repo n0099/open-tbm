@@ -3,7 +3,7 @@
     <div class="flex-1 flex-col basis-1/2 m-4">
         <p>{{ useSiteConfig().name }} {{ routePath }}</p>
         <h2 v-if="firstPostPageForumName !== undefined">{{ firstPostPageForumName }}吧</h2>
-        <p>右侧为查询结果中第一张图片（不一定来自第一条帖子）</p>
+        <p v-if="shouldShowImage">右侧为查询结果中第一张图片（不一定来自第一条帖子）</p>
         <p v-if="currentQueryType !== 'postID'" class="m-0">下方为查询结果中第一条主题帖/回复帖/楼中楼</p>
         <h1 v-if="firstThreadTitle !== undefined">{{ firstThreadTitle }}</h1>
         <NewlineToBr is="h3" :text="firstPostContentTexts" wrapInSpan class="h-auto" />
@@ -16,8 +16,8 @@
             </div>
         </template>
     </div>
-    <div v-if="firstImageUrl !== undefined" class="flex-auto basis-1/4">
-        <SkippableImage :src="firstImageUrl" class="h-screen object-contain" />
+    <div v-if="firstImageUrl !== undefined && shouldShowImage" class="flex-auto basis-1/4">
+        <SkippableImage @failToLoad="shouldShowImage = false" :src="firstImageUrl" class="h-screen object-contain" />
     </div>
 </div>
 </template>
@@ -25,7 +25,7 @@
 <script setup lang="ts">
 import type { UnwrapRef } from 'vue';
 
-defineProps<{
+const { firstImageUrl } = defineProps<{
     routePath: string,
     currentQueryType: UnwrapRef<QueryFormDeps['currentQueryType']>,
     firstPostPageForumName?: string,
@@ -34,4 +34,5 @@ defineProps<{
     firstPostAuthor?: User,
     firstImageUrl?: string
 }>();
+const shouldShowImage = ref(firstImageUrl !== undefined);
 </script>
