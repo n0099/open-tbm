@@ -25,14 +25,14 @@
 <script setup lang="ts">
 import type { UnwrapRef } from 'vue';
 
-const { firstPostAuthor, firstImageUrl } = defineProps<{
+const { firstPostAuthor, firstImage } = defineProps<{
     routePath: string,
     currentQueryType: UnwrapRef<QueryFormDeps['currentQueryType']>,
     firstPostPageForumName?: string,
     firstThreadTitle?: string,
     firstPostContentTexts: string,
     firstPostAuthor?: User,
-    firstImageUrl?: string
+    firstImage?: Extract<PostContent[number], { originSrc?: string }>
 }>();
 const fetchImageAsBase64 = async (url: string): Promise<string | null> => {
     // eslint-disable-next-line @typescript-eslint/init-declarations
@@ -60,6 +60,6 @@ const authorPortraitImageBase64 = ref<string | null>(
     firstPostAuthor === undefined ? null : await fetchImageAsBase64(toUserPortraitImageUrl(firstPostAuthor.portrait))
 );
 const firstImageBase64 = ref<string | null>(
-    firstImageUrl === undefined ? null : await fetchImageAsBase64(firstImageUrl)
+    firstImage?.originSrc === undefined ? null : await fetchImageAsBase64(firstImage.originSrc)
 );
 </script>

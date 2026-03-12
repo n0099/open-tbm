@@ -30,13 +30,12 @@ export const toHTTPS = (rawUrl?: string): string | undefined => {
 
     return url.toString();
 };
-const config = useRuntimeConfig().public;
 
-// https://github.com/n0099/open-tbm/blob/3dd6664e522a7ae74c5143bacf8c90294fcc568a/c%23/crawler/src/Tieba/Crawl/Parser/Post/ReplyParser.cs#L7
-const tiebaImageFilenameRegex = /^(?:[0-9a-f]{40}|[0-9a-f]{24})$/u;
+const tiebaImageFilenameRegex = /^(?:[0-9a-f]{40}|[0-9a-f]{24})$/u; // https://github.com/n0099/open-tbm/blob/3dd6664e522a7ae74c5143bacf8c90294fcc568a/c%23/crawler/src/Tieba/Crawl/Parser/Post/ReplyParser.cs#L7
 export const toTiebaImageUrl = (originSrc?: string) => {
     if (originSrc === undefined || !tiebaImageFilenameRegex.test(originSrc))
         return originSrc;
+    const config = useRuntimeConfig().public;
     if (config.tiebaImageProxy !== '')
         return `${config.tiebaImageProxy}/${originSrc}`;
 

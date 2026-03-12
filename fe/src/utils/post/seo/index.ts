@@ -46,7 +46,6 @@ export const usePostsSEO = (
                 thread.replies.flatMap(reply =>
                     reply.content?.find(i => i.type === 3)))
             .find(i => i !== undefined));
-        const firstImageUrl = computed(() => toTiebaImageUrl(firstImage.value?.originSrc));
 
         // https://github.com/nuxt-modules/og-image/blob/39412488d08af4d27cb3a7881d4cf44a773fbb3c/src/runtime/server/util/kit.ts#L13
         // https://github.com/nuxt/nuxt/issues/22786
@@ -57,7 +56,7 @@ export const usePostsSEO = (
             firstThreadTitle,
             firstPostContentTexts,
             firstPostAuthor,
-            firstImageUrl
+            firstImage
         });
     })();
     usePostsSchemaOrg(data);

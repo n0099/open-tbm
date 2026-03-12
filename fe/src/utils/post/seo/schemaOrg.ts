@@ -107,7 +107,7 @@ export const usePostsSchemaOrg = (data: Ref<InfiniteData<ApiPosts['response']> |
             /* eslint-enable @typescript-eslint/naming-convention */
             interactionStatistic: definePostInteractionCounters(subReply)
         });
-    useSchemaOrg(computed(() => data.value?.pages.flatMap(page => {
+    useSchemaOrg(data.value?.pages.flatMap(page => {
         const getUser = baseGetUser(page.users);
 
         return page.threads.flatMap(thread => [
@@ -117,5 +117,5 @@ export const usePostsSchemaOrg = (data: Ref<InfiniteData<ApiPosts['response']> |
                 ...reply.subReplies.map(defineSubReplyComment({ getUser }))
             ])
         ]);
-    }) ?? []));
+    }) ?? []);
 };
