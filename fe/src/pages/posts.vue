@@ -13,7 +13,12 @@
     <div v-if="!(data === undefined || _.isEmpty(data.pages))" class="container-fluid">
         <div class="row flex-nowrap">
             <PostNav v-if="renderType === 'list'" :queryParam="queryParam" />
-            <div class="post-page col ps-0" :class="{ 'renderer-list': renderType === 'list' }">
+            <div
+                class="post-pages col" :class="{
+                    'px-0': renderType === 'table',
+                    'ps-0': renderType === 'list',
+                    'renderer-list': renderType === 'list'
+                }">
                 <PostPage
                     v-for="(page, pageIndex) in data.pages"
                     :key="`${queryParam?.query}/cursor/${page.pages.currentCursor}`"
@@ -145,12 +150,12 @@ parseRouteThenFetch(route, false);
 </script>
 
 <style scoped>
-.post-page {
+.post-pages {
     /* minus the inline-size of .post-nav-expand in <PostNav> to prevent overflow */
     inline-size: calc(100% - v-bind(scrollBarWidth));
 }
 @media (width <= 575.98px) {
-    .post-page {
+    .post-pages {
         padding-inline-end: 0;
     }
 }
