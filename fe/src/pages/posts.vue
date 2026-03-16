@@ -154,7 +154,7 @@ parseRouteThenFetch(route, false);
     /* minus the inline-size of .post-nav-expand in <PostNav> to prevent overflow */
     inline-size: calc(100% - v-bind(scrollBarWidth));
 }
-@media (width <= 575.98px) {
+@media (width < 576px) {
     .post-pages {
         padding-inline-end: 0;
     }
