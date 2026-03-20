@@ -12,7 +12,7 @@
     </aside>
     <div v-if="!(data === undefined || _.isEmpty(data.pages))" class="container-fluid">
         <div class="row flex-nowrap">
-            <PostNav v-if="renderType === 'list'" :queryParam="queryParam" />
+            <PostNav v-if="renderType === 'list'" :queryParam="queryParam" class="col p-0 post-nav-wrapper" />
             <div
                 class="post-pages col" :class="{
                     'px-0': renderType === 'table',
@@ -150,19 +150,25 @@ parseRouteThenFetch(route, false);
 </script>
 
 <style scoped>
-.post-pages {
-    /* minus the inline-size of .post-nav-expand in <PostNav> to prevent overflow */
-    inline-size: calc(100% - v-bind(scrollBarWidth));
-}
 @media (width < 576px) {
     .post-pages {
         padding-inline-end: 0;
     }
 }
+@media (width < 1250px) {
+    .renderer-list {
+        flex-grow: 3;
+    }
+}
 @media (width >= 1250px) {
     .renderer-list {
-        flex: 1 0 auto;
+        flex-basis: auto;
         max-inline-size: 1000px;
+    }
+}
+@media (width >= 1400px) {
+    .post-nav-wrapper {
+        min-inline-size: calc(1400px - 1000px - v-bind(scrollBarWidth))
     }
 }
 </style>

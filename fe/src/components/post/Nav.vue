@@ -1,45 +1,47 @@
 <template>
-<nav
-    class="post-nav col p-0 sticky-top border-0"
-    :class="{ 'd-none': !isPostNavExpanded }" :aria-expanded="isPostNavExpanded">
-    <AMenu
-        v-model:selectedKeys="selectedThreads" v-model:openKeys="expandedPages" @click="selectThread($event)"
-        forceSubMenuRender :inlineIndent="16" mode="inline">
-        <template v-for="posts in data?.pages ?? []">
-            <ASubMenu
-                v-for="cursor in [posts.pages.currentCursor]"
-                :key="pageMenuKey(cursor)" :eventKey="pageMenuKey(cursor)" :title="cursorTemplate(cursor)">
-                <AMenuItem
-                    v-for="thread in posts.threads" :key="threadMenuKey(cursor, thread.tid)"
-                    ref="threadMenuItemsRef" :title="thread.title"
-                    :class="menuThreadClasses(thread)" class="post-nav-thread border ps-2 ps-lg-3 pe-1">
-                    {{ thread.title }}
-                    <div class="d-block btn-group p-1 text-wrap" role="group">
-                        <template v-for="reply in thread.replies" :key="reply.pid">
-                            <NuxtLink
-                                @click.prevent="navigate(cursor, reply)" :to="routeHash(reply)"
-                                :class="menuReplyClasses(cursor, reply)" class="post-nav-reply btn ms-0 px-2">
-                                {{ reply.floor }}L
-                            </NuxtLink>
-                        </template>
-                    </div>
-                </AMenuItem>
-            </ASubMenu>
-        </template>
-    </AMenu>
-</nav>
-<div
-    :class="{
-        'border-start': isPostNavExpanded,
-        'border-end': !isPostNavExpanded
-    }"
-    class="post-nav-expand col-auto align-items-center d-flex sticky-top border-light-subtle">
-    <a
-        v-if="!hydrationStore.isHydratingOrSSR"
-        @click="togglePostNavExpanded()" class="text-primary">
-        <FontAwesome v-show="isPostNavExpanded" :icon="faAngleLeft" />
-        <FontAwesome v-show="!isPostNavExpanded" :icon="faAngleRight" />
-    </a>
+<div>
+    <nav
+        class="post-nav col p-0 sticky-top border-0"
+        :class="{ 'd-none': !isPostNavExpanded }" :aria-expanded="isPostNavExpanded">
+        <AMenu
+            v-model:selectedKeys="selectedThreads" v-model:openKeys="expandedPages" @click="selectThread($event)"
+            forceSubMenuRender :inlineIndent="16" mode="inline">
+            <template v-for="posts in data?.pages ?? []">
+                <ASubMenu
+                    v-for="cursor in [posts.pages.currentCursor]"
+                    :key="pageMenuKey(cursor)" :eventKey="pageMenuKey(cursor)" :title="cursorTemplate(cursor)">
+                    <AMenuItem
+                        v-for="thread in posts.threads" :key="threadMenuKey(cursor, thread.tid)"
+                        ref="threadMenuItemsRef" :title="thread.title"
+                        :class="menuThreadClasses(thread)" class="post-nav-thread border ps-2 ps-lg-3 pe-1">
+                        {{ thread.title }}
+                        <div class="d-block btn-group p-1 text-wrap" role="group">
+                            <template v-for="reply in thread.replies" :key="reply.pid">
+                                <NuxtLink
+                                    @click.prevent="navigate(cursor, reply)" :to="routeHash(reply)"
+                                    :class="menuReplyClasses(cursor, reply)" class="post-nav-reply btn ms-0 px-2">
+                                    {{ reply.floor }}L
+                                </NuxtLink>
+                            </template>
+                        </div>
+                    </AMenuItem>
+                </ASubMenu>
+            </template>
+        </AMenu>
+    </nav>
+    <div
+        :class="{
+            'border-start': isPostNavExpanded,
+            'border-end': !isPostNavExpanded
+        }"
+        class="post-nav-expand col-auto align-items-center d-flex sticky-top border-light-subtle">
+        <a
+            v-if="!hydrationStore.isHydratingOrSSR"
+            @click="togglePostNavExpanded()" class="text-primary">
+            <FontAwesome v-show="isPostNavExpanded" :icon="faAngleLeft" />
+            <FontAwesome v-show="!isPostNavExpanded" :icon="faAngleRight" />
+        </a>
+    </div>
 </div>
 </template>
 
