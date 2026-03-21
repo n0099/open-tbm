@@ -207,6 +207,12 @@ watch(viewportTopmostPost, (to, from) => {
         flex-grow: 1 !important;
     }
 }
+@media (width < 1200px) {
+    .post-nav-wrapper:has(.post-nav[aria-expanded="false"]) {
+        flex-grow: 0;
+        min-inline-size: unset;
+    }
+}
 @media (width <= 900px) {
     .post-nav {
         display: v-bind(postNavDisplay);
