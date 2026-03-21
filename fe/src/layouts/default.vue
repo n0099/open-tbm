@@ -14,12 +14,12 @@
         class="spinner-border text-primary" role="status">
         <span class="visually-hidden">Loading...</span>
     </div>
-    <main>
+    <main class="mb-auto">
         <AConfigProvider :locale="AntdZhCn">
             <slot v-if="!routeUpdatingStore.isUpdating" />
         </AConfigProvider>
     </main>
-    <footer id="footer-upper" class="text-light pt-4 mt-auto">
+    <footer id="footer-upper" class="text-light pt-4">
         <footer id="footer-lower" class="text-center p-3">
             <span>{{ config.footerText }}</span>
         </footer>

@@ -271,7 +271,7 @@ const queryFormSubmit = async () => useTriggerRouteUpdateStore()
 }
 
 .query-params > * {
-    margin-block-start: -1px;
+    margin-block-end: -1px;
 }
 .query-params > :first-child > .select-param {
     border-start-start-radius: .25rem !important;
