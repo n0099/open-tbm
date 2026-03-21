@@ -150,25 +150,26 @@ parseRouteThenFetch(route, false);
 </script>
 
 <style scoped>
+.renderer-list {
+    flex-grow: 2.5;
+    max-inline-size: 1000px;
+}
+.post-nav-wrapper {
+    min-inline-size: clamp(300px, 400px, calc(100% - 1000px - v-bind(scrollBarWidth)));
+}
 @media (width < 576px) {
     .post-pages {
         padding-inline-end: 0;
     }
 }
-@media (width < 1250px) {
-    .renderer-list {
-        flex-grow: 3;
-    }
-}
-@media (width >= 1250px) {
-    .renderer-list {
-        flex-basis: auto;
-        max-inline-size: 1000px;
+@media (width > 900px) and (width < 1400px) {
+    .post-nav-wrapper {
+        max-inline-size: 400px;
     }
 }
 @media (width >= 1400px) {
-    .post-nav-wrapper {
-        min-inline-size: calc(1400px - 1000px - v-bind(scrollBarWidth))
+    .renderer-list {
+        min-inline-size: 1000px;
     }
 }
 </style>
