@@ -34,7 +34,7 @@
             'border-start': isPostNavExpanded,
             'border-end': !isPostNavExpanded
         }"
-        class="post-nav-expand col-auto align-items-center d-flex sticky-top border-light-subtle">
+        class="post-nav-expand col-auto d-flex align-items-center sticky-top border-light-subtle">
         <a
             v-if="!hydrationStore.isHydratingOrSSR"
             @click="togglePostNavExpanded()" class="text-primary">
@@ -209,12 +209,6 @@ watch(viewportTopmostPost, (to, from) => {
     }
 }
 @media (width >= 900px) and (width <= 1250px) {
-    /* keeping .post-nav:hover to replace .post-nav-expand with scrollbar
-       without shifting when the inline-size of .post-nav excess 30% */
-    .post-nav[aria-expanded="true"] {
-        flex: 0 1 30%;
-        max-inline-size: calc(30% + v-bind(scrollBarWidth));
-    }
     .post-nav:hover {
         flex-grow: 1 !important;
     }
