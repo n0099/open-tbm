@@ -63,19 +63,13 @@ const selectedThreads = ref<[string]>();
 const threadMenuItemsRef = useTemplateRef('threadMenuItemsRef');
 
 useNoScript(`<style>
-    /* cannot use logical property as overriding existing physical property */
     .post-nav > .ant-menu-root {
-        padding-left: 0;
-    }
-    @media (max-width: 900px) {
-        .post-nav {
-            display: none;
-        }
+        padding-left: 0; /* cannot use logical property as overriding existing physical property */
     }
 </style>`);
 const [isPostNavExpanded, togglePostNavExpanded] = useToggle(true);
 onMounted(() => togglePostNavExpanded(matchMedia('(min-width: 900px)').matches));
-const postNavDisplay = ref('none'); // using media query in css instead of js before hydrate
+const postNavDisplay = ref('none'); // used in media query to hide while hydrating or noscript
 onMounted(() => { postNavDisplay.value = 'unset' });
 
 type PostIdObj = Partial<Record<PostIDStr, string | number>>;
