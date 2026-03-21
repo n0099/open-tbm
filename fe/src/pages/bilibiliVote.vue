@@ -20,11 +20,11 @@
     <hr />
     <div
         ref="top50CandidateCountRef" id="top50-candidate-count"
-        :class="{ 'loading-huaji': isChartLoading.top50CandidateCount }" class="echarts" />
+        :class="{ 'loading-huaji': isChartLoading.top50CandidateCount }" />
     <hr />
     <div
         ref="top10CandidatesTimelineRef" id="top10-candidates-timeline"
-        :class="{ 'loading-huaji': isChartLoading.top10CandidatesTimeline }" class="echarts" />
+        :class="{ 'loading-huaji': isChartLoading.top10CandidatesTimeline }" />
     <hr />
     <div class="row justify-content-end">
         <label class="col-2 col-form-label text-end" for="top5CandidateCountGroupByTimeGranularity">时间粒度</label>
@@ -40,7 +40,7 @@
     </div>
     <div
         ref="top5CandidateCountGroupByTimeRef" id="top5-candidate-count-group-by-time"
-        :class="{ 'loading-huaji': isChartLoading.top5CandidateCountGroupByTime }" class="echarts" />
+        :class="{ 'loading-huaji': isChartLoading.top5CandidateCountGroupByTime }" />
     <hr />
     <div class="row justify-content-end">
         <label class="col-2 col-form-label text-end" for="allVoteCountGroupByTimeGranularity">时间粒度</label>
@@ -56,7 +56,7 @@
     </div>
     <div
         ref="allVoteCountGroupByTimeRef" id="all-vote-count-group-by-time"
-        :class="{ 'loading-huaji': isChartLoading.allVoteCountGroupByTime }" class="echarts" />
+        :class="{ 'loading-huaji': isChartLoading.allVoteCountGroupByTime }" />
     <hr />
     <Suspense :timeout="0">
         <template #fallback>
@@ -751,9 +751,6 @@ onMounted(() => {
 .loading-table {
     height: 2552rem;
     background-attachment: fixed;
-}
-.echarts {
-    margin-block-start: .5rem;
 }
 #top50-candidate-count {
     block-size: 32rem;
