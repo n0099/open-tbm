@@ -1,5 +1,5 @@
 <template>
-<div>
+<div class="d-flex post-nav-wrapper">
     <nav
         class="post-nav col p-0 sticky-top border-0"
         :class="{ 'd-none': !isPostNavExpanded }" :aria-expanded="isPostNavExpanded">
@@ -211,7 +211,7 @@ watch(viewportTopmostPost, (to, from) => {
     .post-nav {
         display: v-bind(postNavDisplay);
     }
-    .post-nav[aria-expanded="true"], .post-nav[aria-expanded="true"] + .post-nav-expand {
+    .post-nav-wrapper:has(.post-nav[aria-expanded="true"]) > * {
         position: fixed;
         z-index: 1040;
     }
