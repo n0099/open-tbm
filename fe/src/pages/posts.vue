@@ -154,12 +154,20 @@ parseRouteThenFetch(route, false);
     flex-grow: 2.5;
     max-inline-size: 1000px;
 }
+:deep() { /* https://stackoverflow.com/questions/53240081/css-variables-use-in-vue/58977845#58977845 */
+    --post-nav-wrapper-min-inline-size: clamp(300px, 400px, calc(100% - 1000px - v-bind(scrollBarWidth)));
+}
 .post-nav-wrapper {
-    min-inline-size: clamp(300px, 400px, calc(100% - 1000px - v-bind(scrollBarWidth)));
+    min-inline-size: var(--post-nav-wrapper-min-inline-size);
 }
 @media (width < 576px) {
     .post-pages {
         padding-inline-end: 0;
+    }
+}
+@media (width < 1400px) {
+    .renderer-list {
+        max-inline-size: calc(100% - var(--post-nav-wrapper-min-inline-size));
     }
 }
 @media (width > 900px) and (width < 1400px) {
