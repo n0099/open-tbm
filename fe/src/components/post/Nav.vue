@@ -68,7 +68,7 @@ useNoScript(`<style>
     }
 </style>`);
 const [isPostNavExpanded, togglePostNavExpanded] = useToggle(true);
-onMounted(() => togglePostNavExpanded(matchMedia('(min-width: 900px)').matches));
+onMounted(() => togglePostNavExpanded(matchMedia('(min-width: 992px)').matches));
 const postNavDisplay = ref('none'); // used in media query to hide while hydrating or noscript
 onMounted(() => { postNavDisplay.value = 'unset' });
 
@@ -197,12 +197,12 @@ watch(viewportTopmostPost, (to, from) => {
     border-radius: var(--bs-border-radius) !important;
 }
 
-@media (width >= 900px) {
+@media (width >= 992px) {
     .post-nav:hover + .post-nav-expand {
         display: none !important;
     }
 }
-@media (width >= 900px) and (width < 1250px) {
+@media (width >= 992px) and (width < 1200px) {
     .post-nav:hover {
         flex-grow: 1 !important;
     }
@@ -213,7 +213,7 @@ watch(viewportTopmostPost, (to, from) => {
         min-inline-size: unset;
     }
 }
-@media (width < 900px) {
+@media (width < 992px) {
     .post-nav {
         display: v-bind(postNavDisplay);
     }
