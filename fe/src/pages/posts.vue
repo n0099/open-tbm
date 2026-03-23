@@ -170,7 +170,7 @@ parseRouteThenFetch(route, false);
         max-inline-size: calc(100% - var(--post-nav-wrapper-min-inline-size));
     }
 }
-@media (width > 900px) and (width < 1400px) {
+@media (width >= 900px) and (width < 1400px) {
     .post-nav-wrapper {
         max-inline-size: 400px;
     }

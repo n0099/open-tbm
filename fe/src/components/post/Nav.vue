@@ -202,7 +202,7 @@ watch(viewportTopmostPost, (to, from) => {
         display: none !important;
     }
 }
-@media (width >= 900px) and (width <= 1250px) {
+@media (width >= 900px) and (width < 1250px) {
     .post-nav:hover {
         flex-grow: 1 !important;
     }
@@ -213,7 +213,7 @@ watch(viewportTopmostPost, (to, from) => {
         min-inline-size: unset;
     }
 }
-@media (width <= 900px) {
+@media (width < 900px) {
     .post-nav {
         display: v-bind(postNavDisplay);
     }
