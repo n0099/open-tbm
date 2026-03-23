@@ -56,8 +56,7 @@ const getSiblingSubReply = (index: number, direction: 'previous' | 'next') =>
 
 <style scoped>
 .sub-reply-group {
-    margin-block-start: .5rem !important;
-    margin-inline-start: .5rem;
+    margin-block-start: unset !important;
     padding: .25rem;
 }
 .sub-reply-item {

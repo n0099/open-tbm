@@ -46,14 +46,14 @@
             </NuxtLink>
             <PostBadgeUser :user="getUser(reply.authorUid)" :threadAuthorUid="thread.authorUid" />
         </address>
-        <div class="col border-start overflow-auto">
+        <div class="col d-flex flex-column gap-2 border-start overflow-auto">
             <PostRendererContent :content="reply.content" class="reply-content" />
-            <template v-if="reply.subReplies.length > 0">
+            <div v-if="reply.subReplies.length > 0" class="sub-replies d-flex flex-column gap-2">
                 <PostRendererListSubReply
                     v-for="(subReplyGroup, index) in reply.subReplies" :key="index"
                     :previousSubReplyGroup="reply.subReplies[index - 1]" :subReplyGroup="subReplyGroup"
                     :nextSubReplyGroup="reply.subReplies[index + 1]" :thread="thread" :reply="reply" />
-            </template>
+            </div>
         </div>
     </div>
 </article>
@@ -117,6 +117,9 @@ const { stickyTitleEl } = await viewportTopmostPostStore.observe(
     padding: .25rem;
     font-size: 1rem;
     line-height: 150%;
+}
+.sub-replies {
+    margin-inline-start: .5rem;
 }
 
 /*
