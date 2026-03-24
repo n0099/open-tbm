@@ -94,8 +94,14 @@ export default defineNuxtConfig({
         }
     },
     postcss: {
-        // eslint-disable-next-line @typescript-eslint/naming-convention
-        plugins: { 'postcss-preset-env': { minimumVendorImplementations: 2 } }
+        plugins: {
+            /* eslint-disable @typescript-eslint/naming-convention */
+            'postcss-preset-env': {
+                minimumVendorImplementations: 2,
+                features: { 'logical-properties-and-values': false }
+            }
+            /* eslint-enable @typescript-eslint/naming-convention */
+        }
     },
     experimental: {
         viewTransition: true,
