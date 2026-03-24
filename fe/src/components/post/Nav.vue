@@ -64,7 +64,7 @@ const threadMenuItemsRef = useTemplateRef('threadMenuItemsRef');
 
 useNoScript(`<style>
     .post-nav > .ant-menu-root {
-        padding-left: 0; /* cannot use logical property as overriding existing physical property */
+        padding-inline-start: 0;
     }
 </style>`);
 const [isPostNavExpanded, togglePostNavExpanded] = useToggle(true);

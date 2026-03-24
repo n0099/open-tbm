@@ -158,10 +158,8 @@ const subReplyColumns = ref<ColumnType[]>([
     padding: .5rem;
 }
 
-/* cannot use logical property as overriding existing physical property */
 :deep(.ant-table thead > tr > th) {
-    padding-top: .5rem !important;
-    padding-bottom: .5rem !important;
+    padding-block: .5rem !important;
 }
 :deep(.ant-table thead > tr) {
     position: sticky;

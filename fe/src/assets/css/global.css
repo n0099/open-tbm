@@ -17,8 +17,7 @@ a {
 }
 
 address {
-    /* cannot use logical property as overriding existing physical property */
-    margin-bottom: 0 !important; /* https://getbootstrap.com/docs/5.3/content/reboot/#address */
+    margin-block-end: 0 !important; /* https://getbootstrap.com/docs/5.3/content/reboot/#address */
 }
 
 * {
