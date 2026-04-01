@@ -11,7 +11,7 @@
         "ext-intl": "*",
         "ext-mbstring": "*",
         "beberlei/doctrineextensions": "dev-master",
-        "doctrine/doctrine-bundle": "^2.18.2",
+        "doctrine/doctrine-bundle": "^3.2",
         "doctrine/orm": "^3.6.2",
         "google/protobuf": "^4.33.6",
         "illuminate/collections": "^12.56",
@@ -35,7 +35,7 @@
         "doctrine/doctrine-fixtures-bundle": "^4.3.1",
         "friendsofphp/php-cs-fixer": "^3.94.2",
         "infection/infection": "^0.30.3",
-        "phan/phan": "^5.5.2",
+        "phan/phan": "^6.0",
         "phpmd/phpmd": "^2.15.0",
         "phpstan/extension-installer": "^1.4.3",
         "phpstan/phpstan-deprecation-rules": "^2.0.4",
@@ -104,7 +104,7 @@
     "extra": {
         "symfony": {
             "allow-contrib": false,
-            "require": "7.*"
+            "require": "8.*"
         }
     },
     "scripts": {
