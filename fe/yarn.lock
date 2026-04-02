@@ -5192,13 +5192,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/lodash@npm:^4.17.24":
-  version: 4.17.24
-  resolution: "@types/lodash@npm:4.17.24"
-  checksum: 10c0/b72f60d4daacdad1fa643edb3faba204c02a01eb1ac00a83ff73496a6d236fc55e459c06106e8ced42277dba932d087d8fc090f8de4ef590d3f91e6d6f7ce85a
-  languageName: node
-  linkType: hard
-
 "@types/luxon@npm:^3.7.1":
   version: 3.7.1
   resolution: "@types/luxon@npm:3.7.1"
@@ -10499,13 +10492,6 @@ __metadata:
   linkType: hard
 
 "lodash@npm:^4.17.15, lodash@npm:^4.17.21, lodash@npm:^4.17.23":
-  version: 4.17.23
-  resolution: "lodash@npm:4.17.23"
-  checksum: 10c0/1264a90469f5bb95d4739c43eb6277d15b6d9e186df4ac68c3620443160fc669e2f14c11e7d8b2ccf078b81d06147c01a8ccced9aab9f9f63d50dcf8cace6bf6
-  languageName: node
-  linkType: hard
-
-"lodash@npm:^4.18.1":
   version: 4.18.1
   resolution: "lodash@npm:4.18.1"
   checksum: 10c0/757228fc68805c59789e82185135cf85f05d0b2d3d54631d680ca79ec21944ec8314d4533639a14b8bcfbd97a517e78960933041a5af17ecb693ec6eecb99a27
@@ -14884,7 +14870,6 @@ __metadata:
     "@tanstack/vue-query-devtools": "npm:^6.1.12"
     "@types/bootstrap": "npm:^5.2.10"
     "@types/eslint": "npm:^9.6.1"
-    "@types/lodash": "npm:^4.17.24"
     "@types/luxon": "npm:^3.7.1"
     "@types/node": "npm:^24.12.0"
     "@types/requestidlecallback": "npm:^0.3.7"
@@ -14905,7 +14890,6 @@ __metadata:
     eslint-plugin-pinia: "npm:^0.4.2"
     eslint-plugin-vue: "npm:^10.8.0"
     htmlparser2: "npm:^12.0.0"
-    lodash: "npm:^4.18.1"
     luxon: "npm:^3.7.2"
     noty: "npm:^3.2.0-beta-deprecated"
     nuxt: "npm:^4.4.2"
