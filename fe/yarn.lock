@@ -1766,6 +1766,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@fontsource/noto-sans-sc@npm:^5.2.9":
+  version: 5.2.9
+  resolution: "@fontsource/noto-sans-sc@npm:5.2.9"
+  checksum: 10c0/f399c11d875a069307fccc2df005b3194e1090fea804a6e9b4cd9ed20163e7bc8060ab53495159d19ad12839fa22d5dcebdacca97dc3b90b78abb9df7a355e69
+  languageName: node
+  linkType: hard
+
 "@fortawesome/fontawesome-common-types@npm:6.7.2":
   version: 6.7.2
   resolution: "@fortawesome/fontawesome-common-types@npm:6.7.2"
@@ -14829,6 +14836,7 @@ __metadata:
     "@eslint/compat": "npm:^2.0.3"
     "@eslint/eslintrc": "npm:^3.3.5"
     "@eslint/js": "npm:^10.0.1"
+    "@fontsource/noto-sans-sc": "npm:^5.2.9"
     "@fortawesome/free-brands-svg-icons": "npm:^7.2.0"
     "@fortawesome/free-regular-svg-icons": "npm:^7.2.0"
     "@fortawesome/free-solid-svg-icons": "npm:^7.2.0"

@@ -32,7 +32,8 @@ export default defineNuxtConfig({
         '@ant-design-vue/nuxt',
         '@n0099/vue-query-nuxt',
         '@vesp/nuxt-fontawesome',
-        '@nuxtjs/seo'
+        '@nuxtjs/seo',
+        '@nuxt/fonts'
     ],
     pinia: { storesDirs: ['stores/**'] },
     eslint: { config: { standalone: false } },
@@ -63,8 +64,19 @@ export default defineNuxtConfig({
         sitemaps: true,
         appendSitemaps: [{ sitemap: `${process.env.NUXT_PUBLIC_BE_URL}/sitemaps/forums` }]
     },
-    ogImage: { fonts: ['Noto Sans SC'] },
     schemaOrg: { identity: 'Organization' },
+    fonts: {
+        provider: 'npm',
+        families: [{
+            name: 'Noto Sans SC',
+            global: true,
+
+            // https://github.com/fontsource/font-files/blob/12593eb13c50a839aa670bf43535341c8b3597cf/fonts/google/noto-sans-sc/README.md
+            weights: Array.from({ length: 9 }, (_, i) => (i + 1) * 100),
+            styles: ['normal'],
+            subsets: ['latin', 'latin-ext', 'vietnamese', 'cyrillic', 'chinese-simplified']
+        }]
+    },
     typescript: {
         tsConfig: { include: ['../vue-query.config.ts'] }, // https://github.com/Hebilicious/vue-query-nuxt/issues/119
         nodeTsConfig: { include: ['../eslint.config.ts', '../stylelint.config.ts'] }
