@@ -47,16 +47,21 @@ export const usePostsSEO = (
                     reply.content?.find(i => i.type === 3)))
             .find(i => i !== undefined));
 
-        // https://github.com/nuxt-modules/og-image/blob/39412488d08af4d27cb3a7881d4cf44a773fbb3c/src/runtime/server/util/kit.ts#L13
-        // https://github.com/nuxt/nuxt/issues/22786
-        defineOgImageComponent('Post', {
-            routePath: route.path,
-            currentQueryType,
-            firstPostPageForumName,
-            firstThreadTitle,
-            firstPostContentTexts,
-            firstPostAuthor,
-            firstImage
+        const nuxt = useNuxtApp();
+        watchSyncEffect(() => {
+            void nuxt.runWithContext(() => {
+                defineOgImage('Post', {
+                    // https://github.com/nuxt-modules/og-image/blob/39412488d08af4d27cb3a7881d4cf44a773fbb3c/src/runtime/server/util/kit.ts#L13
+                    // https://github.com/nuxt/nuxt/issues/22786
+                    routePath: route.path,
+                    currentQueryType,
+                    firstPostPageForumName,
+                    firstThreadTitle,
+                    firstPostContentTexts,
+                    firstPostAuthor,
+                    firstImage
+                });
+            });
         });
     })();
     usePostsSchemaOrg(data);
