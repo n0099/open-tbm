@@ -56,10 +56,10 @@ const fetchImageAsBase64 = async (url: string): Promise<string | null> => {
         })()
     ]).finally(() => { clearTimeout(timeoutId); abortController.abort() });
 };
-const authorPortraitImageBase64 = ref<string | null>(
+const authorPortraitImageBase64 = ref(
     firstPostAuthor === undefined ? null : await fetchImageAsBase64(toUserPortraitImageUrl(firstPostAuthor.portrait))
 );
-const firstImageBase64 = ref<string | null>(
+const firstImageBase64 = ref(
     firstImage?.originSrc === undefined ? null : await fetchImageAsBase64(firstImage.originSrc)
 );
 </script>

@@ -21,6 +21,6 @@ const granularitiesDefaultOption: TimeGranularityStringMap = {
     month: '月',
     year: '年'
 };
-const options = ref<TimeGranularityStringMap>(_.pick(granularitiesDefaultOption,
+const options = ref(_.pick(granularitiesDefaultOption,
     _.intersection(granularities, Object.keys(granularitiesDefaultOption))));
 </script>

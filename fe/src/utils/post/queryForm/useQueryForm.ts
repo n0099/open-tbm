@@ -17,7 +17,7 @@ export const useQueryForm = <
     type UniqueParam = ObjValues<UniqueParams>;
     type Param = ObjValues<Params>;
 
-    const uniqueParams = ref<UniqueParams>({} as UniqueParams) as Ref<UniqueParams>;
+    const uniqueParams = ref({} as UniqueParams) as Ref<UniqueParams>;
     const params = ref<Param[]>([]) as Ref<Param[]>;
     const invalidParamsIndex = ref<number[]>([]);
 
