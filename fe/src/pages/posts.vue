@@ -56,7 +56,7 @@ const queryFormDeps = getQueryFormDeps();
 const { currentQueryType, parseRouteToGetFlattenParams } = queryFormDeps;
 const { data, error, isPending, isFetching, isFetched, dataUpdatedAt, errorUpdatedAt, fetchNextPage, isFetchingNextPage, hasNextPage } =
     useApiPosts(queryParam, { initialPageParam: initialPageCursor, enabled: shouldFetch });
-usePostsSEO(data, currentQueryType);
+usePostsSEO(currentQueryType, queryParam, initialPageCursor, data);
 
 const queryStartedAtSSR = useState('postsQuerySSRStartTime', () => 0);
 let queryStartedAt = 0;

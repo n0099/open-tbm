@@ -25,15 +25,31 @@
 <script setup lang="ts">
 import type { UnwrapRef } from 'vue';
 
-const { firstPostAuthor, firstImage } = defineProps<{
+const { currentQueryType, queryParam, initialPageCursor } = defineProps<{
     routePath: string,
     currentQueryType: UnwrapRef<QueryFormDeps['currentQueryType']>,
-    firstPostPageForumName?: string,
-    firstThreadTitle?: string,
-    firstPostContentTexts: string,
-    firstPostAuthor?: User,
-    firstImage?: Extract<PostContent[number], { originSrc?: string }>
+    queryParam: ApiPosts['queryParam'] | undefined,
+    initialPageCursor?: string
 }>();
+const { data } = useApiPosts(ref(queryParam), { initialPageParam: initialPageCursor });
+
+const { firstPostPage, firstPostPageForumName, firstThread } = useFirstPost(data);
+const firstThreadTitle = computed(() => firstThread.value?.title);
+const firstReplyContent = computed(() => firstThread.value?.replies[0]);
+const firstSubReplyContent = computed(() => firstReplyContent.value?.subReplies[0]);
+const firstPostContentTexts = computed(() =>
+    extractContentTexts((firstSubReplyContent.value ?? firstReplyContent.value)?.content));
+const getUser = computed(() => baseGetUser(firstPostPage.value?.users ?? []));
+const firstPostAuthor = computed(() => undefinedOr(
+    (firstSubReplyContent.value ?? firstReplyContent.value)?.authorUid,
+    uid => getUser.value(uid)
+));
+const firstImage = computed(() => firstPostPage.value
+    ?.threads.flatMap(thread =>
+        thread.replies.flatMap(reply =>
+            reply.content?.find(i => i.type === 3)))
+    .find(i => i !== undefined));
+
 const fetchImageAsBase64 = async (url: string): Promise<string | null> => {
     // eslint-disable-next-line @typescript-eslint/init-declarations
     let timeoutId: NodeJS.Timeout;
@@ -56,10 +72,8 @@ const fetchImageAsBase64 = async (url: string): Promise<string | null> => {
         })()
     ]).finally(() => { clearTimeout(timeoutId); abortController.abort() });
 };
-const authorPortraitImageBase64 = ref(
-    firstPostAuthor === undefined ? null : await fetchImageAsBase64(toUserPortraitImageUrl(firstPostAuthor.portrait))
-);
-const firstImageBase64 = ref(
-    firstImage?.originSrc === undefined ? null : await fetchImageAsBase64(firstImage.originSrc)
-);
+const authorPortraitImageBase64 = computedAsync(async () =>
+    (firstPostAuthor.value === undefined ? null : await fetchImageAsBase64(toUserPortraitImageUrl(firstPostAuthor.value.portrait))));
+const firstImageBase64 = computedAsync(async () =>
+    (firstImage.value?.originSrc === undefined ? null : await fetchImageAsBase64(firstImage.value.originSrc)));
 </script>

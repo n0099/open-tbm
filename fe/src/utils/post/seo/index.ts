@@ -1,9 +1,6 @@
 import type { InfiniteData } from '@tanstack/vue-query';
 
-export const usePostsSEO = (
-    data: Ref<InfiniteData<ApiPosts['response']> | undefined>,
-    currentQueryType: QueryFormDeps['currentQueryType']
-) => {
+export const useFirstPost = (data: Ref<InfiniteData<ApiPosts['response']> | undefined>) => {
     const firstPostPage = computed(() => data.value?.pages[0]);
     const firstPostPageForumName = computed((): string | undefined => {
         if (firstPostPage.value?.forums === undefined)
@@ -16,6 +13,17 @@ export const usePostsSEO = (
         return undefined;
     });
     const firstThread = computed(() => firstPostPage.value?.threads[0]);
+
+    return { firstPostPage, firstPostPageForumName, firstThread };
+};
+
+export const usePostsSEO = (
+    currentQueryType: QueryFormDeps['currentQueryType'],
+    queryParam: Ref<ApiPosts['queryParam'] | undefined>,
+    initialPageCursor: Ref<string>,
+    data: Ref<InfiniteData<ApiPosts['response']> | undefined>
+) => {
+    const { firstPostPageForumName, firstThread } = useFirstPost(data);
     useHead({
         title: computed(() => {
             const titleParts = ['帖子查询'];
@@ -29,40 +37,13 @@ export const usePostsSEO = (
             return titleParts.join(' - ');
         })
     });
-    (() => {
-        const route = useRoute();
-        const firstThreadTitle = computed(() => firstThread.value?.title);
-        const firstReplyContent = computed(() => firstThread.value?.replies[0]);
-        const firstSubReplyContent = computed(() => firstReplyContent.value?.subReplies[0]);
-        const firstPostContentTexts = computed(() =>
-            extractContentTexts((firstSubReplyContent.value ?? firstReplyContent.value)?.content));
-        const getUser = computed(() => baseGetUser(firstPostPage.value?.users ?? []));
-        const firstPostAuthor = computed(() => undefinedOr(
-            (firstSubReplyContent.value ?? firstReplyContent.value)?.authorUid,
-            uid => getUser.value(uid)
-        ));
-        const firstImage = computed(() => firstPostPage.value
-            ?.threads.flatMap(thread =>
-                thread.replies.flatMap(reply =>
-                    reply.content?.find(i => i.type === 3)))
-            .find(i => i !== undefined));
-
-        const nuxt = useNuxtApp();
-        watchSyncEffect(() => {
-            void nuxt.runWithContext(() => {
-                defineOgImage('Post', {
-                    // https://github.com/nuxt-modules/og-image/blob/39412488d08af4d27cb3a7881d4cf44a773fbb3c/src/runtime/server/util/kit.ts#L13
-                    // https://github.com/nuxt/nuxt/issues/22786
-                    routePath: route.path,
-                    currentQueryType,
-                    firstPostPageForumName,
-                    firstThreadTitle,
-                    firstPostContentTexts,
-                    firstPostAuthor,
-                    firstImage
-                });
-            });
-        });
-    })();
+    watchSyncEffect(() => defineOgImage('Post', {
+        // https://github.com/nuxt-modules/og-image/blob/39412488d08af4d27cb3a7881d4cf44a773fbb3c/src/runtime/server/util/kit.ts#L13
+        // https://github.com/nuxt/nuxt/issues/22786
+        routePath: useRoute().path,
+        currentQueryType,
+        queryParam,
+        initialPageCursor
+    }));
     usePostsSchemaOrg(data);
 };
