@@ -2,6 +2,15 @@
 <div class="flex flex-row gap-6 justify-between size-screen bg-white" style="font-family: 'Noto Sans SC', sans-serif;">
     <div class="flex-1 flex-col basis-1/2 m-4">
         <p>{{ useSiteConfig().name }} {{ routePath }}</p>
+        <div v-if="error instanceof ApiResponseError">
+            <p class="text-7xl">{{ error.errorCode }}</p>
+            <template v-if="_.isString(error.errorInfo)">
+                <p v-for="(info, _k) in error.errorInfo.split('\n')" :key="_k">{{ info }}</p>
+            </template>
+            <template v-else-if="_.isObject(error.errorInfo)">
+                <p class="whitespace-pre">{{ JSON.stringify(error.errorInfo, null, 4) }}</p>
+            </template>
+        </div>
         <h2 v-if="firstPostPageForumName !== undefined">{{ firstPostPageForumName }}吧</h2>
         <p v-if="firstImageBase64 !== null">右侧为查询结果中第一张图片（不一定来自第一条帖子）</p>
         <p v-if="currentQueryType !== 'postID'" class="m-0">下方为查询结果中第一条主题帖/回复帖/楼中楼</p>
@@ -24,6 +33,7 @@
 
 <script setup lang="ts">
 import type { UnwrapRef } from 'vue';
+import _ from 'lodash';
 
 const { currentQueryType, queryParam, initialPageCursor } = defineProps<{
     routePath: string,
@@ -31,7 +41,7 @@ const { currentQueryType, queryParam, initialPageCursor } = defineProps<{
     queryParam: ApiPosts['queryParam'] | undefined,
     initialPageCursor?: string
 }>();
-const { data } = useApiPosts(ref(queryParam), { initialPageParam: initialPageCursor });
+const { data, error } = useApiPosts(ref(queryParam), { initialPageParam: initialPageCursor });
 
 const { firstPostPage, firstPostPageForumName, firstThread } = useFirstPost(data);
 const firstThreadTitle = computed(() => firstThread.value?.title);
