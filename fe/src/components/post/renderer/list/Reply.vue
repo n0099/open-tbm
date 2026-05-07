@@ -85,6 +85,7 @@ const { stickyTitleEl } = await viewportTopmostPostStore.observe(
 .reply-title {
     z-index: 1019;
     inset-block-start: v-bind('replyTitleStyle.insetBlockStart.remString');
+    margin-block-start: v-bind('replyTitleStyle.marginBlockStart.remString');
     border-block-start: 1px solid #ededed;
     border-block-end: 0;
     background-color: #0000;

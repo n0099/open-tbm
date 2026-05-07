@@ -131,7 +131,6 @@ const zanTippyContent = (zan: NonNullable<Thread['zan']>) => () => {
 
 .thread-title {
     block-size: v-bind('replyTitleStyle.insetBlockStart.remString');
-    margin-block-end: v-bind('replyTitleStyle.marginBlockStart.remString');
     padding: .75rem 1rem .5rem;
     background-color: #f2f2f2;
     /* https://stackoverflow.com/questions/25308823/targeting-positionsticky-elements-that-are-currently-in-a-stuck-state/79471060#79471060 */
