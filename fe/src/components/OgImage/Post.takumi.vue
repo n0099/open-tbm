@@ -15,7 +15,7 @@
         <p v-if="firstImageBase64 !== null">右侧为查询结果中第一张图片（不一定来自第一条帖子）</p>
         <p v-if="currentQueryType !== 'postID'" class="m-0">下方为查询结果中第一条主题帖/回复帖/楼中楼</p>
         <h1 v-if="firstThreadTitle !== undefined">{{ firstThreadTitle }}</h1>
-        <NewlineToBr is="h3" :text="firstPostContentTexts" wrapInSpan class="h-auto" />
+        <h3 class="h-auto whitespace-pre-wrap">{{ firstPostContentTexts }}</h3>
         <template v-for="author in [firstPostAuthor]">
             <div :key="author.uid" v-if="author !== undefined" class="m-auto">
                 <img v-if="authorPortraitImageBase64 !== null" :src="authorPortraitImageBase64" />

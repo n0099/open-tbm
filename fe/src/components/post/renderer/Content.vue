@@ -12,7 +12,7 @@
             loading="lazy" class="tieba-ugc-media tieba-ugc-image" v-bind="attrs" />
     </DefineUGCImage>
     <div v-for="(i, index) in content" :key="index" class="post-content-item">
-        <NewlineToBr is="span" v-if="i.type === undefined || i.type === 40" :text="i.text" />
+        <span v-if="i.type === undefined || i.type === 40" class="post-content-item-text">{{ i.text }}</span>
         <NuxtLink
             v-if="i.type === 1 || i.type === 18"
             :to="tryExtractTiebaOutboundUrl(i.link)" target="_blank">
@@ -91,5 +91,9 @@ useViewerStore().enable();
 .post-content-item:has(.tieba-ugc-image):not(:has(+ .post-content-item .tieba-ugc-image))::after {
     content: '';
     display: block;
+}
+
+.post-content-item-text {
+    white-space: pre-wrap;
 }
 </style>
