@@ -8543,17 +8543,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"devalue@npm:^5.6.3":
-  version: 5.7.0
-  resolution: "devalue@npm:5.7.0"
-  checksum: 10c0/2ce70fb452812dd7239da37451890779fec31828b078a43d14a575d458d20eb80c2d1eb945502e784dd39a7635a7a5236914f6f054aa28732a2230a0cba52c00
-  languageName: node
-  linkType: hard
-
-"devalue@npm:^5.8.0":
-  version: 5.8.0
-  resolution: "devalue@npm:5.8.0"
-  checksum: 10c0/85512cca4524537e018f0e72486382acaf082f58c1d80f1c8245ea2f3a833988b3a35c274c40a9cae3e7bd652680570c532335e8044f9d03ec324dce843b26f0
+"devalue@npm:^5.6.3, devalue@npm:^5.8.0":
+  version: 5.8.1
+  resolution: "devalue@npm:5.8.1"
+  checksum: 10c0/fad0c5aeb615e0ddea3385923389991652b285cd2adcd84e10f07a930f735127d94621751f7ef5249a7fe2c7c666ec7c02bb95c3901da337c91f45ef4da18dea
   languageName: node
   linkType: hard
 
