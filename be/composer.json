@@ -87,7 +87,7 @@
         "symfony/polyfill-ctype": "*",
         "symfony/polyfill-iconv": "*",
         "symfony/polyfill-intl-grapheme": "*",
-        "symfony/polyfill-intl-idn": "*",
+        "symfony/polyfill-intl-idn": ">=1.38.1",
         "symfony/polyfill-intl-normalizer": "*",
         "symfony/polyfill-mbstring": "*",
         "symfony/polyfill-php72": "*",
