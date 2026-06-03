@@ -27,7 +27,7 @@
         "symfony/stopwatch": "^7.4.8",
         "symfony/twig-bundle": "^7.4.8",
         "symfony/validator": "^7.4.8",
-        "symfony/yaml": "^7.4.8",
+        "symfony/yaml": "^7.4.13",
         "thecodingmachine/safe": "^3.4"
     },
     "require-dev": {
@@ -50,7 +50,7 @@
         "symfony/debug-bundle": "^7.4.8",
         "symfony/maker-bundle": "^1.67.0",
         "symfony/phpunit-bridge": "^7.4.8",
-        "symfony/web-profiler-bundle": "^7.4.8",
+        "symfony/web-profiler-bundle": "^7.4.12",
         "thecodingmachine/phpstan-safe-rule": "^1.4.3"
     },
     "repositories": [
