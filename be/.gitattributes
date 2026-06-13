@@ -1,5 +1,5 @@
-composer.lock binary
-symfony.lock binary
+composer.lock text eol=lf -diff
+symfony.lock text eol=lf -diff
 
 # https://github.com/gitattributes/gitattributes/blob/master/PHP.gitattributes
 # Auto detect text files and perform LF normalization

@@ -1,4 +1,4 @@
-devenv.lock binary
+devenv.lock text eol=lf -diff
 
 # https://github.com/gitattributes/gitattributes/blob/master/Common.gitattributes
 # Common settings that generally should always be used with your language specific settings

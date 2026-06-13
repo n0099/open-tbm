@@ -1,4 +1,4 @@
-*/packages.lock.json binary
+*/packages.lock.json text eol=lf -diff
 
 # https://github.com/gitattributes/gitattributes/blob/master/CSharp.gitattributes
 # Auto detect text files and perform LF normalization
