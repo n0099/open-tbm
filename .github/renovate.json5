@@ -1,9 +1,8 @@
 { // https://docs.renovatebot.com/configuration-options/
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": [
-    "config:recommended"
-  ],
+  "extends": ["config:recommended"],
   "rangeStrategy": "bump",
+  "vulnerabilityAlerts": { "rangeStrategy": "bump" },
   "separateMajorMinor": false,
   "lockFileMaintenance": { "enabled": true },
   "labels": ["dependencies"],
