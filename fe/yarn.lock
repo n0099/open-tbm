@@ -5042,11 +5042,11 @@ __metadata:
   linkType: hard
 
 "@tiptap/core@npm:^3.27.3, @tiptap/core@npm:^3.29.2":
-  version: 3.29.2
-  resolution: "@tiptap/core@npm:3.29.2"
+  version: 3.31.0
+  resolution: "@tiptap/core@npm:3.31.0"
   peerDependencies:
-    "@tiptap/pm": 3.29.2
-  checksum: 10c0/048f010854c8ff37e02a4aebe61e2d675e3814933e924ec74127dd6a243217a8a4aaf277f3243dd2d409dc9a3587244bd47b91b2605520c3f9457c183b478c19
+    "@tiptap/pm": 3.31.0
+  checksum: 10c0/b0682197944088fe9f745867cb889502a4364d1177c218ed22dc47a6f902288f46d7de7f43b24bdb4bb9aa51a0ace4f02e37850f7bb281db90ccd5c41d73f97f
   languageName: node
   linkType: hard
 
