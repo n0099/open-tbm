@@ -3,10 +3,10 @@ description: c#/init
 runs:
   using: composite
   steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
       with:
         submodules: true
-    - uses: actions/setup-dotnet@v5
+    - uses: actions/setup-dotnet@v6
       with: # https://github.com/actions/setup-dotnet/tree/v4
         global-json-file: c#/global.json
         # cache: true
@@ -16,7 +16,7 @@ runs:
         # to allow saving cache even jobs failed
 
     - id: cache-restore
-      uses: actions/cache/restore@v5
+      uses: actions/cache/restore@v6
       with:
         path: ${{ github.workspace }}/.nuget/packages
         key: ${{ runner.os }}-nuget-${{ hashFiles('c#/*/packages.lock.json') }}
@@ -29,7 +29,7 @@ runs:
 
     # https://github.com/actions/runner/issues/1478
     # https://github.com/actions/setup-node/issues/410#issuecomment-1939482965
-    - uses: actions/cache/save@v5
+    - uses: actions/cache/save@v6
       if: ${{ steps.cache-restore.outputs.cache-hit != 'true' }}
       with:
         path: ${{ github.workspace }}/.nuget/packages
