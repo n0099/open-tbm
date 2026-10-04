@@ -8,7 +8,7 @@
     <ItemGroup>
         <PackageReference Include="LanguageExt.Core" Version="4.4.9" />
         <PackageReference Include="Microsoft.Extensions.Http.Polly" Version="10.0.3" />
-        <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL.NetTopologySuite" Version="9.0.4" />
+        <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL.NetTopologySuite" Version="10.0.3" />
         <PackageReference Include="OpenCvSharp4" Version="4.13.0.20260222" />
         <PackageReference Include="OpenCvSharp4.runtime.win" Version="4.13.0.20260222" />
         <PackageReference Include="Sdcb.PaddleInference.runtime.win64.mkl" Version="3.1.0.54" />
