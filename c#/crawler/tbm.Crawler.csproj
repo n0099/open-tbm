@@ -7,7 +7,7 @@
         <ProjectReference Include="..\shared\tbm.Shared.csproj" />
     </ItemGroup>
     <ItemGroup>
-        <PackageReference Include="AngleSharp" Version="1.4.0" />
+        <PackageReference Include="AngleSharp" Version="1.5.0" />
         <PackageReference Include="Dapper" Version="2.1.66" />
         <PackageReference Include="Humanizer.Core.zh-Hans" Version="3.0.1" />
         <PackageReference Include="linq2db.EntityFrameworkCore" Version="9.2.0" />
